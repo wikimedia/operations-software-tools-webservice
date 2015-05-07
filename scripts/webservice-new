@@ -1,0 +1,59 @@
+#!/usr/bin/python
+import argparse
+import sys
+
+from tools.webservice import WebServiceJob, WebService
+from tools.webservice.services import webservice_classes
+from tools.common.utils import wait_for
+from tools.common import Tool
+
+
+argparser = argparse.ArgumentParser()
+argparser.add_argument('type', help='Type of webservice to start',
+                       choices=webservice_classes.keys())
+argparser.add_argument('action', help='Action to perform',
+                       choices=['start', 'stop', 'restart'])
+
+
+def start(job, message):
+    try:
+        job.request_start()
+    except WebService.InvalidWebServiceException as e:
+        raise SystemExit(e.message)
+    wait_for(lambda: job.is_running(), message)
+
+
+def stop(job, message):
+    job.request_stop()
+    wait_for(lambda: not job.is_running(), message)
+
+
+if __name__ == '__main__':
+    args = argparser.parse_args()
+
+    tool = Tool.from_currentuser()
+    webservice = webservice_classes[args.type](tool)
+
+    job = WebServiceJob(webservice)
+
+    if args.action == 'start':
+        if job.is_running():
+            print 'Your job is already running'
+            sys.exit()
+
+        start(job, 'Starting webservice')
+
+    elif args.action == 'stop':
+        if not job.is_running():
+            print 'Your webservice is not running'
+            sys.exit()
+
+        stop(job, 'Stopping webservice')
+    elif args.action == 'restart':
+        if not job.is_running():
+            start(job, 'Your job is not running, starting')
+        else:
+            stop(job, 'Restarting webservice')
+            start(job, '')
+
+    print  # End program with newline, don't output newline anywhere else :)
