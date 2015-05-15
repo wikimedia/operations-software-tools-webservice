@@ -52,6 +52,8 @@ class Tool(object):
         tilde_file_fd = os.open(tilde_file_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
         tilde_file = os.fdopen(tilde_file_fd, 'w')
         try:
+            tilde_file.write("# This file is used by toollabs infrastructure.\n"
+                             "# Please do not edit manually at this time.\n")
             yaml.safe_dump(self._manifest, tilde_file, default_flow_style=False)
         finally:
             tilde_file.close()
