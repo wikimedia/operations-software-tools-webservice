@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import print_function
 import argparse
 import sys
 
@@ -13,6 +14,10 @@ argparser.add_argument('type', help='Type of webservice to start',
                        choices=webservice_classes.keys())
 argparser.add_argument('action', help='Action to perform',
                        choices=['start', 'stop', 'restart'])
+# Backwards compat with older webservice. Allows for webservice --release precise lighttpd <action>
+argparser.add_argument('--release',
+                       help=argparse.SUPPRESS,
+                       choices=['precise', 'trusty'])
 
 
 def start(job, message):
@@ -31,6 +36,17 @@ def stop(job, message):
 if __name__ == '__main__':
     args = argparser.parse_args()
 
+    # Backwards compatibility hack to support 'webservice --release precise lighttpd start' invocations
+    if args.release is not None:
+        if args.type == 'lighttpd':
+            if args.release == 'precise':
+                args.type = 'lighttpd-precise'
+                print("--release=precise is deprecated. Use %s lighttpd-precise <action> instead" % sys.argv[0])
+            elif args.release == 'trusty':
+                print("--release=trusty is deprecated. Use %s lighttpd <action> instead " % sys.argv[0])
+        else:
+            raise SystemExit('Specifying --release only supported for lighttpd server type')
+
     tool = Tool.from_currentuser()
     webservice = webservice_classes[args.type](tool)
 
@@ -38,14 +54,14 @@ if __name__ == '__main__':
 
     if args.action == 'start':
         if job.is_running():
-            print 'Your job is already running'
+            print('Your job is already running')
             sys.exit()
 
         start(job, 'Starting webservice')
 
     elif args.action == 'stop':
         if not job.is_running():
-            print 'Your webservice is not running'
+            print('Your webservice is not running')
             sys.exit()
 
         stop(job, 'Stopping webservice')
@@ -56,4 +72,4 @@ if __name__ == '__main__':
             stop(job, 'Restarting webservice')
             start(job, '')
 
-    print  # End program with newline, don't output newline anywhere else :)
+    print()  # End program with newline, don't output newline anywhere else :)
