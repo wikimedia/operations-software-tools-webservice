@@ -11,4 +11,7 @@ setup(
         'scripts/webservice-new',
     ],
     description='Infrastructure for running webservices on tools.wmflabs.org',
+    install_requires=[
+        'PyYAML'
+    ]
 )
