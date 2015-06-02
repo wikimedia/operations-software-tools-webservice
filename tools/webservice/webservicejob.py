@@ -39,6 +39,9 @@ class WebServiceJob(object):
 
     def request_start(self):
         self.webservice.check()
+        cmd = '/usr/bin/webservice-runner --type %s' % self.webservice.type
+        if self.webservice.extra_args:
+            cmd += " --extra_args '%s'" % self.webservice.extra_args
         command = ['qsub',
                    '-e', os.path.expanduser('~/error.log'),
                    '-o', os.path.expanduser('~/error.log'),
@@ -47,7 +50,7 @@ class WebServiceJob(object):
                    '-l', 'h_vmem=%s,release=%s' % (self.webservice.memlimit, self.webservice.release),
                    '-b', 'y',
                    '-N', self.name,
-                   '/usr/bin/webservice-runner --type %s' % self.webservice.type]
+                   cmd]
 
         subprocess.check_call(command, stdout=open(os.devnull, 'wb'))
 

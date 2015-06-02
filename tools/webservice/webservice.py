@@ -15,8 +15,9 @@ class WebService(object):
     class InvalidWebServiceException(Exception):
         pass
 
-    def __init__(self, tool):
+    def __init__(self, tool, extra_args=None):
         self.tool = tool
+        self.extra_args = extra_args
 
     @property
     def release(self):
@@ -61,3 +62,21 @@ class WebService(object):
         # Populate environment with all the useful things!
         os.environ['PORT'] = str(port)
         os.environ['WEB_TOOL_PORT'] = str(port)  # Backwards compat, should be removed at some point
+
+    def update_manifest(self, type):
+        """
+        Update a tool's service manifest to indicate this type of webservice is being used
+
+        :param type 'start' or 'stop', to say if this is an update for a 'start' or 'stop' action
+        """
+        if type == 'start':
+            if 'web' not in self.tool.manifest or self.tool.manifest['web'] != self.type:
+                self.tool.manifest['web'] = self.type
+                self.tool.save_manifest()
+        elif type == 'stop':
+            if 'web' in self.tool.manifest:
+                del self.tool.manifest['web']
+                self.tool.save_manifest()
+        else:
+            # blow up!
+            raise Exception("type has to be 'start' or 'stop', got %s" % type)

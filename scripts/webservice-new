@@ -14,6 +14,8 @@ argparser.add_argument('type', help='Type of webservice to start',
                        choices=webservice_classes.keys(), nargs='?')
 argparser.add_argument('action', help='Action to perform',
                        choices=['start', 'stop', 'restart'])
+argparser.add_argument('extra_args', help='Extra arguments to be parsed by the chosen webservicetype',
+                       nargs='?')
 # Backwards compat with older webservice. Allows for webservice --release precise lighttpd <action>
 argparser.add_argument('--release',
                        help=argparse.SUPPRESS,
@@ -51,7 +53,7 @@ if __name__ == '__main__':
     if args.type is None:
         args.type = tool.manifest.get('web', 'lighttpd')
 
-    webservice = webservice_classes[args.type](tool)
+    webservice = webservice_classes[args.type](tool, args.extra_args)
 
     job = WebServiceJob(webservice)
 
@@ -61,11 +63,7 @@ if __name__ == '__main__':
             sys.exit()
 
         start(job, 'Starting webservice')
-
-        # Write appropriate 'web' value to service.manifest
-        if 'web' not in tool.manifest or tool.manifest['web'] != args.type:
-            tool.manifest['web'] = args.type
-            tool.save_manifest()
+        webservice.update_manifest('start')
 
     elif args.action == 'stop':
         if not job.is_running():
@@ -73,11 +71,7 @@ if __name__ == '__main__':
             sys.exit()
 
         stop(job, 'Stopping webservice')
-
-        # If there is a 'web' entry, get rid of it
-        if 'web' in tool.manifest:
-            del tool.manifest['web']
-            tool.save_manifest()
+        webservice.update_manifest('stop')
 
     elif args.action == 'restart':
         if not job.is_running():
