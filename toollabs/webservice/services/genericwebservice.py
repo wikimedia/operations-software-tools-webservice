@@ -26,7 +26,9 @@ class GenericWebService(WebService):
                     self.tool.manifest['webservice-command'] != self.extra_args:
                 self.tool.manifest['webservice-command'] = self.extra_args
                 self.tool.save_manifest()
-        else:
+        elif type == 'stop':
             if 'webservice-command' in self.tool.manifest:
                 del self.tool.manifest['webservice-command']
                 self.tool.save_manifest()
+        else:
+            raise Exception("type has to be 'start' or 'stop', got %s" % type)
