@@ -1,11 +1,11 @@
-Source: tools-webservice
+Source: toollabs-webservice
 Maintainer: Yuvi Panda <yuvipanda@gmail.com>
 Section: python
 Priority: optional
 Build-Depends: python-setuptools, python-all, debhelper (>= 9)
 Standards-Version: 3.9.5
 
-Package: tools-webservice
+Package: toollabs-webservice
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}
 Description: Infrastructure for running webservices on tools.wmflabs.org

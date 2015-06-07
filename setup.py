@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='tools-webservice',
+    name='toollabs-webservice',
     version='0.1',
     author='Yuvi Panda',
     author_email='yuvipanda@gmail.com',
