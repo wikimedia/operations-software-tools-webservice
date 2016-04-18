@@ -6,6 +6,7 @@ import errno
 
 class Tool(object):
     PREFIX = 'tools.'
+    MANIFEST_VERSION = 2
 
     class InvalidToolException(Exception):
         pass
@@ -51,6 +52,9 @@ class Tool(object):
         tilde_file_path = self.get_homedir_subpath('service.manifest~')
         tilde_file_fd = os.open(tilde_file_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
         tilde_file = os.fdopen(tilde_file_fd, 'w')
+        # Set version if there is none!
+        if 'version' not in self.manifest:
+            self.manifest['version'] = Tool.MANIFEST_VERSION
         try:
             tilde_file.write("# This file is used by toollabs infrastructure.\n"
                              "# Please do not edit manually at this time.\n")
