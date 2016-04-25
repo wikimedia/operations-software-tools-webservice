@@ -9,6 +9,7 @@ setup(
     scripts=[
         'scripts/webservice-runner',
         'scripts/webservice-new',
+        'scripts/deprecated-tomcat-starter',
     ],
     description='Infrastructure for running webservices on tools.wmflabs.org',
     install_requires=[
