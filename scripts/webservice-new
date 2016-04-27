@@ -45,9 +45,10 @@ if __name__ == '__main__':
                 args.type = 'lighttpd-precise'
                 print("--release=precise is deprecated. Use %s lighttpd-precise <action> instead" % sys.argv[0])
             elif args.release == 'trusty':
-                print("--release=trusty is deprecated. Use %s lighttpd <action> instead " % sys.argv[0])
+                print("--release=trusty is deprecated. Use %s %s <action> instead " % sys.argv[0], args.type)
         else:
-            raise SystemExit('Specifying --release only supported for lighttpd server type')
+            print("--release is deprecated and has no effect, using trusty...")
+            args.release = 'trusty'
 
     tool = Tool.from_currentuser()
     if args.type is None:
