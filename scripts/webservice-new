@@ -13,7 +13,7 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument('type', help='Type of webservice to start',
                        choices=webservice_classes.keys(), nargs='?')
 argparser.add_argument('action', help='Action to perform',
-                       choices=['start', 'stop', 'restart'])
+                       choices=['start', 'stop', 'status', 'restart'])
 argparser.add_argument('extra_args', help='Extra arguments to be parsed by the chosen webservicetype',
                        nargs='?')
 # Backwards compat with older webservice. Allows for webservice --release precise lighttpd <action>
@@ -80,5 +80,9 @@ if __name__ == '__main__':
         else:
             stop(job, 'Restarting webservice')
             start(job, '')
-
+    elif args.action == 'status':
+        if job.is_running():
+            print('Your webservice is running', end='')
+        else:
+            print('Your webservice is not running', end='')
     print()  # End program with newline, don't output newline anywhere else :)
