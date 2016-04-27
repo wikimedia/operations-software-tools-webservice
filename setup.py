@@ -8,7 +8,7 @@ setup(
     packages=find_packages(),
     scripts=[
         'scripts/webservice-runner',
-        'scripts/webservice-new',
+        'scripts/webservice',
         'scripts/deprecated-tomcat-starter',
     ],
     description='Infrastructure for running webservices on tools.wmflabs.org',

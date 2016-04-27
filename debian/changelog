@@ -1,3 +1,15 @@
+toollabs-webservice (0.4) trusty; urgency=low
+
+  * Add support for plain uwsgi webservices
+  * Add 'status' command support
+  * Allow --release for all types, print deprecation warning
+  * Fix check for testing if a job is running to report 'yes' even if it is
+    queued.
+  * Use IP rather than hostname to register service
+  * Rename webservice-new to webservice!
+
+ -- Yuvi Panda <yuvipanda@gmail.com>  Wed, 27 Apr 2016 11:30:00 +0530
+
 toollabs-webservice (0.3) trusty; urgency=low
 
   * Add support for tomcat webservice
