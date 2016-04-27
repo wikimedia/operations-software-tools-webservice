@@ -7,6 +7,7 @@ from toollabs.webservice import WebServiceJob, WebService
 from toollabs.webservice.services import webservice_classes
 from toollabs.common.utils import wait_for
 from toollabs.common import Tool
+from toollabs.common.el import log_command_invocation
 
 
 argparser = argparse.ArgumentParser()
@@ -36,6 +37,7 @@ def stop(job, message):
 
 
 if __name__ == '__main__':
+    log_command_invocation('webservice', ' '.join(sys.argv))
     args = argparser.parse_args()
 
     # Backwards compatibility hack to support 'webservice --release precise lighttpd start' invocations
