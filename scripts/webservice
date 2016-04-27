@@ -82,7 +82,7 @@ if __name__ == '__main__':
         else:
             stop(job, 'Restarting webservice')
             start(job, '')
-            tool.save_manifest()
+        tool.save_manifest()
     elif args.action == 'status':
         if job.is_running():
             print('Your webservice is running', end='')

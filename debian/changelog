@@ -1,3 +1,9 @@
+toollabs-webservice (0.6) trusty; urgency=low
+
+  * Write service.manifest on restarts all the time
+
+ -- Yuvi Panda <yuvipanda@gmail.com>  Wed, 27 Apr 2016 23:30:00 +0530
+
 toollabs-webservice (0.5) trusty; urgency=low
 
   * Log command invocations to EL
