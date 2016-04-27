@@ -60,6 +60,7 @@ class WebServiceJob(object):
 
     def is_running(self):
         job = self._get_job_xml()
-        state = job.findtext('.//state').lower() if job is not None else None
-        # Return true if there is a 'r' for running in state
-        return job is not None and 'r' in state
+        # Returns true even if the job is queued, since that is the only
+        # sane thing to do with GridEngine.
+        # FIXME: Get rid of GridEngine
+        return job is not None
