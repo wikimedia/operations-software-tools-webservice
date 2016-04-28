@@ -61,7 +61,7 @@ class WebService(object):
         """
         # Populate environment with all the useful things!
         os.environ['PORT'] = str(port)
-        os.environ['WEB_TOOL_PORT'] = str(port)  # Backwards compat, should be removed at some point
+        os.environ['TOOL_WEB_PORT'] = str(port)  # Backwards compat, should be removed at some point
 
     def update_manifest(self, type):
         """
