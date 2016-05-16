@@ -40,6 +40,10 @@ if __name__ == '__main__':
     log_command_invocation('webservice', ' '.join(sys.argv))
     args = argparser.parse_args()
 
+    tool = Tool.from_currentuser()
+    if args.type is None:
+        args.type = tool.manifest.get('web', 'lighttpd')
+
     # Backwards compatibility hack to support 'webservice --release precise lighttpd start' invocations
     if args.release is not None:
         if args.type == 'lighttpd':
@@ -51,10 +55,6 @@ if __name__ == '__main__':
         else:
             print("--release is deprecated and has no effect, using trusty...")
             args.release = 'trusty'
-
-    tool = Tool.from_currentuser()
-    if args.type is None:
-        args.type = tool.manifest.get('web', 'lighttpd')
 
     webservice = webservice_classes[args.type](tool, args.extra_args)
 
