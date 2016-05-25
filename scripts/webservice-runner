@@ -9,13 +9,19 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument('--type', help='Type of webservice to start',
                        choices=webservice_classes.keys())
 argparser.add_argument('--extra_args', help='Extra arguments optionally passed to the chosen webservice type')
+argparser.add_argument('--port', help='Port to bind the webservice to', type=int, default=0)
+argparser.add_argument('--register-proxy', action='store_true', help='Register webservice with proxy')
 args = argparser.parse_args()
 
 
 tool = Tool.from_currentuser()
-port = proxy.get_open_port()
+if args.port != 0:
+    port = args.port
+else:
+    port = proxy.get_open_port()
 
 webservice = webservice_classes[args.type](tool, args.extra_args)
 
-proxy.register(port)
+if args.register_proxy:
+    proxy.register(port)
 webservice.run(port)

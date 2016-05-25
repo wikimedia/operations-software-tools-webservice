@@ -39,7 +39,7 @@ class WebServiceJob(object):
 
     def request_start(self):
         self.webservice.check()
-        cmd = '/usr/bin/webservice-runner --type %s' % self.webservice.type
+        cmd = '/usr/bin/webservice-runner --register-proxy --type %s' % self.webservice.type
         if self.webservice.extra_args:
             cmd += " --extra_args '%s'" % self.webservice.extra_args
         command = ['qsub',
