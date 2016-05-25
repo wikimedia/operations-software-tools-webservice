@@ -26,7 +26,7 @@ server.errorlog = "{home}/error.log"
 server.breakagelog = "{home}/error.log"
 server.follow-symlink = "enable"
 server.max-connections = 300
-server.stat-cache-engine = "fam"
+server.stat-cache-engine = "simple"
 server.event-handler = "linux-sysepoll"
 ssl.engine = "disable"
 
