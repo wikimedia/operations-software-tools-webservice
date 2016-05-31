@@ -2,16 +2,13 @@ import subprocess
 import os
 import re
 import xml.etree.ElementTree as ET
+from toollabs.webservice.backends import Backend
 
 
-class WebServiceJob(object):
+class GridEngineBackend(Backend):
     """
     A gridengine job that starts / stops a HTTP serving process (webservice)
     """
-
-    def __init__(self, webservice):
-        self.webservice = webservice
-
     @property
     def name(self):
         return '%s-%s' % (self.webservice.type, self.webservice.tool.name)
@@ -58,9 +55,12 @@ class WebServiceJob(object):
         command = ['/usr/bin/qdel', self.name]
         subprocess.check_call(command, stdout=open(os.devnull, 'wb'))
 
-    def is_running(self):
+    def get_state(self):
         job = self._get_job_xml()
-        # Returns true even if the job is queued, since that is the only
-        # sane thing to do with GridEngine.
-        # FIXME: Get rid of GridEngine
-        return job is not None
+        if job is not None:
+            state = job.findtext('.//state').lower()
+            if 'r' in state:
+                return Backend.STATE_RUNNING
+            else:
+                return Backend.STATE_PENDING
+        return Backend.STATE_STOPPED

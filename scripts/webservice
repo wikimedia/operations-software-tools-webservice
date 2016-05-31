@@ -3,7 +3,8 @@ from __future__ import print_function
 import argparse
 import sys
 
-from toollabs.webservice import WebServiceJob, WebService
+from toollabs.webservice import WebService
+from toollabs.webservice.backends import Backend, GridEngineBackend
 from toollabs.webservice.services import webservice_classes
 from toollabs.common.utils import wait_for
 from toollabs.common import Tool
@@ -13,6 +14,9 @@ from toollabs.common.el import log_command_invocation
 argparser = argparse.ArgumentParser()
 argparser.add_argument('type', help='Type of webservice to start',
                        choices=webservice_classes.keys(), nargs='?')
+argparser.add_argument('--backend', help='Which cluster backend to use run the webservice',
+                       choices=['gridengine'],
+                       default='gridengine')
 argparser.add_argument('action', help='Action to perform',
                        choices=['start', 'stop', 'status', 'restart'])
 argparser.add_argument('extra_args', help='Extra arguments to be parsed by the chosen webservicetype',
@@ -28,12 +32,13 @@ def start(job, message):
         job.request_start()
     except WebService.InvalidWebServiceException as e:
         raise SystemExit(e.message)
-    wait_for(lambda: job.is_running(), message)
+    # FIXME: Treat pending state differently.
+    wait_for(lambda: job.get_state() != Backend.STATE_RUNNING, message)
 
 
 def stop(job, message):
     job.request_stop()
-    wait_for(lambda: not job.is_running(), message)
+    wait_for(lambda: not job.get_state() == Backend.STATE_STOPPED, message)
 
 
 if __name__ == '__main__':
@@ -58,10 +63,10 @@ if __name__ == '__main__':
 
     webservice = webservice_classes[args.type](tool, args.extra_args)
 
-    job = WebServiceJob(webservice)
+    job = GridEngineBackend(webservice)
 
     if args.action == 'start':
-        if job.is_running():
+        if job.get_state() != Backend.STATE_STOPPED:
             print('Your job is already running')
             sys.exit()
 
@@ -69,7 +74,7 @@ if __name__ == '__main__':
         webservice.update_manifest('start')
 
     elif args.action == 'stop':
-        if not job.is_running():
+        if job.get_state() == Backend.STATE_STOPPED:
             print('Your webservice is not running')
             sys.exit()
 
@@ -77,14 +82,14 @@ if __name__ == '__main__':
         webservice.update_manifest('stop')
 
     elif args.action == 'restart':
-        if not job.is_running():
+        if job.get_state() != Backend.STATE_STOPPED:
             start(job, 'Your job is not running, starting')
         else:
             stop(job, 'Restarting webservice')
             start(job, '')
         tool.save_manifest()
     elif args.action == 'status':
-        if job.is_running():
+        if job.get_state() != Backend.STATE_STOPPED:
             print('Your webservice is running', end='')
         else:
             print('Your webservice is not running', end='')
