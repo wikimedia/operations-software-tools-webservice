@@ -5,6 +5,7 @@ setup(
     version='0.1',
     author='Yuvi Panda',
     author_email='yuvipanda@gmail.com',
+    license='Apache2',
     packages=find_packages(),
     scripts=[
         'scripts/webservice-runner',
