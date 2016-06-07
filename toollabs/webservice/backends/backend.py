@@ -10,8 +10,10 @@ class Backend(object):
     STATE_RUNNING = 1
     STATE_PENDING = 2
 
-    def __init__(self, webservice):
-        self.webservice = webservice
+    def __init__(self, tool, type, extra_args=None):
+        self.tool = tool
+        self.type = type
+        self.extra_args = extra_args
 
     @abstractmethod
     def get_state(self):

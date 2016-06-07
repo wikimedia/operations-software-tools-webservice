@@ -4,8 +4,7 @@ import argparse
 import sys
 
 from toollabs.webservice import WebService
-from toollabs.webservice.backends import Backend, GridEngineBackend
-from toollabs.webservice.services import webservice_classes
+from toollabs.webservice.backends import Backend, GridEngineBackend, KubernetesBackend
 from toollabs.common.utils import wait_for
 from toollabs.common import Tool
 from toollabs.common.el import log_command_invocation
@@ -13,10 +12,9 @@ from toollabs.common.el import log_command_invocation
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument('type', help='Type of webservice to start',
-                       choices=webservice_classes.keys(), nargs='?')
+                       nargs='?')
 argparser.add_argument('--backend', help='Which cluster backend to use run the webservice',
-                       choices=['gridengine'],
-                       default='gridengine')
+                       choices=['gridengine', 'kubernetes'])
 argparser.add_argument('action', help='Action to perform',
                        choices=['start', 'stop', 'status', 'restart'])
 argparser.add_argument('extra_args', help='Extra arguments to be parsed by the chosen webservicetype',
@@ -40,6 +38,23 @@ def stop(job, message):
     job.request_stop()
     wait_for(lambda: not job.get_state() == Backend.STATE_STOPPED, message)
 
+def update_manifest(job, action):
+    """
+    Update a tool's service manifest to indicate this type of webservice is being used
+
+    :param action 'start' or 'stop', to say if this is an update for a 'start' or 'stop' action
+    """
+    if action == 'start':
+        if 'web' not in job.tool.manifest or job.tool.manifest['web'] != job.type:
+            job.tool.manifest['web'] = job.type
+            job.tool.save_manifest()
+    elif action == 'stop':
+        if 'web' in job.tool.manifest:
+            del job.tool.manifest['web']
+            job.tool.save_manifest()
+    else:
+        # blow up!
+        raise Exception("action has to be 'start' or 'stop', got %s" % action)
 
 if __name__ == '__main__':
     log_command_invocation('webservice', ' '.join(sys.argv))
@@ -49,21 +64,45 @@ if __name__ == '__main__':
     if args.type is None:
         args.type = tool.manifest.get('web', 'lighttpd')
 
-    # Backwards compatibility hack to support 'webservice --release precise lighttpd start' invocations
-    if args.release is not None:
-        if args.type == 'lighttpd':
-            if args.release == 'precise':
-                args.type = 'lighttpd-precise'
-                print("--release=precise is deprecated. Use %s lighttpd-precise <action> instead" % sys.argv[0])
-            elif args.release == 'trusty':
-                print("--release=trusty is deprecated. Use %s %s <action> instead " % sys.argv[0], args.type)
-        else:
-            print("--release is deprecated and has no effect, using trusty...")
-            args.release = 'trusty'
+    # We use this logic rather than setting defaults in argparse.
+    # This allows us to default to spec in service.manifest but override
+    # by specifying --backend option on the CLI
+    if args.backend is None:
+        backend = tool.manifest.get('backend', 'gridengine')
+    else:
+        backend = args.backend
 
-    webservice = webservice_classes[args.type](tool, args.extra_args)
+    if backend == 'gridengine':
+        # Backwards compatibility hack to support 'webservice --release precise lighttpd start' invocations
+        if args.release is not None:
+            if args.type == 'lighttpd':
+                if args.release == 'precise':
+                    args.type = 'lighttpd-precise'
+                    print("--release=precise is deprecated. Use %s lighttpd-precise <action> instead" % sys.argv[0])
+                elif args.release == 'trusty':
+                    print("--release=trusty is deprecated. Use %s %s <action> instead " % sys.argv[0], args.type)
+            else:
+                print("--release is deprecated and has no effect, using trusty...")
+                args.release = 'trusty'
+        acceptable_types = GridEngineBackend.CONFIG.keys()
+    elif backend == 'kubernetes':
+        if args.release is not None:
+            print("--release is not implemented for --backend=kubernetes")
+            print("Please just pick an appropriate type instead")
+        if args.type is None:
+            args.type = tool.manifest.get('web', 'php5.6')
+        acceptable_types = KubernetesBackend.CONFIG.keys()
 
-    job = GridEngineBackend(webservice)
+    
+    if args.type not in acceptable_types:
+        print("type must be one of ", ','.join(acceptable_types))
+
+    if backend == 'gridengine':
+        job = GridEngineBackend(tool, args.type, args.extra_args)
+    else:
+        job = KubernetesBackend(tool, args.type, args.extra_args)
+
+    tool.manifest['backend'] = backend
 
     if args.action == 'start':
         if job.get_state() != Backend.STATE_STOPPED:
@@ -71,7 +110,7 @@ if __name__ == '__main__':
             sys.exit()
 
         start(job, 'Starting webservice')
-        webservice.update_manifest('start')
+        update_manifest(job, 'start')
 
     elif args.action == 'stop':
         if job.get_state() == Backend.STATE_STOPPED:
@@ -79,7 +118,7 @@ if __name__ == '__main__':
             sys.exit()
 
         stop(job, 'Stopping webservice')
-        webservice.update_manifest('stop')
+        update_manifest(job, 'stop')
 
     elif args.action == 'restart':
         if job.get_state() != Backend.STATE_STOPPED:

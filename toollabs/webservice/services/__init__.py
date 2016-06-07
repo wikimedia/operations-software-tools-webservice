@@ -6,8 +6,9 @@ from toollabs.webservice.services.lighttpdwebservice import LighttpdPlainWebServ
 from toollabs.webservice.services.tomcatservice import TomcatWebService
 from toollabs.webservice.services.uwsgiwebservice import UwsgiWebService
 
-
 webservice_classes = {cls.NAME: cls
                       for cls in [JSWebService, PythonWebService, GenericWebService, TomcatWebService,
                                   LighttpdWebService, LighttpdPreciseWebService, LighttpdPlainWebService,
                                   UwsgiWebService]}
+
+__all__ = webservice_classes.values()
