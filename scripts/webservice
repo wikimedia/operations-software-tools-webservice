@@ -61,8 +61,7 @@ if __name__ == '__main__':
     args = argparser.parse_args()
 
     tool = Tool.from_currentuser()
-    if args.type is None:
-        args.type = tool.manifest.get('web', 'lighttpd')
+
 
     # We use this logic rather than setting defaults in argparse.
     # This allows us to default to spec in service.manifest but override
@@ -84,6 +83,8 @@ if __name__ == '__main__':
             else:
                 print("--release is deprecated and has no effect, using trusty...")
                 args.release = 'trusty'
+        if args.type is None:
+            args.type = tool.manifest.get('web', 'lighttpd')
         acceptable_types = GridEngineBackend.CONFIG.keys()
     elif backend == 'kubernetes':
         if args.release is not None:
