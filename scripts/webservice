@@ -89,6 +89,7 @@ if __name__ == '__main__':
         if args.release is not None:
             print("--release is not implemented for --backend=kubernetes")
             print("Please just pick an appropriate type instead")
+            sys.exit(1)
         if args.type is None:
             args.type = tool.manifest.get('web', 'php5.6')
         acceptable_types = KubernetesBackend.CONFIG.keys()
@@ -96,6 +97,7 @@ if __name__ == '__main__':
     
     if args.type not in acceptable_types:
         print("type must be one of ", ','.join(acceptable_types))
+        sys.exit(1)
 
     if backend == 'gridengine':
         job = GridEngineBackend(tool, args.type, args.extra_args)
