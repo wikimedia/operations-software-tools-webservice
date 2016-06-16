@@ -1,3 +1,12 @@
+toollabs-webservice (0.10) trusty; urgency=low
+
+  * Introduce concept of backends
+  * Introduce a kubernetes backends
+  * Refactor the gridengine backend so it continues to work with
+    new backend architecture
+
+ -- Yuvi Panda <yuvipanda@gmail.com>  Thu, 16 Jun 2016 10:30:00 -0800
+
 toollabs-webservice (0.9) trusty; urgency=low
 
   * Disable fam for lighttpd
