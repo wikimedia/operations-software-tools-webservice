@@ -3,6 +3,7 @@ Maintainer: Yuvi Panda <yuvipanda@gmail.com>
 Section: python
 Priority: optional
 Build-Depends: python-setuptools, python-all, debhelper (>= 9)
+Depends: python-jsonpatch, python-six, python-requests, python-yaml
 Standards-Version: 3.9.5
 
 Package: toollabs-webservice
