@@ -1,3 +1,9 @@
+toollabs-webservice (0.11) trusty; urgency=low
+
+  * Fix terrible typo with restart state checking
+
+ -- Yuvi Panda <yuvipanda@gmail.com>  Thu, 16 Jun 2016 22:30:00 -0800
+
 toollabs-webservice (0.10) trusty; urgency=low
 
   * Introduce concept of backends
