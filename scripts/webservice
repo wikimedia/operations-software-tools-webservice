@@ -51,6 +51,7 @@ def update_manifest(job, action):
     elif action == 'stop':
         if 'web' in job.tool.manifest:
             del job.tool.manifest['web']
+            del job.tool.manifest['backend']
             job.tool.save_manifest()
     else:
         # blow up!
