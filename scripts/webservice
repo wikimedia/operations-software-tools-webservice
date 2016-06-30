@@ -72,7 +72,7 @@ if __name__ == '__main__':
     else:
         if 'backend' in tool.manifest and tool.manifest['backend'] != args.backend:
             print('Looks like you already have another webservice running, with a %s backend' % tool.manifest['backend'])
-            print('You should stop that by issuing:')
+            print('You should stop that webservice by issuing:')
             print('    webservice --backend=%s stop' % tool.manifest['backend'])
             print('And then start it again with backend %s by issuing:' % args.backend)
             print('    webservice --backend=%s start' % args.backend)
