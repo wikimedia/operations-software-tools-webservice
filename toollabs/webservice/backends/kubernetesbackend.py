@@ -10,7 +10,22 @@ class KubernetesBackend(Backend):
     """
 
     CONFIG = {
-        'php5.6':  {'cls': LighttpdWebService, 'image': 'toollabs-php-web'}
+        'php5.6':  {
+            'cls': LighttpdWebService,
+            'image': 'toollabs-php-web',
+            'resources': {
+                'limits': {
+                    # Pods can't use more than these resource limits
+                    'memory': '2Gi',  # Pods will be killed if they go over this
+                    'cpu': '2'  # Pods can still burst to more than this
+                },
+                'requests': {
+                    # Pods are guaranteed at least this many resources
+                    'memory': '256Mi',
+                    'cpu': '0.125'
+                }
+            }
+        }
     }
 
     def __init__(self, tool, type, extra_args=None):
@@ -19,6 +34,7 @@ class KubernetesBackend(Backend):
         self.container_image = 'docker-registry.tools.wmflabs.org/{image}:latest'.format(
             image=KubernetesBackend.CONFIG[type]['image']
         )
+        self.container_resources = KubernetesBackend.CONFIG[type]['resources']
         self.webservice = KubernetesBackend.CONFIG[type]['cls'](tool, extra_args)
 
         self.api = pykube.HTTPClient(
@@ -136,6 +152,7 @@ class KubernetesBackend(Backend):
                                     {"name": key, "mountPath": value}
                                     for key, value in hostMounts.items()
                                 ],
+                                "resources": self.container_resources
                             }
                         ],
                     }

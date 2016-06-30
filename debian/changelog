@@ -1,3 +1,9 @@
+toollabs-webservice (0.13) trusty; urgency=low
+
+  * Add memory & CPU limits to kubernetes backend
+
+ -- Yuvi Panda <yuvipanda@gmail.com>  Thu, 30 Jun 2016 20:50:00 +0100
+
 toollabs-webservice (0.12) trusty; urgency=low
 
   * Disallow crossing of the streams(backends)
