@@ -1,3 +1,9 @@
+toollabs-webservice (0.12) trusty; urgency=low
+
+  * Disallow crossing of the streams(backends)
+
+ -- Yuvi Panda <yuvipanda@gmail.com>  Thu, 30 Jun 2016 18:30:00 +0100
+
 toollabs-webservice (0.11) trusty; urgency=low
 
   * Fix terrible typo with restart state checking
