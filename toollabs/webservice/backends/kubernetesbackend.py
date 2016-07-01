@@ -97,9 +97,8 @@ class KubernetesBackend(Backend):
         Return the full spec of the deployment object for this webservice
         """
         # All the paths we want to mount from host nodes onto container
-        homedir = '/data/project/{toolname}/'.format(toolname=self.tool.name)
         hostMounts = {
-            'home': homedir,
+            'home': '/data/project/',
             'scratch': '/data/scratch/',
             'dumps': '/public/dumps/'
         }
@@ -111,6 +110,8 @@ class KubernetesBackend(Backend):
             "--port",
             "8000"
         ]
+
+        homedir = '/data/project/{toolname}/'.format(toolname=self.tool.name)
 
         if self.extra_args:
             cmd += " --extra-args '%s'" % self.extra_args
