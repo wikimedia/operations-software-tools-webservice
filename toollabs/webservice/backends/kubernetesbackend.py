@@ -97,8 +97,9 @@ class KubernetesBackend(Backend):
         Return the full spec of the deployment object for this webservice
         """
         # All the paths we want to mount from host nodes onto container
+        homedir = '/data/project/{toolname}/'.format(toolname=self.tool.name)
         hostMounts = {
-            'home': '/data/project/{toolname}/'.format(toolname=self.tool.name),
+            'home': homedir,
             'scratch': '/data/scratch/',
             'dumps': '/public/dumps/'
         }
@@ -141,6 +142,11 @@ class KubernetesBackend(Backend):
                                 "name": "webservice",
                                 "image": self.container_image,
                                 "command": cmd,
+                                "workingDir": homedir,
+                                "env": [
+                                    # FIXME: This should be set by NSS maybe?!
+                                    {"name": "HOME", "value": homedir}
+                                ],
                                 "ports": [
                                     {
                                         "name": "http",
