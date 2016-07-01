@@ -1,3 +1,11 @@
+toollabs-webservice (0.14) trusty; urgency=low
+
+  * Mount all of /data/project rather than just the tool's homedir
+  * Set HOME env variable explicitly
+  * Set CWD explicitly
+
+ -- Yuvi Panda <yuvipanda@gmail.com>  Thu, 30 Jun 2016 20:50:00 +0100
+
 toollabs-webservice (0.13) trusty; urgency=low
 
   * Add memory & CPU limits to kubernetes backend
