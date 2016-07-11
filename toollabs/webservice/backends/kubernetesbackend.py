@@ -277,7 +277,7 @@ class KubernetesBackend(Backend):
             time.sleep(1)
         else:
             print("Pod creation failed, please report this as a bug!")
-            sys.exit()
+            sys.exit(1)
         kubectl = subprocess.Popen([
             '/usr/local/bin/kubectl',
             'attach',

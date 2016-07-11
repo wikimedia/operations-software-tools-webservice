@@ -38,6 +38,7 @@ def stop(job, message):
     job.request_stop()
     wait_for(lambda: not job.get_state() == Backend.STATE_STOPPED, message)
 
+
 def update_manifest(job, action):
     """
     Update a tool's service manifest to indicate this type of webservice is being used
@@ -76,7 +77,7 @@ if __name__ == '__main__':
             print('    webservice --backend=%s stop' % tool.manifest['backend'])
             print('And then start it again with backend %s by issuing:' % args.backend)
             print('    webservice --backend=%s start' % args.backend)
-            sys.exit(-1)
+            sys.exit(1)
         backend = args.backend
 
     if backend == 'gridengine':
@@ -103,7 +104,6 @@ if __name__ == '__main__':
             args.type = tool.manifest.get('web', 'php5.6')
         acceptable_types = KubernetesBackend.CONFIG.keys()
 
-    
     if args.type not in acceptable_types:
         print("type must be one of ", ','.join(acceptable_types))
         sys.exit(1)
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     if args.action == 'start':
         if job.get_state() != Backend.STATE_STOPPED:
             print('Your job is already running')
-            sys.exit()
+            sys.exit(1)
 
         start(job, 'Starting webservice')
         update_manifest(job, 'start')
@@ -146,6 +146,6 @@ if __name__ == '__main__':
     elif args.action == 'shell':
         if backend != 'kubernetes':
             print('webservice shell only supported for kubernetes backend')
-            sys.exit()
+            sys.exit(1)
         job.shell()
     print()  # End program with newline, don't output newline anywhere else :)
