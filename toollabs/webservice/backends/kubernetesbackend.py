@@ -1,7 +1,7 @@
 import os
 import pykube
 from toollabs.webservice.backends import Backend
-from toollabs.webservice.services import LighttpdWebService
+from toollabs.webservice.services import LighttpdWebService, PythonWebService
 
 
 class KubernetesBackend(Backend):
@@ -24,6 +24,22 @@ class KubernetesBackend(Backend):
                     'memory': '256Mi',
                     'cpu': '0.125'
                 }
+            }
+        },
+        'python2': {
+            'cls': PythonWebService,
+            'image': 'toollabs-python2-web',
+            'resources': {
+                 'limits': {
+                    # Pods can't use more than these resource limits
+                    'memory': '2Gi',  # Pods will be killed if they go over this
+                    'cpu': '2'  # Pods can still burst to more than this
+                 },
+                 'requests': {
+                    # Pods are guaranteed at least this many resources
+                    'memory': '256Mi',
+                    'cpu': '0.125'
+                 }
             }
         }
     }
