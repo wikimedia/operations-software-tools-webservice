@@ -1,5 +1,8 @@
 import os
+import subprocess
 import pykube
+import time
+import sys
 from toollabs.webservice.backends import Backend
 from toollabs.webservice.services import LighttpdWebService, PythonWebService
 
@@ -13,6 +16,7 @@ class KubernetesBackend(Backend):
         'php5.6':  {
             'cls': LighttpdWebService,
             'image': 'toollabs-php-web',
+            'shell-image': 'toollabs-php-base',
             'resources': {
                 'limits': {
                     # Pods can't use more than these resource limits
@@ -29,6 +33,7 @@ class KubernetesBackend(Backend):
         'python2': {
             'cls': PythonWebService,
             'image': 'toollabs-python2-web',
+            'shell-image': 'toollabs-python2-base',
             'resources': {
                  'limits': {
                     # Pods can't use more than these resource limits
@@ -49,6 +54,9 @@ class KubernetesBackend(Backend):
 
         self.container_image = 'docker-registry.tools.wmflabs.org/{image}:latest'.format(
             image=KubernetesBackend.CONFIG[type]['image']
+        )
+        self.shell_image = 'docker-registry.tools.wmflabs.org/{image}:latest'.format(
+            image=KubernetesBackend.CONFIG[type]['shell-image']
         )
         self.container_resources = KubernetesBackend.CONFIG[type]['resources']
         self.webservice = KubernetesBackend.CONFIG[type]['cls'](tool, extra_args)
@@ -112,13 +120,6 @@ class KubernetesBackend(Backend):
         """
         Return the full spec of the deployment object for this webservice
         """
-        # All the paths we want to mount from host nodes onto container
-        hostMounts = {
-            'home': '/data/project/',
-            'scratch': '/data/scratch/',
-            'dumps': '/public/dumps/'
-        }
-
         cmd = [
             "/usr/bin/webservice-runner",
             "--type",
@@ -127,10 +128,14 @@ class KubernetesBackend(Backend):
             "8000"
         ]
 
-        homedir = '/data/project/{toolname}/'.format(toolname=self.tool.name)
-
         if self.extra_args:
             cmd += " --extra-args '%s'" % self.extra_args
+
+        ports = [{
+            "name": "http",
+            "containerPort": 8000,
+            "protocol": "TCP"
+        }]
 
         return {
             "kind": "Deployment",
@@ -149,38 +154,50 @@ class KubernetesBackend(Backend):
                     "metadata": {
                         "labels": self.labels
                     },
-                    "spec": {
-                        "volumes": [
-                            {"name": key, "hostPath": {"path": value}}
-                            for key, value in hostMounts.items()
-                        ],
-                        "containers": [
-                            {
-                                "name": "webservice",
-                                "image": self.container_image,
-                                "command": cmd,
-                                "workingDir": homedir,
-                                "env": [
-                                    # FIXME: This should be set by NSS maybe?!
-                                    {"name": "HOME", "value": homedir}
-                                ],
-                                "ports": [
-                                    {
-                                        "name": "http",
-                                        "containerPort": 8000,
-                                        "protocol": "TCP"
-                                    }
-                                ],
-                                "volumeMounts": [
-                                    {"name": key, "mountPath": value}
-                                    for key, value in hostMounts.items()
-                                ],
-                                "resources": self.container_resources
-                            }
-                        ],
-                    }
+                    "spec": self._get_container_spec(
+                        "webservice",
+                        self.container_image,
+                        cmd,
+                        self.container_resources,
+                        ports
+                    )
                 }
             }
+        }
+
+    def _get_container_spec(self, name, container_image, cmd, resources, ports=None, stdin=False, tty=False):
+        # All the paths we want to mount from host nodes onto container
+        hostMounts = {
+            'home': '/data/project/',
+            'scratch': '/data/scratch/',
+            'dumps': '/public/dumps/'
+        }
+
+        homedir = '/data/project/{toolname}/'.format(toolname=self.tool.name)
+
+        return {
+            "volumes": [
+                {"name": key, "hostPath": {"path": value}}
+                for key, value in hostMounts.items()
+            ],
+            "containers": [{
+                "name": name,
+                "image": container_image,
+                "command": cmd,
+                "workingDir": homedir,
+                "env": [
+                    # FIXME: This should be set by NSS maybe?!
+                    {"name": "HOME", "value": homedir}
+                ],
+                "ports": ports,
+                "volumeMounts": [
+                    {"name": key, "mountPath": value}
+                    for key, value in hostMounts.items()
+                ],
+                "resources": resources,
+                "tty": tty,
+                "stdin": stdin
+            }],
         }
 
     def request_start(self):
@@ -217,3 +234,63 @@ class KubernetesBackend(Backend):
             # FIXME: Check if pod is running as well
             return Backend.STATE_RUNNING
         return Backend.STATE_STOPPED
+
+    def shell(self):
+        labels = {
+            'tools.wmflabs.org/webservice-interactive': 'true',
+            'tools.wmflabs.org/webservice-interactive-version': '1',
+            'name': 'interactive'
+        }
+        label_selector = ','.join(
+            ['{k}={v}'.format(k=k, v=v) for k, v in labels.items()]
+        )
+
+        podSpec = {
+            'apiVersion': 'v1',
+            'kind': 'Pod',
+            'metadata': {
+                'namespace': self.tool.name,
+                'name': 'interactive',
+                'labels': labels,
+            },
+            'spec': self._get_container_spec(
+                'interactive',
+                self.shell_image,
+                ['/bin/bash', '-i', '-l'],
+                resources=None,
+                ports=None,
+                stdin=True,
+                tty=True
+            )
+        }
+        if self._find_obj(pykube.Pod, label_selector) is None:
+            pykube.Pod(self.api, podSpec).create()
+
+        # Wait 30s for pod to become ready
+        count = 0
+        while count < 30:
+            pod = self._find_obj(pykube.Pod, label_selector)
+            if pod is not None:
+                if pod.obj['status']['phase'] == 'Running':
+                    break
+            count += 1
+            time.sleep(1)
+        else:
+            print("Pod creation failed, please report this as a bug!")
+            sys.exit()
+        kubectl = subprocess.Popen([
+            '/usr/local/bin/kubectl',
+            'attach',
+            '--tty',
+            '--stdin',
+            'interactive'
+        ])
+
+        kubectl.wait()
+        # kubectl attach prints the following when done:
+        # Session ended, resume using 'kubectl attach interactive -c interactive -i -t' command when the pod is running
+        # This isn't true, since we actually kill the pod when done
+        print("Pod stopped. Session cannot be resumed.")
+
+        pod = self._find_obj(pykube.Pod, label_selector)
+        pykube.Pod(self.api, pod.obj).delete()

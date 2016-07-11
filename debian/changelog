@@ -1,3 +1,9 @@
+toollabs-webservice (0.16) trusty; urgency=low
+
+  * Add webservice shell command
+
+ -- Yuvi Panda <yuvipanda@gmail.com>  Mon, 11 Jul 2016 20:50:00 +0100
+
 toollabs-webservice (0.15) trusty; urgency=low
 
   * Add python2 webservice support
