@@ -1,3 +1,12 @@
+toollabs-webservice (0.17) trusty; urgency=low
+
+  * Refactors to cleanup code
+  * Make restarts/starts faster by fixing logic errors
+  * Add nodejs support
+  * Wait for pod to be running before declaring webservice running
+
+ -- Yuvi Panda <yuvipanda@gmail.com>  Tue, 12 Jul 2016 19:30:00 +0100
+
 toollabs-webservice (0.16) trusty; urgency=low
 
   * Add webservice shell command
