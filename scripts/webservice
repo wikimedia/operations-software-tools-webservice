@@ -31,12 +31,12 @@ def start(job, message):
     except WebService.InvalidWebServiceException as e:
         raise SystemExit(e.message)
     # FIXME: Treat pending state differently.
-    wait_for(lambda: job.get_state() != Backend.STATE_RUNNING, message)
+    wait_for(lambda: job.get_state() == Backend.STATE_RUNNING, message)
 
 
 def stop(job, message):
     job.request_stop()
-    wait_for(lambda: not job.get_state() == Backend.STATE_STOPPED, message)
+    wait_for(lambda: job.get_state() == Backend.STATE_STOPPED, message)
 
 
 def update_manifest(job, action):
