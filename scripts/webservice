@@ -64,14 +64,13 @@ if __name__ == '__main__':
 
     tool = Tool.from_currentuser()
 
-
     # We use this logic rather than setting defaults in argparse.
     # This allows us to default to spec in service.manifest but override
     # by specifying --backend option on the CLI
     if args.backend is None:
         backend = tool.manifest.get('backend', 'gridengine')
     else:
-        if 'backend' in tool.manifest and tool.manifest['backend'] != args.backend:
+        if 'backend' in tool.manifest and tool.manifest['backend'] != args.backend and args.action != 'shell':
             print('Looks like you already have another webservice running, with a %s backend' % tool.manifest['backend'])
             print('You should stop that webservice by issuing:')
             print('    webservice --backend=%s stop' % tool.manifest['backend'])
