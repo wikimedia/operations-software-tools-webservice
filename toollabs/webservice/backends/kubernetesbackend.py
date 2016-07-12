@@ -67,14 +67,23 @@ class KubernetesBackend(Backend):
             )
         )
         # Labels for all objects created by this webservice
-        self.labels = {
+        self.webservice_labels = {
             "tools.wmflabs.org/webservice": "true",
             "tools.wmflabs.org/webservice-version": "1",
             "name": self.tool.name
         }
         # FIXME: Protect against injection?
-        self.label_selector = ','.join(
-            ['{k}={v}'.format(k=k, v=v) for k, v in self.labels.items()]
+        self.webservice_label_selector = ','.join(
+            ['{k}={v}'.format(k=k, v=v) for k, v in self.webservice_labels.items()]
+        )
+
+        self.shell_labels = {
+            'tools.wmflabs.org/webservice-interactive': 'true',
+            'tools.wmflabs.org/webservice-interactive-version': '1',
+            'name': 'interactive'
+        }
+        self.shell_label_selector = ','.join(
+            ['{k}={v}'.format(k=k, v=v) for k, v in self.shell_labels.items()]
         )
 
     def _find_obj(self, kind, selector):
@@ -101,6 +110,18 @@ class KubernetesBackend(Backend):
         except pykube.exceptions.ObjectDoesNotExist:
             return None
 
+    def _wait_for_pod(self, label_selector, timeout=30):
+        """
+        Wait for a pod to become 'ready'
+        """
+        for i in range(timeout):
+            pod = self._find_obj(pykube.Pod, label_selector)
+            if pod is not None:
+                if pod.obj['status']['phase'] == 'Running':
+                    return True
+            time.sleep(1)
+        return False
+
     def _get_svc(self):
         """
         Return full spec for the webservice service
@@ -111,7 +132,7 @@ class KubernetesBackend(Backend):
             "metadata": {
                 "name": self.tool.name,
                 "namespace": self.tool.name,
-                "labels": self.labels
+                "labels": self.webservice_labels
             },
             "spec": {
                 "ports": [
@@ -155,16 +176,16 @@ class KubernetesBackend(Backend):
             "metadata": {
                 "name": self.tool.name,
                 "namespace": self.tool.name,
-                "labels": self.labels
+                "labels": self.webservice_labels
             },
             "spec": {
                 "replicas": 1,
                 "selector": {
-                    "matchLabels": self.labels
+                    "matchLabels": self.webservice_labels
                 },
                 "template": {
                     "metadata": {
-                        "labels": self.labels
+                        "labels": self.webservice_labels
                     },
                     "spec": self._get_container_spec(
                         "webservice",
@@ -175,6 +196,31 @@ class KubernetesBackend(Backend):
                     )
                 }
             }
+        }
+
+    def _get_shell_pod(self):
+        cmd = [
+            '/bin/bash',
+            '-i',
+            '--login'
+        ]
+        return {
+            'apiVersion': 'v1',
+            'kind': 'Pod',
+            'metadata': {
+                'namespace': self.tool.name,
+                'name': 'interactive',
+                'labels': self.shell_labels,
+            },
+            'spec': self._get_container_spec(
+                'interactive',
+                self.shell_image,
+                cmd,
+                resources=None,
+                ports=None,
+                stdin=True,
+                tty=True
+            )
         }
 
     def _get_container_spec(self, name, container_image, cmd, resources, ports=None, stdin=False, tty=False):
@@ -214,76 +260,38 @@ class KubernetesBackend(Backend):
 
     def request_start(self):
         self.webservice.check()
-        if self._find_obj(pykube.Deployment, self.label_selector) is None:
+        if self._find_obj(pykube.Deployment, self.webservice_label_selector) is None:
             pykube.Deployment(self.api, self._get_deployment()).create()
-        if self._find_obj(pykube.Service, self.label_selector) is None:
+        if self._find_obj(pykube.Service, self.webservice_label_selector) is None:
             pykube.Service(self.api, self._get_svc()).create()
 
     def request_stop(self):
-        self._delete_obj(pykube.Service, self.label_selector)
+        self._delete_obj(pykube.Service, self.webservice_label_selector)
         # No cascading delete support yet. So we delete all of the objects by hand
         # Can be simplified after https://github.com/kubernetes/kubernetes/pull/23656
-        self._delete_obj(pykube.Deployment, self.label_selector)
+        self._delete_obj(pykube.Deployment, self.webservice_label_selector)
         self._delete_obj(pykube.ReplicaSet, 'name={name}'.format(name=self.tool.name))
-        self._delete_obj(pykube.Pod, self.label_selector)
+        self._delete_obj(pykube.Pod, self.webservice_label_selector)
 
     def get_state(self):
-        svc = self._find_obj(pykube.Service, self.label_selector)
-        deployment = self._find_obj(pykube.Deployment, self.label_selector)
+        svc = self._find_obj(pykube.Service, self.webservice_label_selector)
+        deployment = self._find_obj(pykube.Deployment, self.webservice_label_selector)
         if svc is not None and deployment is not None:
-            pod = self._find_obj(pykube.Pod, self.label_selector)
+            pod = self._find_obj(pykube.Pod, self.webservice_label_selector)
             if pod is not None:
                 if pod.obj['status']['phase'] == 'Running':
                     return Backend.STATE_RUNNING
             return Backend.STATE_PENDING
         return Backend.STATE_STOPPED
 
-    def _wait_for_pod(self, label_selector, timeout=30):
-        """
-        Wait for a pod to become 'ready'
-        """
-        for i in range(timeout):
-            pod = self._find_obj(pykube.Pod, label_selector)
-            if pod is not None:
-                if pod.obj['status']['phase'] == 'Running':
-                    return True
-            time.sleep(1)
-        return False
-
     def shell(self):
-        labels = {
-            'tools.wmflabs.org/webservice-interactive': 'true',
-            'tools.wmflabs.org/webservice-interactive-version': '1',
-            'name': 'interactive'
-        }
-        label_selector = ','.join(
-            ['{k}={v}'.format(k=k, v=v) for k, v in labels.items()]
-        )
-
-        podSpec = {
-            'apiVersion': 'v1',
-            'kind': 'Pod',
-            'metadata': {
-                'namespace': self.tool.name,
-                'name': 'interactive',
-                'labels': labels,
-            },
-            'spec': self._get_container_spec(
-                'interactive',
-                self.shell_image,
-                ['/bin/bash', '-i', '-l'],
-                resources=None,
-                ports=None,
-                stdin=True,
-                tty=True
-            )
-        }
-        if self._find_obj(pykube.Pod, label_selector) is None:
+        podSpec = self._get_shell_pod()
+        if self._find_obj(pykube.Pod, self.shell_label_selector) is None:
             pykube.Pod(self.api, podSpec).create()
 
-        if not self._wait_for_pod(label_selector):
+        if not self._wait_for_pod(self.shell_label_selector):
             print("Pod is not ready in time")
-            self._delete_obj(pykube.Pod, label_selector)
+            self._delete_obj(pykube.Pod, self.shell_label_selector)
             sys.exit(1)
         kubectl = subprocess.Popen([
             '/usr/local/bin/kubectl',
@@ -299,4 +307,4 @@ class KubernetesBackend(Backend):
         # This isn't true, since we actually kill the pod when done
         print("Pod stopped. Session cannot be resumed.")
 
-        self._delete_obj(pykube.Pod, label_selector)
+        self._delete_obj(pykube.Pod, self.shell_label_selector)
