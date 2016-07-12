@@ -89,6 +89,18 @@ class KubernetesBackend(Backend):
         except pykube.exceptions.ObjectDoesNotExist:
             return None
 
+    def _delete_obj(self, kind, selector):
+        """
+        Delete object of kind matching selector if it exists
+        """
+        try:
+            kind.objects(self.api).filter(
+                namespace=self.tool.name,
+                selector=selector
+            ).get().delete()
+        except pykube.exceptions.ObjectDoesNotExist:
+            return None
+
     def _get_svc(self):
         """
         Return full spec for the webservice service
@@ -208,25 +220,12 @@ class KubernetesBackend(Backend):
             pykube.Service(self.api, self._get_svc()).create()
 
     def request_stop(self):
-        svc = self._find_obj(pykube.Service, self.label_selector)
-        if svc is not None:
-            pykube.Service(self.api, svc.obj).delete()
-
+        self._delete_obj(pykube.Service, self.label_selector)
         # No cascading delete support yet. So we delete all of the objects by hand
         # Can be simplified after https://github.com/kubernetes/kubernetes/pull/23656
-        dep = self._find_obj(pykube.Deployment, self.label_selector)
-        if dep is not None:
-            pykube.Deployment(self.api, dep.obj).delete()
-
-        rs = self._find_obj(
-            pykube.ReplicaSet, 'name={name}'.format(name=self.tool.name)
-        )
-        if rs is not None:
-            pykube.ReplicaSet(self.api, rs.obj).delete()
-
-        pod = self._find_obj(pykube.Pod, self.label_selector)
-        if pod is not None:
-            pykube.Pod(self.api, pod.obj).delete()
+        self._delete_obj(pykube.Deployment, self.label_selector)
+        self._delete_obj(pykube.ReplicaSet, 'name={name}'.format(name=self.tool.name))
+        self._delete_obj(pykube.Pod, self.label_selector)
 
     def get_state(self):
         if self._find_obj(pykube.Service, self.label_selector) is not None\
@@ -234,6 +233,18 @@ class KubernetesBackend(Backend):
             # FIXME: Check if pod is running as well
             return Backend.STATE_RUNNING
         return Backend.STATE_STOPPED
+
+    def _wait_for_pod(self, label_selector, timeout=30):
+        """
+        Wait for a pod to become 'ready'
+        """
+        for i in range(timeout):
+            pod = self._find_obj(pykube.Pod, label_selector)
+            if pod is not None:
+                if pod.obj['status']['phase'] == 'Running':
+                    return True
+            time.sleep(1)
+        return False
 
     def shell(self):
         labels = {
@@ -266,17 +277,9 @@ class KubernetesBackend(Backend):
         if self._find_obj(pykube.Pod, label_selector) is None:
             pykube.Pod(self.api, podSpec).create()
 
-        # Wait 30s for pod to become ready
-        count = 0
-        while count < 30:
-            pod = self._find_obj(pykube.Pod, label_selector)
-            if pod is not None:
-                if pod.obj['status']['phase'] == 'Running':
-                    break
-            count += 1
-            time.sleep(1)
-        else:
-            print("Pod creation failed, please report this as a bug!")
+        if not self._wait_for_pod(label_selector):
+            print("Pod is not ready in time")
+            self._delete_obj(pykube.Pod, label_selector)
             sys.exit(1)
         kubectl = subprocess.Popen([
             '/usr/local/bin/kubectl',
@@ -292,5 +295,4 @@ class KubernetesBackend(Backend):
         # This isn't true, since we actually kill the pod when done
         print("Pod stopped. Session cannot be resumed.")
 
-        pod = self._find_obj(pykube.Pod, label_selector)
-        pykube.Pod(self.api, pod.obj).delete()
+        self._delete_obj(pykube.Pod, label_selector)
