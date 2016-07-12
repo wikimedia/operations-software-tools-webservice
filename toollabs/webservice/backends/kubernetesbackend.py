@@ -228,10 +228,14 @@ class KubernetesBackend(Backend):
         self._delete_obj(pykube.Pod, self.label_selector)
 
     def get_state(self):
-        if self._find_obj(pykube.Service, self.label_selector) is not None\
-                or self._find_obj(pykube.Deployment, self.label_selector) is not None:
-            # FIXME: Check if pod is running as well
-            return Backend.STATE_RUNNING
+        svc = self._find_obj(pykube.Service, self.label_selector)
+        deployment = self._find_obj(pykube.Deployment, self.label_selector)
+        if svc is not None and deployment is not None:
+            pod = self._find_obj(pykube.Pod, self.label_selector)
+            if pod is not None:
+                if pod.obj['status']['phase'] == 'Running':
+                    return Backend.STATE_RUNNING
+            return Backend.STATE_PENDING
         return Backend.STATE_STOPPED
 
     def _wait_for_pod(self, label_selector, timeout=30):
