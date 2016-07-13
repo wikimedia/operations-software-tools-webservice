@@ -218,8 +218,7 @@ class KubernetesBackend(Backend):
     def _get_shell_pod(self):
         cmd = [
             '/bin/bash',
-            '-i',
-            '--login'
+            '-il',
         ]
         return {
             'apiVersion': 'v1',

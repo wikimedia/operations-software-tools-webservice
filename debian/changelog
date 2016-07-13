@@ -1,3 +1,10 @@
+toollabs-webservice (0.18) trusty; urgency=low
+
+  * Don't use longform command when passing to bash, causes
+    strange errors: https://phabricator.wikimedia.org/P3414
+
+ -- Yuvi Panda <yuvipanda@gmail.com>  Tue, 13 Jul 2016 14:30:00 +0100
+
 toollabs-webservice (0.17) trusty; urgency=low
 
   * Refactors to cleanup code
