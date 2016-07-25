@@ -65,6 +65,23 @@ class KubernetesBackend(Backend):
                  }
             }
         },
+        'golang': {
+            'cls': GenericWebService,
+            'image': 'toollabs-golang-web',
+            'shell-image': 'toollabs-golang-base',
+            'resources': {
+                 'limits': {
+                    # Pods can't use more than these resource limits
+                    'memory': '2Gi',  # Pods will be killed if they go over this
+                    'cpu': '2'  # Pods can still burst to more than this
+                 },
+                 'requests': {
+                    # Pods are guaranteed at least this many resources
+                    'memory': '256Mi',
+                    'cpu': '0.125'
+                 }
+            }
+        },
         'jdk8': {
             'cls': GenericWebService,
             'image': 'toollabs-jdk8-web',
