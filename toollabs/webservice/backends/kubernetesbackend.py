@@ -4,7 +4,8 @@ import pykube
 import time
 import sys
 from toollabs.webservice.backends import Backend
-from toollabs.webservice.services import LighttpdWebService, PythonWebService, JSWebService
+from toollabs.webservice.services import LighttpdWebService, PythonWebService, JSWebService, \
+    GenericWebService
 
 
 class KubernetesBackend(Backend):
@@ -38,6 +39,26 @@ class KubernetesBackend(Backend):
                  'limits': {
                     # Pods can't use more than these resource limits
                     'memory': '2Gi',  # Pods will be killed if they go over this
+                    'cpu': '2'  # Pods can still burst to more than this
+                 },
+                 'requests': {
+                    # Pods are guaranteed at least this many resources
+                    'memory': '256Mi',
+                    'cpu': '0.125'
+                 }
+            }
+        },
+        'jdk8': {
+            'cls': GenericWebService,
+            'image': 'toollabs-jdk8-web',
+            'shell-image': 'toollabs-jdk8-base',
+            'resources': {
+                 'limits': {
+                    # Pods can't use more than these resource limits
+                    # Higher Memory Limit for jdk8, but not higher request
+                    # So it can use more memory before being killed, but will die when there
+                    # is a memory crunch
+                    'memory': '4Gi',  # Pods will be killed if they go over this
                     'cpu': '2'  # Pods can still burst to more than this
                  },
                  'requests': {
