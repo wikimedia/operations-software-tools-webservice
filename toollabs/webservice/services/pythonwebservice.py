@@ -18,7 +18,7 @@ class PythonWebService(WebService):
         super(PythonWebService, self).run(port)
         args = [
             '/usr/bin/uwsgi',
-            '--plugin', 'python',
+            '--plugin', 'python,python3',  # Will ignore plugins that don't load
             '--http-socket', ':' + str(port),
             '--chdir', self.tool.get_homedir_subpath('www/python/src'),
             '--logto', self.tool.get_homedir_subpath('uwsgi.log'),
