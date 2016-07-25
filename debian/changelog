@@ -1,3 +1,9 @@
+toollabs-webservice (0.20) trusty; urgency=low
+
+  * Add python3, go and jdk8 webservices
+
+ -- Yuvi Panda <yuvipanda@gmail.com>  Mon, 25 Jul 2016 11:50:00 -1300
+
 toollabs-webservice (0.19) trusty; urgency=low
 
   * Depende explicitly on python-pykube package
