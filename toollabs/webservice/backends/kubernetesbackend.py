@@ -122,7 +122,7 @@ class KubernetesBackend(Backend):
     }
 
     def __init__(self, tool, type, extra_args=None):
-        super(KubernetesBackend, self).__init__(tool, type, extra_args=None)
+        super(KubernetesBackend, self).__init__(tool, type, extra_args)
 
         self.container_image = 'docker-registry.tools.wmflabs.org/{image}:latest'.format(
             image=KubernetesBackend.CONFIG[type]['image']
@@ -234,7 +234,8 @@ class KubernetesBackend(Backend):
         ]
 
         if self.extra_args:
-            cmd += " --extra-args '%s'" % self.extra_args
+            cmd.append("--extra_args")
+            cmd.append(self.extra_args)
 
         ports = [{
             "name": "http",

@@ -1,3 +1,10 @@
+toollabs-webservice (0.22) trusty; urgency=low
+
+  * Load python3 plugin as well for uwsgi
+  * Fix generic webservice to load extra args properly
+
+ -- Yuvi Panda <yuvipanda@gmail.com>  Tue, 26 Jul 2016 11:50:00 -1300
+
 toollabs-webservice (0.20) trusty; urgency=low
 
   * Add python3, go and jdk8 webservices

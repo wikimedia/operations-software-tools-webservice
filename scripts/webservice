@@ -48,11 +48,15 @@ def update_manifest(job, action):
     if action == 'start':
         if 'web' not in job.tool.manifest or job.tool.manifest['web'] != job.type:
             job.tool.manifest['web'] = job.type
+            if job.extra_args is not None:
+                job.tool.manifest['web::extra_args'] = job.extra_args
             job.tool.save_manifest()
     elif action == 'stop':
         if 'web' in job.tool.manifest:
             del job.tool.manifest['web']
             del job.tool.manifest['backend']
+            if 'web::extra_args' in job.tool.manifest:
+                del job.tool.manifest['web::extra_args']
             job.tool.save_manifest()
     else:
         # blow up!
@@ -102,6 +106,9 @@ if __name__ == '__main__':
         if args.type is None:
             args.type = tool.manifest.get('web', 'php5.6')
         acceptable_types = KubernetesBackend.CONFIG.keys()
+
+    if args.extra_args is None:
+        args.extra_args = tool.manifest.get('web::extra_args', None)
 
     if args.type not in acceptable_types:
         print("type must be one of ", ','.join(acceptable_types))
