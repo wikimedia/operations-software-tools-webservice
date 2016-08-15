@@ -1,3 +1,9 @@
+toollabs-webservice (0.23) trusty; urgency=low
+
+  * Add tcl webservice type
+
+ -- Yuvi Panda <yuvipanda@gmail.com>  Mon, 15 Aug 2016 11:50:00 -1300
+
 toollabs-webservice (0.22) trusty; urgency=low
 
   * Load python3 plugin as well for uwsgi

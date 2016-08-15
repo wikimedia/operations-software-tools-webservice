@@ -31,6 +31,23 @@ class KubernetesBackend(Backend):
                 }
             }
         },
+        'tcl':  {
+            'cls': LighttpdWebService,
+            'image': 'toollabs-tcl-web',
+            'shell-image': 'toollabs-tcl-base',
+            'resources': {
+                'limits': {
+                    # Pods can't use more than these resource limits
+                    'memory': '2Gi',  # Pods will be killed if they go over this
+                    'cpu': '2'  # Pods can still burst to more than this
+                },
+                'requests': {
+                    # Pods are guaranteed at least this many resources
+                    'memory': '256Mi',
+                    'cpu': '0.125'
+                }
+            }
+        },
         'python': {
             'cls': PythonWebService,
             'image': 'toollabs-python-web',
