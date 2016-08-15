@@ -5,7 +5,7 @@ import time
 import sys
 from toollabs.webservice.backends import Backend
 from toollabs.webservice.services import LighttpdWebService, PythonWebService, JSWebService, \
-    GenericWebService
+    GenericWebService, LighttpdPlainWebService
 
 
 class KubernetesBackend(Backend):
@@ -32,7 +32,7 @@ class KubernetesBackend(Backend):
             }
         },
         'tcl':  {
-            'cls': LighttpdWebService,
+            'cls': LighttpdPlainWebService,
             'image': 'toollabs-tcl-web',
             'shell-image': 'toollabs-tcl-base',
             'resources': {

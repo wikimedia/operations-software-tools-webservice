@@ -1,3 +1,9 @@
+toollabs-webservice (0.24) UNRELEASED; urgency=medium
+
+  * Fix tcl webservice type to use lighttpd plain than PHP
+
+ -- yuvipanda <yuvipanda@picard>  Mon, 15 Aug 2016 13:58:17 -0700
+
 toollabs-webservice (0.23) trusty; urgency=low
 
   * Add tcl webservice type
