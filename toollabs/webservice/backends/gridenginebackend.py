@@ -67,7 +67,7 @@ class GridEngineBackend(Backend):
         self.webservice.check()
         cmd = '/usr/bin/webservice-runner --register-proxy --type %s' % self.webservice.name
         if self.extra_args:
-            cmd += " --extra-args '%s'" % self.extra_args
+            cmd += " --extra_args '%s'" % self.extra_args
         command = ['qsub',
                    '-e', os.path.expanduser('~/error.log'),
                    '-o', os.path.expanduser('~/error.log'),
