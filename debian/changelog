@@ -1,3 +1,9 @@
+toollabs-webservice (0.26) trusty; urgency=medium
+
+  * Add webservice warning for lighttpd-precise
+
+ -- bd808 <bd808@wikimedia.org>  Tue, 06 Sep 2016 19:06:07 +0000
+
 toollabs-webservice (0.25) trusty; urgency=medium
 
   * Fix generic webservices on gridengine
