@@ -1,3 +1,9 @@
+toollabs-webservice (0.27) trusty; urgency=medium
+
+  * Fix package dependencies to work with Precise hosts
+
+ -- bd808 <bd808@wikimedia.org>  Mon, 12 Sep 2016 17:27:09 +0000
+
 toollabs-webservice (0.26) trusty; urgency=medium
 
   * Add webservice warning for lighttpd-precise
@@ -8,13 +14,13 @@ toollabs-webservice (0.25) trusty; urgency=medium
 
   * Fix generic webservices on gridengine
 
- -- yuvipanda <yuvipanda@picard>  Fri, 19 Aug 2016 09:32:54 -0700
+ -- yuvipanda <yuvipanda@gmail.com>  Fri, 19 Aug 2016 09:32:54 -0700
 
 toollabs-webservice (0.24) trusty; urgency=medium
 
   * Fix tcl webservice type to use lighttpd plain than PHP
 
- -- yuvipanda <yuvipanda@picard>  Mon, 15 Aug 2016 13:58:17 -0700
+ -- yuvipanda <yuvipanda@gmail.com>  Mon, 15 Aug 2016 13:58:17 -0700
 
 toollabs-webservice (0.23) trusty; urgency=low
 
