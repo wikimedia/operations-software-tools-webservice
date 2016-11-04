@@ -19,7 +19,7 @@ class UwsgiWebService(WebService):
         args = [
             '/usr/bin/uwsgi',
             '--http-socket', ':' + str(port),
-            '--logto', self.tool.get_homedir_subpath('uwsgi.log'),
+            '--logto', "/dev/null",
             '--ini', self.tool.get_homedir_subpath('uwsgi.ini'),
             '--workers', '4',
             '--die-on-term',

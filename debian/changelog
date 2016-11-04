@@ -1,3 +1,16 @@
+toollabs-webservice (0.29) trusty; urgency=medium
+
+  * Route python2 webservices to /dev/null too
+
+ -- yuvipanda <yuvipanda@gmail.com>  Fri, 13 Nov 2016 17:27:09 +0000
+
+toollabs-webservice (0.28) trusty; urgency=medium
+
+  * Temporary build that routes all logs to /dev/null
+    https://phabricator.wikimedia.org/T149946
+
+ -- yuvipanda <yuvipanda@gmail.com>  Fri, 04 Nov 2016 17:27:09 +0000
+
 toollabs-webservice (0.27) trusty; urgency=medium
 
   * Fix package dependencies to work with Precise hosts

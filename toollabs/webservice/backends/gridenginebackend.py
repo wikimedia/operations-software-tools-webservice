@@ -69,8 +69,8 @@ class GridEngineBackend(Backend):
         if self.extra_args:
             cmd += " --extra_args '%s'" % self.extra_args
         command = ['qsub',
-                   '-e', os.path.expanduser('~/error.log'),
-                   '-o', os.path.expanduser('~/error.log'),
+                   '-e', '/dev/null',
+                   '-o', '/dev/null',
                    '-i', '/dev/null',
                    '-q', self.queue,
                    '-l', 'h_vmem=%s,release=%s' % (self.memlimit, self.release),
