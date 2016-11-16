@@ -22,8 +22,8 @@ server.groupname = "{groupname}"
 server.core-files = "disable"
 server.document-root = "{home}/public_html"
 server.pid-file = "/var/run/lighttpd/{toolname}.pid"
-server.errorlog = "/dev/null"
-server.breakagelog = "/dev/null"
+server.errorlog = "{home}/error.log"
+server.breakagelog = "{home}/error.log"
 server.follow-symlink = "enable"
 server.max-connections = 300
 server.stat-cache-engine = "simple"
@@ -39,7 +39,7 @@ url.access-deny = ( "~", ".inc" )
 static-file.exclude-extensions = ( ".php", ".pl", ".fcgi" )
 
 accesslog.use-syslog = "disable"
-accesslog.filename = "/dev/null"
+accesslog.filename = "{home}/access.log"
 
 include_shell "/usr/share/lighttpd/create-mime.assign.pl"
 

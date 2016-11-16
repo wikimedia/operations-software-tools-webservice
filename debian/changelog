@@ -1,3 +1,9 @@
+toollabs-webservice (0.30) trusty; urgency=medium
+
+  * Stop routing logs to /dev/null
+
+ -- yuvipanda <yuvipanda@gmail.com>  Tue, 15 Nov 2016 17:27:09 +0000
+
 toollabs-webservice (0.29) trusty; urgency=medium
 
   * Route python2 webservices to /dev/null too
