@@ -1,3 +1,9 @@
+toollabs-webservice (0.31) trusty; urgency=medium
+
+  * guard against PYTHONPATH munging in caller's environment
+
+ -- bd808 <bd808@wikimedia.org>  Mon, 21 Nov 2016 23:49:13 +0000
+
 toollabs-webservice (0.30) trusty; urgency=medium
 
   * Stop routing logs to /dev/null
