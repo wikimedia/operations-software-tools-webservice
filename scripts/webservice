@@ -1,4 +1,4 @@
-#!/usr/bin/python -E -s
+#!/usr/bin/python -Es
 from __future__ import print_function
 import argparse
 import sys

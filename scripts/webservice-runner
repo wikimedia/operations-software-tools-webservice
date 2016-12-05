@@ -1,4 +1,4 @@
-#!/usr/bin/python -E -s
+#!/usr/bin/python -Es
 import argparse
 
 from toollabs.common import Tool
