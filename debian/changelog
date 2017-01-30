@@ -1,3 +1,9 @@
+toollabs-webservice (0.32) trusty; urgency=medium
+
+  * change absolute kubectl path to '/usr/bin/kubectl'
+
+ -- YiFei Zhu <zhyifei1999@gmail.com> Mon, 30 Jan 2017 08:58:51 +0000
+
 toollabs-webservice (0.31) trusty; urgency=medium
 
   * guard against PYTHONPATH munging in caller's environment

@@ -400,7 +400,7 @@ class KubernetesBackend(Backend):
             self._delete_obj(pykube.Pod, self.shell_label_selector)
             sys.exit(1)
         kubectl = subprocess.Popen([
-            '/usr/local/bin/kubectl',
+            '/usr/bin/kubectl',
             'attach',
             '--tty',
             '--stdin',
