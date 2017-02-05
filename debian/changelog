@@ -1,3 +1,9 @@
+toollabs-webservice (0.33) trusty; urgency=medium
+
+  * Wait for the Kubernetes pod to shut down after "stop"
+
+ -- Tim Landscheidt <tim@tim-landscheidt.de>  Tue, 07 Feb 2017 13:29:07 +0000
+
 toollabs-webservice (0.32) trusty; urgency=medium
 
   * change absolute kubectl path to '/usr/bin/kubectl'

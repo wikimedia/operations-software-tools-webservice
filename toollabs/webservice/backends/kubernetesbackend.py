@@ -380,15 +380,18 @@ class KubernetesBackend(Backend):
         self._delete_obj(pykube.Pod, self.webservice_label_selector)
 
     def get_state(self):
+        pod = self._find_obj(pykube.Pod, self.webservice_label_selector)
+        if pod is not None:
+            if pod.obj['status']['phase'] == 'Running':
+                return Backend.STATE_RUNNING
+            elif pod.obj['status']['phase'] == 'Pending':
+                return Backend.STATE_PENDING
         svc = self._find_obj(pykube.Service, self.webservice_label_selector)
         deployment = self._find_obj(pykube.Deployment, self.webservice_label_selector)
         if svc is not None and deployment is not None:
-            pod = self._find_obj(pykube.Pod, self.webservice_label_selector)
-            if pod is not None:
-                if pod.obj['status']['phase'] == 'Running':
-                    return Backend.STATE_RUNNING
             return Backend.STATE_PENDING
-        return Backend.STATE_STOPPED
+        else:
+            return Backend.STATE_STOPPED
 
     def shell(self):
         podSpec = self._get_shell_pod()
