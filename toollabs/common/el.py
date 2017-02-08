@@ -46,6 +46,10 @@ def get_gp_cmdline():
     So if jsub calls this, this will return the commandline of the
     process that called jsub originally
     """
+    if os.getppid() == 0:
+        # Because there is no grand parent when running inside k8s shell
+        # the parent is the bash process, which is also pid 1
+        return 'inside-k8s-webservice-shell'
     gpid = subprocess.check_output([
         '/bin/ps',
         '-p',
