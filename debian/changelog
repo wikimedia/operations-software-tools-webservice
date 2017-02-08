@@ -1,3 +1,9 @@
+toollabs-webservice (0.34) trusty; urgency=medium
+
+  * Use same container image for shell & webservices
+
+ -- Yuvi Panda <yuvipanda@gmail.com>  Tue, 07 Feb 2017 23:29:07 +0000
+
 toollabs-webservice (0.33) trusty; urgency=medium
 
   * Wait for the Kubernetes pod to shut down after "stop"

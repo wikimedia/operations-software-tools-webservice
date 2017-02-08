@@ -17,7 +17,6 @@ class KubernetesBackend(Backend):
         'php5.6':  {
             'cls': LighttpdWebService,
             'image': 'toollabs-php-web',
-            'shell-image': 'toollabs-php-base',
             'resources': {
                 'limits': {
                     # Pods can't use more than these resource limits
@@ -34,7 +33,6 @@ class KubernetesBackend(Backend):
         'tcl':  {
             'cls': LighttpdPlainWebService,
             'image': 'toollabs-tcl-web',
-            'shell-image': 'toollabs-tcl-base',
             'resources': {
                 'limits': {
                     # Pods can't use more than these resource limits
@@ -51,7 +49,6 @@ class KubernetesBackend(Backend):
         'python': {
             'cls': PythonWebService,
             'image': 'toollabs-python-web',
-            'shell-image': 'toollabs-python-base',
             'resources': {
                  'limits': {
                     # Pods can't use more than these resource limits
@@ -68,7 +65,6 @@ class KubernetesBackend(Backend):
         'python2': {
             'cls': PythonWebService,
             'image': 'toollabs-python2-web',
-            'shell-image': 'toollabs-python2-base',
             'resources': {
                  'limits': {
                     # Pods can't use more than these resource limits
@@ -85,7 +81,6 @@ class KubernetesBackend(Backend):
         'ruby2':  {
             'cls': GenericWebService,
             'image': 'toollabs-ruby-web',
-            'shell-image': 'toollabs-ruby-base',
             'resources': {
                 'limits': {
                     # Pods can't use more than these resource limits
@@ -102,7 +97,6 @@ class KubernetesBackend(Backend):
         'golang': {
             'cls': GenericWebService,
             'image': 'toollabs-golang-web',
-            'shell-image': 'toollabs-golang-base',
             'resources': {
                  'limits': {
                     # Pods can't use more than these resource limits
@@ -119,7 +113,6 @@ class KubernetesBackend(Backend):
         'jdk8': {
             'cls': GenericWebService,
             'image': 'toollabs-jdk8-web',
-            'shell-image': 'toollabs-jdk8-base',
             'resources': {
                  'limits': {
                     # Pods can't use more than these resource limits
@@ -139,7 +132,6 @@ class KubernetesBackend(Backend):
         'nodejs': {
             'cls': JSWebService,
             'image': 'toollabs-nodejs-web',
-            'shell-image': 'toollabs-nodejs-base',
             'resources': {
                  'limits': {
                     # Pods can't use more than these resource limits
@@ -160,9 +152,6 @@ class KubernetesBackend(Backend):
 
         self.container_image = 'docker-registry.tools.wmflabs.org/{image}:latest'.format(
             image=KubernetesBackend.CONFIG[type]['image']
-        )
-        self.shell_image = 'docker-registry.tools.wmflabs.org/{image}:latest'.format(
-            image=KubernetesBackend.CONFIG[type]['shell-image']
         )
         self.container_resources = KubernetesBackend.CONFIG[type]['resources']
         self.webservice = KubernetesBackend.CONFIG[type]['cls'](tool, extra_args)
@@ -320,7 +309,7 @@ class KubernetesBackend(Backend):
             },
             'spec': self._get_container_spec(
                 'interactive',
-                self.shell_image,
+                self.container_image,
                 cmd,
                 resources=None,
                 ports=None,
