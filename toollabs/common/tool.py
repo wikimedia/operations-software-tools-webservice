@@ -24,7 +24,8 @@ class Tool(object):
     @property
     def manifest(self):
         """
-        Return a dict with data from service manifest for current tool instance.
+        Return a dict with data from service manifest for current tool
+        instance.
 
         If no service.manifest file is found, returns an empty dict
         """
@@ -45,26 +46,31 @@ class Tool(object):
         """
         Saves modified manifest file to service.manifest
 
-        Never write to service.manifest without an action directly initiated by
-        a user (like running a commanad on the commandline). If a race happens,
-        whoever wins the os.rename race wins.
+        Never write to service.manifest without an action directly initiated
+        by a user (like running a commanad on the commandline). If a race
+        happens, whoever wins the os.rename race wins.
         """
         tilde_file_path = self.get_homedir_subpath('service.manifest~')
-        tilde_file_fd = os.open(tilde_file_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+        tilde_file_fd = os.open(
+            tilde_file_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
         tilde_file = os.fdopen(tilde_file_fd, 'w')
         # Set version if there is none!
         if 'version' not in self.manifest:
             self.manifest['version'] = Tool.MANIFEST_VERSION
         try:
-            tilde_file.write("# This file is used by toollabs infrastructure.\n"
-                             "# Please do not edit manually at this time.\n")
-            yaml.safe_dump(self._manifest, tilde_file, default_flow_style=False)
+            tilde_file.write(
+                "# This file is used by toollabs infrastructure.\n"
+                "# Please do not edit manually at this time.\n")
+            yaml.safe_dump(
+                self._manifest, tilde_file, default_flow_style=False)
         finally:
             tilde_file.close()
 
-        # We leave behind tilda_file_path if this rename fails for some reason, and then
-        # manual intervention is needed, but that seems appropriate
-        os.rename(tilde_file_path, self.get_homedir_subpath('service.manifest'))
+        # We leave behind tilda_file_path if this rename fails for some
+        # reason, and then manual intervention is needed, but that seems
+        # appropriate
+        os.rename(
+            tilde_file_path, self.get_homedir_subpath('service.manifest'))
 
     @classmethod
     def from_name(cls, name):
@@ -93,8 +99,16 @@ class Tool(object):
         Creates a Tool instance from a given pwd entry
         """
         if not pwd_entry.pw_name.startswith(Tool.PREFIX):
-            raise Tool.InvalidToolException('Tool username should begin with tools.')
+            raise Tool.InvalidToolException(
+                'Tool username should begin with tools.')
         if pwd_entry.pw_uid < 50000:  # FIXME: Find if it should be < or <=
-            raise Tool.InvalidToolException("uid of tools should be >= 50000, uid is %s" % pwd_entry.pw_uid)
+            raise Tool.InvalidToolException(
+                "uid of tools should be >= 50000, uid is %s" %
+                pwd_entry.pw_uid)
         toolname = pwd_entry.pw_name[len(Tool.PREFIX):]
-        return cls(toolname, pwd_entry.pw_name, pwd_entry.pw_uid, pwd_entry.pw_gid, pwd_entry.pw_dir)
+        return cls(
+            toolname,
+            pwd_entry.pw_name,
+            pwd_entry.pw_uid,
+            pwd_entry.pw_gid,
+            pwd_entry.pw_dir)

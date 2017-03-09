@@ -4,7 +4,8 @@ from abc import ABCMeta, abstractmethod
 class Backend(object):
     __metaclass__ = ABCMeta
     """
-    A webservice backend that submits and runs the actual webservice in a cluster
+    A webservice backend that submits and runs the actual webservice in
+    a cluster
     """
     STATE_STOPPED = 0
     STATE_RUNNING = 1
@@ -20,7 +21,10 @@ class Backend(object):
         """
         Returns state of webservice.
 
-        One of Backend.STATE_STOPPED, Backend.STATE_RUNNING or Backend.STATE_PENDING
+        One of:
+        - Backend.STATE_STOPPED
+        - Backend.STATE_RUNNING
+        - Backend.STATE_PENDING
         """
         pass
 

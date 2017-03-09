@@ -1,13 +1,21 @@
-from toollabs.webservice.services.jswebservice import JSWebService
-from toollabs.webservice.services.genericwebservice import GenericWebService
-from toollabs.webservice.services.pythonwebservice import PythonWebService
-from toollabs.webservice.services.lighttpdwebservice import LighttpdPlainWebService, LighttpdWebService
-from toollabs.webservice.services.tomcatservice import TomcatWebService
-from toollabs.webservice.services.uwsgiwebservice import UwsgiWebService
+from .genericwebservice import GenericWebService
+from .jswebservice import JSWebService
+from .lighttpdwebservice import LighttpdPlainWebService
+from .lighttpdwebservice import LighttpdWebService
+from .pythonwebservice import PythonWebService
+from .tomcatservice import TomcatWebService
+from .uwsgiwebservice import UwsgiWebService
 
-webservice_classes = {cls.NAME: cls
-                      for cls in [JSWebService, PythonWebService, GenericWebService, TomcatWebService,
-                                  LighttpdWebService, LighttpdPlainWebService,
-                                  UwsgiWebService]}
+webservice_classes = {
+    cls.NAME: cls for cls in [
+        GenericWebService,
+        JSWebService,
+        LighttpdPlainWebService,
+        LighttpdWebService,
+        PythonWebService,
+        TomcatWebService,
+        UwsgiWebService,
+    ]
+}
 
 __all__ = webservice_classes.values()

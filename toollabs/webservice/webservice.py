@@ -21,7 +21,8 @@ class WebService(object):
         try:
             return self.__class__.NAME
         except AttributeError:
-            raise AttributeError('WebService subclass needs NAME class attribute')
+            raise AttributeError(
+                'WebService subclass needs NAME class attribute')
 
     def check(self):
         """
@@ -41,4 +42,5 @@ class WebService(object):
         """
         # Populate environment with all the useful things!
         os.environ['PORT'] = str(port)
-        os.environ['TOOL_WEB_PORT'] = str(port)  # Backwards compat, should be removed at some point
+        # Backwards compat, should be removed at some point
+        os.environ['TOOL_WEB_PORT'] = str(port)

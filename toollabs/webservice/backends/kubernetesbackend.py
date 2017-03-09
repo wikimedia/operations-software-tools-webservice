@@ -4,8 +4,11 @@ import pykube
 import time
 import sys
 from toollabs.webservice.backends import Backend
-from toollabs.webservice.services import LighttpdWebService, PythonWebService, JSWebService, \
-    GenericWebService, LighttpdPlainWebService
+from toollabs.webservice.services import GenericWebService
+from toollabs.webservice.services import JSWebService
+from toollabs.webservice.services import LighttpdPlainWebService
+from toollabs.webservice.services import LighttpdWebService
+from toollabs.webservice.services import PythonWebService
 
 
 class KubernetesBackend(Backend):
@@ -19,9 +22,10 @@ class KubernetesBackend(Backend):
             'image': 'toollabs-php-web',
             'resources': {
                 'limits': {
-                    # Pods can't use more than these resource limits
-                    'memory': '2Gi',  # Pods will be killed if they go over this
-                    'cpu': '2'  # Pods can still burst to more than this
+                    # Pods will be killed if they go over memory limit
+                    'memory': '2Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
                 },
                 'requests': {
                     # Pods are guaranteed at least this many resources
@@ -35,9 +39,10 @@ class KubernetesBackend(Backend):
             'image': 'toollabs-tcl-web',
             'resources': {
                 'limits': {
-                    # Pods can't use more than these resource limits
-                    'memory': '2Gi',  # Pods will be killed if they go over this
-                    'cpu': '2'  # Pods can still burst to more than this
+                    # Pods will be killed if they go over memory limit
+                    'memory': '2Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
                 },
                 'requests': {
                     # Pods are guaranteed at least this many resources
@@ -51,9 +56,10 @@ class KubernetesBackend(Backend):
             'image': 'toollabs-python-web',
             'resources': {
                  'limits': {
-                    # Pods can't use more than these resource limits
-                    'memory': '2Gi',  # Pods will be killed if they go over this
-                    'cpu': '2'  # Pods can still burst to more than this
+                    # Pods will be killed if they go over memory limit
+                    'memory': '2Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
                  },
                  'requests': {
                     # Pods are guaranteed at least this many resources
@@ -67,9 +73,10 @@ class KubernetesBackend(Backend):
             'image': 'toollabs-python2-web',
             'resources': {
                  'limits': {
-                    # Pods can't use more than these resource limits
-                    'memory': '2Gi',  # Pods will be killed if they go over this
-                    'cpu': '2'  # Pods can still burst to more than this
+                    # Pods will be killed if they go over memory limit
+                    'memory': '2Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
                  },
                  'requests': {
                     # Pods are guaranteed at least this many resources
@@ -83,9 +90,10 @@ class KubernetesBackend(Backend):
             'image': 'toollabs-ruby-web',
             'resources': {
                 'limits': {
-                    # Pods can't use more than these resource limits
-                    'memory': '2Gi',  # Pods will be killed if they go over this
-                    'cpu': '2'  # Pods can still burst to more than this
+                    # Pods will be killed if they go over memory limit
+                    'memory': '2Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
                 },
                 'requests': {
                     # Pods are guaranteed at least this many resources
@@ -99,9 +107,10 @@ class KubernetesBackend(Backend):
             'image': 'toollabs-golang-web',
             'resources': {
                  'limits': {
-                    # Pods can't use more than these resource limits
-                    'memory': '2Gi',  # Pods will be killed if they go over this
-                    'cpu': '2'  # Pods can still burst to more than this
+                    # Pods will be killed if they go over memory limit
+                    'memory': '2Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
                  },
                  'requests': {
                     # Pods are guaranteed at least this many resources
@@ -115,12 +124,13 @@ class KubernetesBackend(Backend):
             'image': 'toollabs-jdk8-web',
             'resources': {
                  'limits': {
-                    # Pods can't use more than these resource limits
+                    # Pods will be killed if they go over memory limit
                     # Higher Memory Limit for jdk8, but not higher request
-                    # So it can use more memory before being killed, but will die when there
-                    # is a memory crunch
-                    'memory': '4Gi',  # Pods will be killed if they go over this
-                    'cpu': '2'  # Pods can still burst to more than this
+                    # So it can use more memory before being killed, but will
+                    # die when there is a memory crunch
+                    'memory': '4Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
                  },
                  'requests': {
                     # Pods are guaranteed at least this many resources
@@ -134,9 +144,10 @@ class KubernetesBackend(Backend):
             'image': 'toollabs-nodejs-web',
             'resources': {
                  'limits': {
-                    # Pods can't use more than these resource limits
-                    'memory': '2Gi',  # Pods will be killed if they go over this
-                    'cpu': '2'  # Pods can still burst to more than this
+                    # Pods will be killed if they go over memory limit
+                    'memory': '2Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
                  },
                  'requests': {
                     # Pods are guaranteed at least this many resources
@@ -150,11 +161,13 @@ class KubernetesBackend(Backend):
     def __init__(self, tool, type, extra_args=None):
         super(KubernetesBackend, self).__init__(tool, type, extra_args)
 
-        self.container_image = 'docker-registry.tools.wmflabs.org/{image}:latest'.format(
+        self.container_image = '{registry}/{image}:latest'.format(
+            registry='docker-registry.tools.wmflabs.org',
             image=KubernetesBackend.CONFIG[type]['image']
         )
         self.container_resources = KubernetesBackend.CONFIG[type]['resources']
-        self.webservice = KubernetesBackend.CONFIG[type]['cls'](tool, extra_args)
+        self.webservice = KubernetesBackend.CONFIG[type]['cls'](
+            tool, extra_args)
 
         self.api = pykube.HTTPClient(
             pykube.KubeConfig.from_file(
@@ -169,7 +182,10 @@ class KubernetesBackend(Backend):
         }
         # FIXME: Protect against injection?
         self.webservice_label_selector = ','.join(
-            ['{k}={v}'.format(k=k, v=v) for k, v in self.webservice_labels.items()]
+            [
+                '{k}={v}'.format(k=k, v=v) for k, v in
+                self.webservice_labels.items()
+            ]
         )
 
         self.shell_labels = {
@@ -178,7 +194,10 @@ class KubernetesBackend(Backend):
             'name': 'interactive'
         }
         self.shell_label_selector = ','.join(
-            ['{k}={v}'.format(k=k, v=v) for k, v in self.shell_labels.items()]
+            [
+                '{k}={v}'.format(k=k, v=v) for k, v in
+                self.shell_labels.items()
+            ]
         )
 
     def _find_obj(self, kind, selector):
@@ -318,7 +337,10 @@ class KubernetesBackend(Backend):
             )
         }
 
-    def _get_container_spec(self, name, container_image, cmd, resources, ports=None, stdin=False, tty=False):
+    def _get_container_spec(
+        self, name, container_image, cmd, resources,
+        ports=None, stdin=False, tty=False
+    ):
         # All the paths we want to mount from host nodes onto container
         hostMounts = {
             'home': '/data/project/',
@@ -355,17 +377,24 @@ class KubernetesBackend(Backend):
 
     def request_start(self):
         self.webservice.check()
-        if self._find_obj(pykube.Deployment, self.webservice_label_selector) is None:
+        deployment = self._find_obj(
+            pykube.Deployment, self.webservice_label_selector)
+        if deployment is None:
             pykube.Deployment(self.api, self._get_deployment()).create()
-        if self._find_obj(pykube.Service, self.webservice_label_selector) is None:
+
+        svc = self._find_obj(
+            pykube.Service, self.webservice_label_selector)
+        if svc is None:
             pykube.Service(self.api, self._get_svc()).create()
 
     def request_stop(self):
         self._delete_obj(pykube.Service, self.webservice_label_selector)
-        # No cascading delete support yet. So we delete all of the objects by hand
-        # Can be simplified after https://github.com/kubernetes/kubernetes/pull/23656
+        # No cascading delete support yet. So we delete all of the objects by
+        # hand Can be simplified after
+        # https://github.com/kubernetes/kubernetes/pull/23656
         self._delete_obj(pykube.Deployment, self.webservice_label_selector)
-        self._delete_obj(pykube.ReplicaSet, 'name={name}'.format(name=self.tool.name))
+        self._delete_obj(
+            pykube.ReplicaSet, 'name={name}'.format(name=self.tool.name))
         self._delete_obj(pykube.Pod, self.webservice_label_selector)
 
     def get_state(self):
@@ -376,7 +405,8 @@ class KubernetesBackend(Backend):
             elif pod.obj['status']['phase'] == 'Pending':
                 return Backend.STATE_PENDING
         svc = self._find_obj(pykube.Service, self.webservice_label_selector)
-        deployment = self._find_obj(pykube.Deployment, self.webservice_label_selector)
+        deployment = self._find_obj(
+            pykube.Deployment, self.webservice_label_selector)
         if svc is not None and deployment is not None:
             return Backend.STATE_PENDING
         else:
@@ -400,8 +430,9 @@ class KubernetesBackend(Backend):
         ])
 
         kubectl.wait()
-        # kubectl attach prints the following when done:
-        # Session ended, resume using 'kubectl attach interactive -c interactive -i -t' command when the pod is running
+        # kubectl attach prints the following when done: Session ended, resume
+        # using 'kubectl attach interactive -c interactive -i -t' command when
+        # the pod is running
         # This isn't true, since we actually kill the pod when done
         print("Pod stopped. Session cannot be resumed.")
 

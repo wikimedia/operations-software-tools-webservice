@@ -1,6 +1,7 @@
 toollabs-webservice (0.36) trusty; urgency=medium
 
   * Remove support for Precise
+  * PEP8 80ch line lenght limits
 
  -- Bryan Davis <bd808@wikimedia.org>  Thu, 09 Mar 2017 17:50:11 +0000
 

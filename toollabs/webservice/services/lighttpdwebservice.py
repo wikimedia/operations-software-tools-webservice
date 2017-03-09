@@ -81,10 +81,13 @@ class LighttpdPlainWebService(WebService):
         # Check for a .lighttpd.conf file or a public_html
         public_html_path = self.tool.get_homedir_subpath('public_html')
         lighttpd_conf_path = self.tool.get_homedir_subpath('.lighttpd.conf')
-        if not (os.path.exists(public_html_path) or os.path.exists(lighttpd_conf_path)):
+        if not (
+            os.path.exists(public_html_path) or
+            os.path.exists(lighttpd_conf_path)
+        ):
             raise WebService.InvalidWebServiceException(
-                'Could not find a public_html folder or a .lighttpd.conf file '
-                'in your tool home.'
+                'Could not find a public_html folder or a .lighttpd.conf '
+                'file in your tool home.'
             )
 
     def build_config(self, port, config_template=BASIC_CONFIG_TEMPLATE):
@@ -108,7 +111,9 @@ class LighttpdPlainWebService(WebService):
         with open(config_path, 'w') as f:
             f.write(config)
 
-        os.execv('/usr/sbin/lighttpd', ['/usr/sbin/lighttpd', '-f', config_path, '-D'])
+        os.execv(
+            '/usr/sbin/lighttpd',
+            ['/usr/sbin/lighttpd', '-f', config_path, '-D'])
 
 
 class LighttpdWebService(LighttpdPlainWebService):
@@ -118,5 +123,9 @@ class LighttpdWebService(LighttpdPlainWebService):
     NAME = 'lighttpd'
     QUEUE = 'webgrid-lighttpd'
 
-    def build_config(self, port, config_template=BASIC_CONFIG_TEMPLATE + ENABLE_PHP_CONFIG_TEMPLATE):
-        return super(LighttpdWebService, self).build_config(port, config_template)
+    def build_config(
+        self, port,
+        config_template=BASIC_CONFIG_TEMPLATE + ENABLE_PHP_CONFIG_TEMPLATE
+    ):
+        return super(LighttpdWebService, self).build_config(
+            port, config_template)

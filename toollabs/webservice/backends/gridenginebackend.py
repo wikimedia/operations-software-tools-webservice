@@ -3,9 +3,13 @@ import os
 import re
 import xml.etree.ElementTree as ET
 from toollabs.webservice.backends import Backend
-from toollabs.webservice.services import JSWebService, PythonWebService, GenericWebService, \
-    TomcatWebService, LighttpdWebService, LighttpdPlainWebService, \
-    UwsgiWebService
+from toollabs.webservice.services import GenericWebService
+from toollabs.webservice.services import JSWebService
+from toollabs.webservice.services import LighttpdPlainWebService
+from toollabs.webservice.services import LighttpdWebService
+from toollabs.webservice.services import PythonWebService
+from toollabs.webservice.services import TomcatWebService
+from toollabs.webservice.services import UwsgiWebService
 
 
 class GridEngineBackend(Backend):
@@ -15,13 +19,17 @@ class GridEngineBackend(Backend):
     # Specify config for each type that this backend accepts
     # Key is name of type passed in by commandline
     # cls is the Webservice class to instantiate
-    # release is an optional key that specifies which release to run this on. Options are trusty.
-    # release defaults to 'trusty'
-    # queue is an optional key that spcifies which queue to run ths one. Options are webgrid-lighttpd & webgrid-generic
-    # queue defaults to 'webgrid-generic'
+    # release is an optional key that specifies which release to run this on.
+    #   options are: trusty
+    #   defaults to 'trusty'
+    # queue is an optional key that spcifies which queue to run ths one.
+    #   options are: webgrid-lighttpd, webgrid-generic
+    #   defaults to 'webgrid-generic'
     CONFIG = {
-        'lighttpd': {'cls': LighttpdWebService, 'queue': 'webgrid-lighttpd'},
-        'lighttpd-plain': {'cls': LighttpdPlainWebService, 'queue': 'webgrid-lighttpd'},
+        'lighttpd': {
+            'cls': LighttpdWebService, 'queue': 'webgrid-lighttpd'},
+        'lighttpd-plain': {
+            'cls': LighttpdPlainWebService, 'queue': 'webgrid-lighttpd'},
         'uwsgi-python': {'cls': PythonWebService},
         'uwsgi-plain': {'cls': UwsgiWebService},
         'nodejs': {'cls': JSWebService},
@@ -31,12 +39,15 @@ class GridEngineBackend(Backend):
 
     def __init__(self, tool, type, extra_args=None):
         super(GridEngineBackend, self).__init__(tool, type, extra_args)
-        self.webservice = GridEngineBackend.CONFIG[type]['cls'](tool, extra_args)
-        self.release = GridEngineBackend.CONFIG[type].get('release', 'trusty')
-        self.queue = GridEngineBackend.CONFIG[type].get('queue', 'webgrid-generic')
+        cfg = GridEngineBackend.CONFIG[type]
+        self.webservice = cfg['cls'](tool, extra_args)
+        self.release = cfg.get('release', 'trusty')
+        self.queue = cfg.get('queue', 'webgrid-generic')
         self.name = '{type}-{toolname}'.format(type=type, toolname=tool.name)
         try:
-            with open('/data/project/.system/config/%s.web-memlimit' % self.tool.name) as f:
+            memlimit = '/data/project/.system/config/{}.web-memlimit'.format(
+                self.tool.name)
+            with open(memlimit) as f:
                 self.memlimit = f.read().strip()
         except:
             self.memlimit = '4G'
@@ -64,7 +75,8 @@ class GridEngineBackend(Backend):
 
     def request_start(self):
         self.webservice.check()
-        cmd = '/usr/bin/webservice-runner --register-proxy --type %s' % self.webservice.name
+        cmd = '/usr/bin/webservice-runner --register-proxy --type {}'.format(
+            self.webservice.name)
         if self.extra_args:
             cmd += " --extra_args '%s'" % self.extra_args
         command = ['qsub',
@@ -72,7 +84,9 @@ class GridEngineBackend(Backend):
                    '-o', os.path.expanduser('~/error.log'),
                    '-i', '/dev/null',
                    '-q', self.queue,
-                   '-l', 'h_vmem=%s,release=%s' % (self.memlimit, self.release),
+                   '-l', 'h_vmem=%s,release=%s' % (
+                       self.memlimit, self.release
+                    ),
                    '-b', 'y',
                    '-N', self.name,
                    cmd]
