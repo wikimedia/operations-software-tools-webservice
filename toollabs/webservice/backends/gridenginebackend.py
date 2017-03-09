@@ -4,7 +4,7 @@ import re
 import xml.etree.ElementTree as ET
 from toollabs.webservice.backends import Backend
 from toollabs.webservice.services import JSWebService, PythonWebService, GenericWebService, \
-    TomcatWebService, LighttpdWebService, LighttpdPreciseWebService, LighttpdPlainWebService, \
+    TomcatWebService, LighttpdWebService, LighttpdPlainWebService, \
     UwsgiWebService
 
 
@@ -15,14 +15,13 @@ class GridEngineBackend(Backend):
     # Specify config for each type that this backend accepts
     # Key is name of type passed in by commandline
     # cls is the Webservice class to instantiate
-    # release is an optional key that specifies which release to run this on. Options are precise, trusty.
+    # release is an optional key that specifies which release to run this on. Options are trusty.
     # release defaults to 'trusty'
     # queue is an optional key that spcifies which queue to run ths one. Options are webgrid-lighttpd & webgrid-generic
     # queue defaults to 'webgrid-generic'
     CONFIG = {
         'lighttpd': {'cls': LighttpdWebService, 'queue': 'webgrid-lighttpd'},
         'lighttpd-plain': {'cls': LighttpdPlainWebService, 'queue': 'webgrid-lighttpd'},
-        'lighttpd-precise': {'cls': LighttpdPreciseWebService, 'release': 'precise', 'queue': 'webgrid-lighttpd'},
         'uwsgi-python': {'cls': PythonWebService},
         'uwsgi-plain': {'cls': UwsgiWebService},
         'nodejs': {'cls': JSWebService},

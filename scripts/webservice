@@ -19,10 +19,11 @@ argparser.add_argument('action', help='Action to perform',
                        choices=['start', 'stop', 'status', 'restart', 'shell'])
 argparser.add_argument('extra_args', help='Extra arguments to be parsed by the chosen webservicetype',
                        nargs='?')
-# Backwards compat with older webservice. Allows for webservice --release precise lighttpd <action>
+# Backwards compat with older webservice.
+# Allows for webservice --release trusty lighttpd <action>
 argparser.add_argument('--release',
                        help=argparse.SUPPRESS,
-                       choices=['precise', 'trusty'])
+                       choices=['trusty'])
 
 
 def start(job, message):
@@ -84,26 +85,30 @@ if __name__ == '__main__':
         backend = args.backend
 
     if backend == 'gridengine':
-        # Backwards compatibility hack to support 'webservice --release precise lighttpd start' invocations
+        # Backwards compatibility hack to support
+        # 'webservice --release trusty lighttpd start' invocations
         if args.release is not None:
             if args.type == 'lighttpd':
-                if args.release == 'precise':
-                    args.type = 'lighttpd-precise'
-                    print("--release=precise is deprecated. Use %s lighttpd-precise <action> instead" % sys.argv[0])
-                elif args.release == 'trusty':
+                if args.release == 'trusty':
                     print("--release=trusty is deprecated. Use %s %s <action> instead " % sys.argv[0], args.type)
+                else:
+                    print(
+                        'ERROR: Unsupported release "%s"' % args.release,
+                        file=sys.stderr)
+                    sys.exit(1)
             else:
                 print("--release is deprecated and has no effect, using trusty...")
                 args.release = 'trusty'
         if args.type is None:
             args.type = tool.manifest.get('web', 'lighttpd')
-        if args.type == 'lighttpd-precise':
+        elif args.type == 'lighttpd-precise':
             print('*' * 78, file=sys.stderr)
             print(
-                'NOTICE: Precise hosts are being deprecated from Tool Labs\n\t'
+                'ERROR: Precise hosts are deprecated from Tool Labs\n\t'
                 'https://wikitech.wikimedia.org/wiki/Tools_Precise_deprecation',
                 file=sys.stderr)
             print('*' * 78, file=sys.stderr)
+            sys.exit(1)
         acceptable_types = GridEngineBackend.CONFIG.keys()
     elif backend == 'kubernetes':
         if args.release is not None:

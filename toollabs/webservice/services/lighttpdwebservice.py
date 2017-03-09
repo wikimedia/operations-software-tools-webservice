@@ -120,12 +120,3 @@ class LighttpdWebService(LighttpdPlainWebService):
 
     def build_config(self, port, config_template=BASIC_CONFIG_TEMPLATE + ENABLE_PHP_CONFIG_TEMPLATE):
         return super(LighttpdWebService, self).build_config(port, config_template)
-
-
-class LighttpdPreciseWebService(LighttpdWebService):
-    """
-    A Lighttpd Webserver with a default PHP setup, running on Ubuntu precise
-    """
-    NAME = 'lighttpd-precise'
-    QUEUE = 'webgrid-lighttpd'
-    RELEASE = 'precise'
