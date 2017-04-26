@@ -122,7 +122,7 @@ if __name__ == '__main__':
         args.extra_args = tool.manifest.get('web::extra_args', None)
 
     if args.type not in acceptable_types:
-        print("type must be one of ", ','.join(acceptable_types))
+        print("type must be one of ", ','.join(sorted(acceptable_types)))
         sys.exit(1)
 
     if backend == 'gridengine':

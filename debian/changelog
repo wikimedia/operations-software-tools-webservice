@@ -1,6 +1,7 @@
 toollabs-webservice (0.37) trusty; urgency=medium
 
   * Always cleanup manifest on stop
+  * Sort backend provided types when displaying help
 
  -- Bryan Davis <bd808@wikimedia.org>  Wed, 25 Apr 2017 04:01:13 +0000
 
