@@ -1,3 +1,9 @@
+toollabs-webservice (0.37) trusty; urgency=medium
+
+  * Always cleanup manifest on stop
+
+ -- Bryan Davis <bd808@wikimedia.org>  Wed, 25 Apr 2017 04:01:13 +0000
+
 toollabs-webservice (0.36) trusty; urgency=medium
 
   * Remove support for Precise

@@ -54,10 +54,9 @@ def update_manifest(job, action):
             job.tool.save_manifest()
     elif action == 'stop':
         if 'web' in job.tool.manifest:
-            del job.tool.manifest['web']
-            del job.tool.manifest['backend']
-            if 'web::extra_args' in job.tool.manifest:
-                del job.tool.manifest['web::extra_args']
+            for key in ['web', 'backend', 'web::extra_args']:
+                if key in job.tool.manifest:
+                    del job.tool.manifest[key]
             job.tool.save_manifest()
     else:
         # blow up!
@@ -144,9 +143,8 @@ if __name__ == '__main__':
     elif args.action == 'stop':
         if job.get_state() == Backend.STATE_STOPPED:
             print('Your webservice is not running')
-            sys.exit()
-
-        stop(job, 'Stopping webservice')
+        else:
+            stop(job, 'Stopping webservice')
         update_manifest(job, 'stop')
 
     elif args.action == 'restart':
