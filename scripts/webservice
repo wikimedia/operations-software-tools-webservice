@@ -7,7 +7,6 @@ from toollabs.webservice import WebService
 from toollabs.webservice.backends import Backend, GridEngineBackend, KubernetesBackend
 from toollabs.common.utils import wait_for
 from toollabs.common import Tool
-from toollabs.common.el import log_command_invocation
 
 
 argparser = argparse.ArgumentParser()
@@ -63,7 +62,6 @@ def update_manifest(job, action):
         raise Exception("action has to be 'start' or 'stop', got %s" % action)
 
 if __name__ == '__main__':
-    log_command_invocation('webservice', ' '.join(sys.argv))
     args = argparser.parse_args()
 
     tool = Tool.from_currentuser()
