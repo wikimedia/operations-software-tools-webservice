@@ -2,6 +2,7 @@
 from __future__ import print_function
 import argparse
 import sys
+import textwrap
 
 from toollabs.webservice import WebService
 from toollabs.webservice.backends import Backend, GridEngineBackend, KubernetesBackend
@@ -9,7 +10,32 @@ from toollabs.common.utils import wait_for
 from toollabs.common import Tool
 
 
-argparser = argparse.ArgumentParser()
+GRIDENGINE_DEFAULT_TYPE = 'lighttpd'
+KUBERNETES_DEFAULT_TYPE = 'php5.6'
+
+
+def format_types_block(types, default):
+    types = sorted(t + " (default)" if t == default else t for t in types)
+    joined = ", ".join(types)
+    return textwrap.fill(joined, 55, subsequent_indent=' '*len('Grid Engine backend: '))
+
+
+description = """
+Online documentation: https://wikitech.wikimedia.org/wiki/Help:Toolforge/Web
+
+Supported webservice types:
+Kubernetes backend:  {kubernetes}
+Grid Engine backend: {gridengine}
+""".format(
+    kubernetes = format_types_block(KubernetesBackend.CONFIG.keys(), KUBERNETES_DEFAULT_TYPE),
+    gridengine = format_types_block(GridEngineBackend.CONFIG.keys(), GRIDENGINE_DEFAULT_TYPE)
+)
+
+argparser = argparse.ArgumentParser(
+    description=description,
+    formatter_class=argparse.RawDescriptionHelpFormatter
+)
+
 argparser.add_argument('type', help='Type of webservice to start',
                        nargs='?')
 argparser.add_argument('--backend', help='Which cluster backend to use run the webservice',
@@ -97,7 +123,7 @@ if __name__ == '__main__':
                 print("--release is deprecated and has no effect, using trusty...")
                 args.release = 'trusty'
         if args.type is None:
-            args.type = tool.manifest.get('web', 'lighttpd')
+            args.type = tool.manifest.get('web', GRIDENGINE_DEFAULT_TYPE)
         elif args.type == 'lighttpd-precise':
             print('*' * 78, file=sys.stderr)
             print(
@@ -113,7 +139,7 @@ if __name__ == '__main__':
             print("Please just pick an appropriate type instead")
             sys.exit(1)
         if args.type is None:
-            args.type = tool.manifest.get('web', 'php5.6')
+            args.type = tool.manifest.get('web', KUBERNETES_DEFAULT_TYPE)
         acceptable_types = KubernetesBackend.CONFIG.keys()
 
     if args.extra_args is None:
