@@ -1,3 +1,10 @@
+toollabs-webservice (0.38) trusty; urgency=medium
+
+  * Remove Schema:CommandInvocation EventLogging
+  * Extend webservice -h details [Merlijn van Deen]
+
+ -- Bryan Davis <bd808@wikimedia.org>  Thu, 12 Oct 2017 16:25:11 +0000
+
 toollabs-webservice (0.37) trusty; urgency=medium
 
   * Always cleanup manifest on stop
