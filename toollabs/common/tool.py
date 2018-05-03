@@ -3,9 +3,12 @@ import yaml
 import pwd
 import errno
 
+with open('/etc/wmcs-project', 'r') as _projectfile:
+    PROJECT = _projectfile.read().strip()
+
 
 class Tool(object):
-    PREFIX = 'tools.'
+    PREFIX = PROJECT + '.'
     MANIFEST_VERSION = 2
 
     class InvalidToolException(Exception):
@@ -100,7 +103,7 @@ class Tool(object):
         """
         if not pwd_entry.pw_name.startswith(Tool.PREFIX):
             raise Tool.InvalidToolException(
-                'Tool username should begin with tools.')
+                'Tool username should begin with ' + Tool.PREFIX)
         if pwd_entry.pw_uid < 50000:  # FIXME: Find if it should be < or <=
             raise Tool.InvalidToolException(
                 "uid of tools should be >= 50000, uid is %s" %

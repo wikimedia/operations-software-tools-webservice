@@ -49,7 +49,7 @@ class GridEngineBackend(Backend):
                 self.tool.name)
             with open(memlimit) as f:
                 self.memlimit = f.read().strip()
-        except:
+        except IOError:
             self.memlimit = '4G'
 
     def _get_job_xml(self):

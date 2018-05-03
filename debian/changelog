@@ -1,3 +1,9 @@
+toollabs-webservice (0.39) trusty; urgency=medium
+
+  * Mount & load project name dynamically from /etc/wmcs-project
+
+ -- YiFei Zhu <zhuyifei1999@gmail.com>  Thu, 03 May 2018 19:57:12 +0000
+
 toollabs-webservice (0.38) trusty; urgency=medium
 
   * Remove Schema:CommandInvocation EventLogging
@@ -41,7 +47,7 @@ toollabs-webservice (0.32) trusty; urgency=medium
 
   * change absolute kubectl path to '/usr/bin/kubectl'
 
- -- YiFei Zhu <zhyifei1999@gmail.com> Mon, 30 Jan 2017 08:58:51 +0000
+ -- YiFei Zhu <zhyifei1999@gmail.com>  Mon, 30 Jan 2017 08:58:51 +0000
 
 toollabs-webservice (0.31) trusty; urgency=medium
 

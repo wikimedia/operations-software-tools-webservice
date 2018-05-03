@@ -101,7 +101,7 @@ class LighttpdPlainWebService(WebService):
         try:
             with open(self.tool.get_homedir_subpath('.lighttpd.conf')) as f:
                 config += f.read()
-        except:
+        except IOError:
             pass  # No customized file, not a big deal
         return config
 

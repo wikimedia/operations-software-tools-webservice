@@ -345,7 +345,8 @@ class KubernetesBackend(Backend):
         hostMounts = {
             'home': '/data/project/',
             'scratch': '/data/scratch/',
-            'dumps': '/public/dumps/'
+            'dumps': '/public/dumps/',
+            'wmcs-project': '/etc/wmcs-project',
         }
 
         homedir = '/data/project/{toolname}/'.format(toolname=self.tool.name)
