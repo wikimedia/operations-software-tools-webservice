@@ -180,7 +180,7 @@ if __name__ == '__main__':
         tool.save_manifest()
     elif args.action == 'status':
         if job.get_state() != Backend.STATE_STOPPED:
-            print('Your webservice is running', end='')
+            print('Your webservice of type', job.type, 'is running', end='')
         else:
             print('Your webservice is not running', end='')
     elif args.action == 'shell':
