@@ -1,6 +1,8 @@
 #!/usr/bin/python -Es
 from __future__ import print_function
 import argparse
+import ConfigParser
+import os
 import sys
 import textwrap
 
@@ -96,7 +98,12 @@ if __name__ == '__main__':
     # This allows us to default to spec in service.manifest but override
     # by specifying --backend option on the CLI
     if args.backend is None:
-        backend = tool.manifest.get('backend', 'gridengine')
+        if os.path.exists(os.path.expanduser('~/.webservicerc')) and 'backend' not in tool.manifest:
+            config = ConfigParser.ConfigParser()
+            config.read(os.path.expanduser('~/.webservicerc'))
+            backend = config.get('Default','--backend')
+        else:
+            backend = tool.manifest.get('backend', 'gridengine')
     else:
         if 'backend' in tool.manifest and tool.manifest['backend'] != args.backend and args.action != 'shell':
             print('Looks like you already have another webservice running, with a %s backend' % tool.manifest['backend'])
