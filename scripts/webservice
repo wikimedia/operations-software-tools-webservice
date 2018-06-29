@@ -22,6 +22,7 @@ from toolforge.common.utils import wait_for
 from toolforge.common import Tool
 
 
+BACKEND_DEFAULT = "kubernetes"
 GRIDENGINE_DEFAULT_TYPE = "lighttpd"
 KUBERNETES_DEFAULT_TYPE = "php7.3"
 
@@ -214,37 +215,50 @@ if __name__ == "__main__":
     # We use this logic rather than setting defaults in argparse.
     # This allows us to default to spec in service.manifest but override
     # by specifying --backend option on the CLI
-    if args.backend is None:
-        if (
-            os.path.exists(os.path.expanduser("~/.webservicerc"))
-            and "backend" not in tool.manifest
-        ):
-            config = ConfigParser()
-            config.read(os.path.expanduser("~/.webservicerc"))
-            backend = config.get("Default", "--backend")
-        else:
-            backend = tool.manifest.get("backend", "gridengine")
-    else:
-        if (
-            "backend" in tool.manifest
-            and tool.manifest["backend"] != args.backend
-            and args.action != "shell"
-        ):
+    rc_backend = None
+    webservicerc = os.path.expanduser("~/.webservicerc")
+    if os.path.exists(webservicerc):
+        config = ConfigParser()
+        config.read(webservicerc)
+        try:
+            rc_backend = config.get("Default", "--backend")
+        except ConfigParser.Error as e:
+            print("Error reading {}: {}".format(webservicerc, e))
+
+    # Select the first of:
+    # * --backend=... from cli args
+    # * 'backend' from service.manifest
+    # * --backend=... from ~/.webservicerc
+    backend = args.backend
+    if backend is None:
+        backend = tool.manifest.get("backend", rc_backend)
+
+    if backend is None:
+        print("WARNING: No explict backend provided.")
+        print("  Using default of '{}'".format(BACKEND_DEFAULT))
+        print(
+            "  For help refer to <https://wikitech.wikimedia.org/wiki/Help:Toolforge/Web>"
+        )
+        backend = BACKEND_DEFAULT
+
+    if args.action != "shell":
+        if "backend" in tool.manifest and tool.manifest["backend"] != backend:
+            manifest_file = tool.get_homedir_subpath("service.manifest")
             print(
-                "Looks like you already have another webservice running, "
-                "with a {} backend".format(tool.manifest["backend"])
+                "Backend '{}' from {} does not match '{}'".format(
+                    tool.manifest["backend"], manifest_file, backend,
+                )
             )
-            print("You should stop that webservice by issuing:")
+            print("  Try stopping your current webservice:")
+            print("    webservice stop")
+            print("  Then try starting it again:")
+            print("    {}".format(" ".join(sys.argv)))
             print(
-                "    webservice --backend=%s stop" % tool.manifest["backend"]
+                "  If you have already tried that and it did not help, "
+                "remove the state file before retrying:"
             )
-            print(
-                "And then start it again with backend %s by issuing:"
-                % args.backend
-            )
-            print("    webservice --backend=%s start" % args.backend)
+            print("    rm {}".format(manifest_file))
             sys.exit(1)
-        backend = args.backend
 
     if backend == "gridengine":
         # Backwards compatibility hack to support
@@ -298,7 +312,9 @@ if __name__ == "__main__":
     if job.is_deprecated(args.type):
         print("DEPRECATED: '{}' type is deprecated.".format(args.type))
         print(
-            "  See https://wikitech.wikimedia.org/wiki/Help:Toolforge/{}".format("Kubernetes" if backend == "kubernetes" else "Web")
+            "  See https://wikitech.wikimedia.org/wiki/Help:Toolforge/{}".format(
+                "Kubernetes" if backend == "kubernetes" else "Web"
+            )
         )
         print("  for currently supported types.")
 
@@ -329,8 +345,10 @@ if __name__ == "__main__":
         if job.get_state() != Backend.STATE_STOPPED:
             print(
                 "Your webservice of type {} is running on backend {}".format(
-                    job.type, backend),
-                file=sys.stdout)
+                    job.type, backend
+                ),
+                file=sys.stdout,
+            )
         else:
             print("Your webservice is not running", file=sys.stdout)
 
