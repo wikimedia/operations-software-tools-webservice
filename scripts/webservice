@@ -61,12 +61,12 @@ def start(job, message):
     except WebService.InvalidWebServiceException as e:
         raise SystemExit(e.message)
     # FIXME: Treat pending state differently.
-    wait_for(lambda: job.get_state() == Backend.STATE_RUNNING, message)
+    return wait_for(lambda: job.get_state() == Backend.STATE_RUNNING, message)
 
 
 def stop(job, message):
     job.request_stop()
-    wait_for(lambda: job.get_state() == Backend.STATE_STOPPED, message)
+    return wait_for(lambda: job.get_state() == Backend.STATE_STOPPED, message)
 
 
 def update_manifest(job, action):
@@ -189,8 +189,11 @@ if __name__ == '__main__':
         if job.get_state() != Backend.STATE_RUNNING:
             start(job, 'Your job is not running, starting')
         else:
-            stop(job, 'Restarting webservice')
-            start(job, '')
+            if stop(job, 'Restarting webservice'):
+                start(job, '')
+            else:
+                print('ERROR: Pod resisted shutdown')
+                sys.exit(1)
         tool.save_manifest()
     elif args.action == 'status':
         if job.get_state() != Backend.STATE_STOPPED:
