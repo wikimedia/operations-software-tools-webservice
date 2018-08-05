@@ -29,8 +29,10 @@ Supported webservice types:
 Kubernetes backend:  {kubernetes}
 Grid Engine backend: {gridengine}
 """.format(
-    kubernetes = format_types_block(KubernetesBackend.CONFIG.keys(), KUBERNETES_DEFAULT_TYPE),
-    gridengine = format_types_block(GridEngineBackend.CONFIG.keys(), GRIDENGINE_DEFAULT_TYPE)
+    kubernetes=format_types_block(
+        KubernetesBackend.CONFIG.keys(), KUBERNETES_DEFAULT_TYPE),
+    gridengine=format_types_block(
+        GridEngineBackend.CONFIG.keys(), GRIDENGINE_DEFAULT_TYPE)
 )
 
 argparser = argparse.ArgumentParser(
@@ -89,6 +91,7 @@ def update_manifest(job, action):
         # blow up!
         raise Exception("action has to be 'start' or 'stop', got %s" % action)
 
+
 if __name__ == '__main__':
     args = argparser.parse_args()
 
@@ -101,15 +104,18 @@ if __name__ == '__main__':
         if os.path.exists(os.path.expanduser('~/.webservicerc')) and 'backend' not in tool.manifest:
             config = ConfigParser.ConfigParser()
             config.read(os.path.expanduser('~/.webservicerc'))
-            backend = config.get('Default','--backend')
+            backend = config.get('Default', '--backend')
         else:
             backend = tool.manifest.get('backend', 'gridengine')
     else:
         if 'backend' in tool.manifest and tool.manifest['backend'] != args.backend and args.action != 'shell':
-            print('Looks like you already have another webservice running, with a %s backend' % tool.manifest['backend'])
+            print('Looks like you already have another webservice running, with a %s backend' %
+                  tool.manifest['backend'])
             print('You should stop that webservice by issuing:')
-            print('    webservice --backend=%s stop' % tool.manifest['backend'])
-            print('And then start it again with backend %s by issuing:' % args.backend)
+            print('    webservice --backend=%s stop' %
+                  tool.manifest['backend'])
+            print('And then start it again with backend %s by issuing:' %
+                  args.backend)
             print('    webservice --backend=%s start' % args.backend)
             sys.exit(1)
         backend = args.backend
@@ -120,7 +126,8 @@ if __name__ == '__main__':
         if args.release is not None:
             if args.type == 'lighttpd':
                 if args.release == 'trusty':
-                    print("--release=trusty is deprecated. Use %s %s <action> instead " % sys.argv[0], args.type)
+                    print("--release=trusty is deprecated. Use %s %s <action> instead " %
+                          sys.argv[0], args.type)
                 else:
                     print(
                         'ERROR: Unsupported release "%s"' % args.release,
