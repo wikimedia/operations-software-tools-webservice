@@ -1,8 +1,12 @@
+from __future__ import print_function
+
 import os
 import subprocess
-import pykube
-import time
 import sys
+import time
+
+import pykube
+
 from toollabs.webservice.backends import Backend
 from toollabs.webservice.services import GenericWebService
 from toollabs.webservice.services import JSWebService
@@ -202,27 +206,43 @@ class KubernetesBackend(Backend):
 
     def _find_obj(self, kind, selector):
         """
-        Returns object of kind matching selector, or None if it doesn't exist
+        Returns object of kind matching selector, or None if it doesn't exist.
+
+        Objects that are currently being deleted by the Kubernetes service
+        (meaning they have a non-empty metadata.deletionTimestamp value) are
+        ignored.
         """
-        try:
-            return kind.objects(self.api).filter(
-                namespace=self.tool.name,
-                selector=selector
-            ).get()
-        except pykube.exceptions.ObjectDoesNotExist:
+        objs = kind.objects(self.api).filter(
+            namespace=self.tool.name,
+            selector=selector
+        )
+        # Ignore objects that are in the process of being deleted.
+        objs = [
+            o for o in objs
+            if o.obj['metadata'].get('deletionTimestamp', None) is None
+        ]
+        if not objs:
             return None
+        elif len(objs) == 1:
+            return objs[0]
+        else:
+            raise ValueError(
+                (
+                    "Found {} objects of type {} matching selector {}: {}. "
+                    "See https://phabricator.wikimedia.org/T156626"
+                ).format(
+                    len(objs), kind.__name__, selector,
+                    ', '.join(repr(o) for o in objs)
+                )
+            )
 
     def _delete_obj(self, kind, selector):
         """
         Delete object of kind matching selector if it exists
         """
-        try:
-            kind.objects(self.api).filter(
-                namespace=self.tool.name,
-                selector=selector
-            ).get().delete()
-        except pykube.exceptions.ObjectDoesNotExist:
-            return None
+        o = self._find_obj(kind, selector)
+        if o is not None:
+            o.delete()
 
     def _wait_for_pod(self, label_selector, timeout=30):
         """
