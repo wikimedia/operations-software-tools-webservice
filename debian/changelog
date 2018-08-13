@@ -1,3 +1,14 @@
+toollabs-webservice (0.41) trusty; urgency=medium
+
+  [ nj4710 ]
+  * Providing users more clue when kubernetes is unable
+    to delete all the objects
+
+  [ Kunal Mehta ]
+  * Add support for php7.2 image/backend
+
+ -- Kunal Mehta <legoktm@member.fsf.org>  Mon, 13 Aug 2018 15:10:28 -0700
+
 toollabs-webservice (0.40) trusty; urgency=medium
 
   * Kubernetes: ignore terminating objects when searching [Bryan Davis]
