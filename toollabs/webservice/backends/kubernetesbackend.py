@@ -38,6 +38,23 @@ class KubernetesBackend(Backend):
                 }
             }
         },
+        'php7.2':  {
+            'cls': LighttpdWebService,
+            'image': 'toollabs-php72-web',
+            'resources': {
+                'limits': {
+                    # Pods will be killed if they go over memory limit
+                    'memory': '2Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
+                },
+                'requests': {
+                    # Pods are guaranteed at least this many resources
+                    'memory': '256Mi',
+                    'cpu': '0.125'
+                }
+            }
+        },
         'tcl':  {
             'cls': LighttpdPlainWebService,
             'image': 'toollabs-tcl-web',
