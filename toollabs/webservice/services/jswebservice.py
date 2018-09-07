@@ -17,4 +17,11 @@ class JSWebService(WebService):
     def run(self, port):
         super(JSWebService, self).run(port)
         os.chdir(self.tool.get_homedir_subpath('www/js'))
-        os.execv('/usr/bin/npm', ['/usr/bin/npm', 'start'])
+        npm = False
+        for path in ['/usr/local/bin/npm', '/usr/bin/npm']:
+            if os.path.exists(path):
+                npm = path
+                break
+        if not npm:
+            raise RuntimeError('Cannot find npm')
+        os.execv(npm, [npm, 'start'])
