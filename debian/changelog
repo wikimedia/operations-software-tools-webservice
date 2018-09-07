@@ -1,3 +1,9 @@
+toollabs-webservice (0.42) trusty; urgency=medium
+
+  * Prefer using npm from /usr/local/bin/npm
+
+ -- Kunal Mehta <legoktm@member.fsf.org>  Thu, 06 Sep 2018 21:54:54 -0700
+
 toollabs-webservice (0.41) trusty; urgency=medium
 
   [ nj4710 ]
