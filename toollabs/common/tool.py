@@ -9,7 +9,7 @@ with open('/etc/wmcs-project', 'r') as _projectfile:
 
 class Tool(object):
     PREFIX = PROJECT + '.'
-    MANIFEST_VERSION = 2
+    MANIFEST_VERSION = 3
 
     class InvalidToolException(Exception):
         pass

@@ -3,6 +3,7 @@ from __future__ import print_function
 import argparse
 import ConfigParser
 import os
+import platform
 import sys
 import textwrap
 
@@ -77,13 +78,14 @@ def update_manifest(job, action):
     """
     if action == 'start':
         if 'web' not in job.tool.manifest or job.tool.manifest['web'] != job.type:
+            job.tool.manifest['distribution'] = platform.linux_distribution()[0]
             job.tool.manifest['web'] = job.type
             if job.extra_args is not None:
                 job.tool.manifest['web::extra_args'] = job.extra_args
             job.tool.save_manifest()
     elif action == 'stop':
         if 'web' in job.tool.manifest:
-            for key in ['web', 'backend', 'web::extra_args']:
+            for key in ['distribution', 'web', 'backend', 'web::extra_args']:
                 if key in job.tool.manifest:
                     del job.tool.manifest[key]
             job.tool.save_manifest()

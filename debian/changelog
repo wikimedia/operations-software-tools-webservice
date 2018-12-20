@@ -1,3 +1,10 @@
+toollabs-webservice (0.43) trusty; urgency=medium
+
+  * Remove 'release' qsub label [Bryan Davis]
+  * Track platform of submit host in service.manifest [Bryan Davis]
+
+ -- Bryan Davis <bd808@wikimedia.org>  Thu, 20 Dec 2018 22:01:11 +0000
+
 toollabs-webservice (0.42) trusty; urgency=medium
 
   * Prefer using npm from /usr/local/bin/npm
