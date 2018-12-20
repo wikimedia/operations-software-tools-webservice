@@ -124,18 +124,7 @@ if __name__ == '__main__':
         # Backwards compatibility hack to support
         # 'webservice --release trusty lighttpd start' invocations
         if args.release is not None:
-            if args.type == 'lighttpd':
-                if args.release == 'trusty':
-                    print("--release=trusty is deprecated. Use %s %s <action> instead " %
-                          sys.argv[0], args.type)
-                else:
-                    print(
-                        'ERROR: Unsupported release "%s"' % args.release,
-                        file=sys.stderr)
-                    sys.exit(1)
-            else:
-                print("--release is deprecated and has no effect, using trusty...")
-                args.release = 'trusty'
+            print("--release is deprecated and has no effect")
         if args.type is None:
             args.type = tool.manifest.get('web', GRIDENGINE_DEFAULT_TYPE)
         elif args.type == 'lighttpd-precise':

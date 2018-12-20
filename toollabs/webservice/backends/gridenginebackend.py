@@ -19,9 +19,6 @@ class GridEngineBackend(Backend):
     # Specify config for each type that this backend accepts
     # Key is name of type passed in by commandline
     # cls is the Webservice class to instantiate
-    # release is an optional key that specifies which release to run this on.
-    #   options are: trusty
-    #   defaults to 'trusty'
     # queue is an optional key that spcifies which queue to run ths one.
     #   options are: webgrid-lighttpd, webgrid-generic
     #   defaults to 'webgrid-generic'
@@ -41,7 +38,6 @@ class GridEngineBackend(Backend):
         super(GridEngineBackend, self).__init__(tool, type, extra_args)
         cfg = GridEngineBackend.CONFIG[type]
         self.webservice = cfg['cls'](tool, extra_args)
-        self.release = cfg.get('release', 'trusty')
         self.queue = cfg.get('queue', 'webgrid-generic')
         self.name = '{type}-{toolname}'.format(type=type, toolname=tool.name)
         try:
@@ -84,9 +80,7 @@ class GridEngineBackend(Backend):
                    '-o', os.path.expanduser('~/error.log'),
                    '-i', '/dev/null',
                    '-q', self.queue,
-                   '-l', 'h_vmem=%s,release=%s' % (
-                       self.memlimit, self.release
-                    ),
+                   '-l', 'h_vmem=%s' % self.memlimit,
                    '-b', 'y',
                    '-N', self.name,
                    cmd]
