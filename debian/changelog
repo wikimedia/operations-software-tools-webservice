@@ -1,3 +1,10 @@
+toollabs-webservice (0.44) trusty; urgency=medium
+
+  * Set custom mime-types [Bryan Davis]
+  * Mount /mnt/nfs into Kuberntes pods [Bryan Davis]
+
+ -- Bryan Davis <bd808@wikimedia.org>  Tue, 19 Feb 2019 01:39:00 +0000
+
 toollabs-webservice (0.43) trusty; urgency=medium
 
   * Remove 'release' qsub label [Bryan Davis]
