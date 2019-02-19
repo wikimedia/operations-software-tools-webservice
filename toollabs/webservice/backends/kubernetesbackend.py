@@ -380,9 +380,10 @@ class KubernetesBackend(Backend):
     ):
         # All the paths we want to mount from host nodes onto container
         hostMounts = {
-            'home': '/data/project/',
-            'scratch': '/data/scratch/',
             'dumps': '/public/dumps/',
+            'home': '/data/project/',
+            'nfs': '/mnt/nfs/',
+            'scratch': '/data/scratch/',
             'wmcs-project': '/etc/wmcs-project',
         }
 
