@@ -1,3 +1,9 @@
+toollabs-webservice (0.45) trusty; urgency=medium
+
+  * Add python 3.5 and nodejs 10 types [Bryan Davis]
+
+ -- Bryan Davis <bd808@wikimedia.org>  Fri, 17 May 2019 15:33:00 +0000
+
 toollabs-webservice (0.44) trusty; urgency=medium
 
   * Set custom mime-types [Bryan Davis]

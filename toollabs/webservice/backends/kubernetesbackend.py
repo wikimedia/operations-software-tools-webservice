@@ -89,6 +89,23 @@ class KubernetesBackend(Backend):
                  }
             }
         },
+        'python3.5': {
+            'cls': PythonWebService,
+            'image': 'toollabs-python35-web',
+            'resources': {
+                 'limits': {
+                    # Pods will be killed if they go over memory limit
+                    'memory': '2Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
+                 },
+                 'requests': {
+                    # Pods are guaranteed at least this many resources
+                    'memory': '256Mi',
+                    'cpu': '0.125'
+                 }
+            }
+        },
         'python2': {
             'cls': PythonWebService,
             'image': 'toollabs-python2-web',
@@ -176,7 +193,24 @@ class KubernetesBackend(Backend):
                     'cpu': '0.125'
                  }
             }
-        }
+        },
+        'node10': {
+            'cls': JSWebService,
+            'image': 'toollabs-node10-web',
+            'resources': {
+                 'limits': {
+                    # Pods will be killed if they go over memory limit
+                    'memory': '2Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
+                 },
+                 'requests': {
+                    # Pods are guaranteed at least this many resources
+                    'memory': '256Mi',
+                    'cpu': '0.125'
+                 }
+            }
+        },
     }
 
     def __init__(self, tool, type, extra_args=None):
