@@ -695,7 +695,8 @@ class KubernetesBackend(Backend):
             print(
                 "Your webservice is taking quite while to restart. If it isn't"
                 " up shortly, run a 'webservice stop' and the start command "
-                "used to run this webservice to begin with."
+                "used to run this webservice to begin with.",
+                file=sys.stderr,
             )
             sys.exit(1)
 
@@ -721,7 +722,7 @@ class KubernetesBackend(Backend):
             pykube.Pod(self.api, podSpec).create()
 
         if not self._wait_for_pods(self.shell_label_selector):
-            print("Pod is not ready in time")
+            print("Pod is not ready in time", file=sys.stderr)
             self._delete_objs(pykube.Pod, self.shell_label_selector)
             sys.exit(1)
         kubectl = subprocess.Popen(
@@ -733,6 +734,6 @@ class KubernetesBackend(Backend):
         # using 'kubectl attach interactive -c interactive -i -t' command when
         # the pod is running
         # This isn't true, since we actually kill the pod when done
-        print("Pod stopped. Session cannot be resumed.")
+        print("Pod stopped. Session cannot be resumed.", file=sys.stderr)
 
         self._delete_objs(pykube.Pod, self.shell_label_selector)
