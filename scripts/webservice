@@ -23,7 +23,7 @@ from toolforge.common import Tool
 
 
 GRIDENGINE_DEFAULT_TYPE = "lighttpd"
-KUBERNETES_DEFAULT_TYPE = "php5.6"
+KUBERNETES_DEFAULT_TYPE = "php7.3"
 
 # Make all `print()` output go to stderr by default
 print = functools.partial(print, file=sys.stderr)
