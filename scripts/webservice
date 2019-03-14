@@ -253,18 +253,6 @@ if __name__ == "__main__":
             sys.exit(1)
         if args.type is None:
             args.type = tool.manifest.get("web", GRIDENGINE_DEFAULT_TYPE)
-        elif args.type == "lighttpd-precise":
-            print("*" * 78, file=sys.stderr)
-            print(
-                (
-                    "ERROR: Precise hosts are deprecated from Tool Labs\n\t"
-                    "https://wikitech.wikimedia.org/wiki/"
-                    "Tools_Precise_deprecation"
-                ),
-                file=sys.stderr,
-            )
-            print("*" * 78, file=sys.stderr)
-            sys.exit(1)
         acceptable_types = GridEngineBackend.CONFIG.keys()
     elif backend == "kubernetes":
         if args.release is not None:
