@@ -524,7 +524,7 @@ class KubernetesBackend(Backend):
 
         if self.extra_args:
             cmd.append("--extra_args")
-            cmd.append(self.extra_args)
+            cmd.extend(self.extra_args)
 
         ports = [{"name": "http", "containerPort": 8000, "protocol": "TCP"}]
 
