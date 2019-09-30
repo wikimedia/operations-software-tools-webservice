@@ -1,3 +1,10 @@
+toollabs-webservice (0.46) trusty; urgency=medium
+
+  * Run update_manifest(...) on restart so service.manifest has the correct
+    webservice type if it is invoked directly the first time [Hieu Pham]
+
+ -- Hieu Pham <hpham@wikimedia.org>  Mon, 30 Sep 2019 20:00:00 +0000
+
 toollabs-webservice (0.45) trusty; urgency=medium
 
   * Add python 3.5 and nodejs 10 types [Bryan Davis]

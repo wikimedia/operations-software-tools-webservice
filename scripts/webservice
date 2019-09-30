@@ -179,6 +179,7 @@ if __name__ == '__main__':
     elif args.action == 'restart':
         if job.get_state() != Backend.STATE_RUNNING:
             start(job, 'Your job is not running, starting')
+            update_manifest(job, 'start')
         else:
             if stop(job, 'Restarting webservice'):
                 start(job, '')
