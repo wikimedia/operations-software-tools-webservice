@@ -39,7 +39,9 @@ url.access-deny = ( "~", ".inc" )
 static-file.exclude-extensions = ( ".php", ".pl", ".fcgi" )
 
 accesslog.use-syslog = "disable"
-accesslog.filename = "{home}/access.log"
+
+# no longer enabled by default (T233347)
+# accesslog.filename = "{home}/access.log"
 
 mimetype.assign = (
   ".pcf.Z" => "application/x-font-pcf",
