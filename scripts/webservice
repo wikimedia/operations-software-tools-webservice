@@ -4,6 +4,7 @@ import argparse
 import ConfigParser
 import os
 import platform
+import re
 import sys
 import textwrap
 
@@ -41,10 +42,43 @@ argparser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter
 )
 
+
+def kube_quant(string):
+    """
+    A type for args that roughly matches up with Kubernetes' quantity.go
+    General form is <number><suffix>
+    The following are acceptable suffixes
+
+    base1024: Ki | Mi | Gi | Ti | Pi | Ei
+    base1000: n | u | m | "" | k | M | G | T | P | E
+    """
+    valid_suffixes = [
+        'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei',
+        'n', 'u', 'm', '', 'k', 'M', 'G', 'T', 'P', 'E'
+    ]
+    pattern = re.compile(r"^(\d+)([A-Za-z]{0,2})$")
+    quant_check = pattern.match(string)
+    if quant_check:
+        suffix = quant_check.group(2)
+        if suffix in valid_suffixes:
+            return string
+
+    msg = '{} is not a valid Kubernetes quantity'.format(string)
+    raise argparse.ArgumentTypeError(msg)
+
+
 argparser.add_argument('type', help='Type of webservice to start',
                        nargs='?')
 argparser.add_argument('--backend', help='Which cluster backend to use run the webservice',
                        choices=['gridengine', 'kubernetes'])
+argparser.add_argument('-m', '--mem', required=False, type=kube_quant,
+                       help='Set higher Kubernetes memory limit (new cluster only)',
+                       dest='memory'
+                       )
+argparser.add_argument('-c', '--cpu', required=False, type=kube_quant,
+                       help='Set a higher Kubernetes cpu limit (new cluster only)',
+                       dest='cpu'
+                       )
 argparser.add_argument('action', help='Action to perform',
                        choices=['start', 'stop', 'status', 'restart', 'shell'])
 argparser.add_argument('extra_args', help='Extra arguments to be parsed by the chosen webservicetype',
@@ -127,6 +161,14 @@ if __name__ == '__main__':
         # 'webservice --release trusty lighttpd start' invocations
         if args.release is not None:
             print("--release is deprecated and has no effect")
+        if args.memory is not None:
+            print("--mem is only for --backend=kubernetes and the new cluster")
+            print("Please run again without this argument")
+            sys.exit(1)
+        if args.cpu is not None:
+            print("--cpu is only for --backend=kubernetes and the new cluster")
+            print("Please run again without this argument")
+            sys.exit(1)
         if args.type is None:
             args.type = tool.manifest.get('web', GRIDENGINE_DEFAULT_TYPE)
         elif args.type == 'lighttpd-precise':
@@ -157,7 +199,7 @@ if __name__ == '__main__':
     if backend == 'gridengine':
         job = GridEngineBackend(tool, args.type, args.extra_args)
     else:
-        job = KubernetesBackend(tool, args.type, args.extra_args)
+        job = KubernetesBackend(tool, args.type, args.memory, args.cpu, args.extra_args)
 
     tool.manifest['backend'] = backend
 

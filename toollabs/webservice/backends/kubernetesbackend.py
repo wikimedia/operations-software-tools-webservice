@@ -24,6 +24,7 @@ class KubernetesBackend(Backend):
         'php5.6':  {
             'cls': LighttpdWebService,
             'image': 'toollabs-php-web',
+            'tf-image': 'toolforge-php5-sssd-web',
             'resources': {
                 'limits': {
                     # Pods will be killed if they go over memory limit
@@ -41,6 +42,7 @@ class KubernetesBackend(Backend):
         'php7.2':  {
             'cls': LighttpdWebService,
             'image': 'toollabs-php72-web',
+            'tf-image': 'toolforge-php72-sssd-web',
             'resources': {
                 'limits': {
                     # Pods will be killed if they go over memory limit
@@ -58,6 +60,7 @@ class KubernetesBackend(Backend):
         'tcl':  {
             'cls': LighttpdPlainWebService,
             'image': 'toollabs-tcl-web',
+            'tf-image': 'toolforge-tcl86-sssd-web',
             'resources': {
                 'limits': {
                     # Pods will be killed if they go over memory limit
@@ -75,6 +78,7 @@ class KubernetesBackend(Backend):
         'python': {
             'cls': PythonWebService,
             'image': 'toollabs-python-web',
+            'tf-image': 'toolforge-python34-sssd-web',
             'resources': {
                  'limits': {
                     # Pods will be killed if they go over memory limit
@@ -92,6 +96,7 @@ class KubernetesBackend(Backend):
         'python3.5': {
             'cls': PythonWebService,
             'image': 'toollabs-python35-web',
+            'tf-image': 'toolforge-python35-sssd-web',
             'resources': {
                  'limits': {
                     # Pods will be killed if they go over memory limit
@@ -109,6 +114,7 @@ class KubernetesBackend(Backend):
         'python2': {
             'cls': PythonWebService,
             'image': 'toollabs-python2-web',
+            'tf-image': 'toolforge-python2-sssd-web',
             'resources': {
                  'limits': {
                     # Pods will be killed if they go over memory limit
@@ -126,6 +132,7 @@ class KubernetesBackend(Backend):
         'ruby2':  {
             'cls': GenericWebService,
             'image': 'toollabs-ruby-web',
+            'tf-image': 'toolforge-ruby21-sssd-web',
             'resources': {
                 'limits': {
                     # Pods will be killed if they go over memory limit
@@ -143,6 +150,7 @@ class KubernetesBackend(Backend):
         'golang': {
             'cls': GenericWebService,
             'image': 'toollabs-golang-web',
+            'tf-image': 'toolforge-golang-sssd-web',
             'resources': {
                  'limits': {
                     # Pods will be killed if they go over memory limit
@@ -160,6 +168,7 @@ class KubernetesBackend(Backend):
         'jdk8': {
             'cls': GenericWebService,
             'image': 'toollabs-jdk8-web',
+            'tf-image': 'toolforge-jdk8-sssd-web',
             'resources': {
                  'limits': {
                     # Pods will be killed if they go over memory limit
@@ -180,6 +189,7 @@ class KubernetesBackend(Backend):
         'nodejs': {
             'cls': JSWebService,
             'image': 'toollabs-nodejs-web',
+            'tf-image': 'toolforge-node6-sssd-web',
             'resources': {
                  'limits': {
                     # Pods will be killed if they go over memory limit
@@ -197,6 +207,7 @@ class KubernetesBackend(Backend):
         'node10': {
             'cls': JSWebService,
             'image': 'toollabs-node10-web',
+            'tf-image': 'toolforge-node10-sssd-web',
             'resources': {
                  'limits': {
                     # Pods will be killed if they go over memory limit
@@ -213,26 +224,51 @@ class KubernetesBackend(Backend):
         },
     }
 
-    def __init__(self, tool, type, extra_args=None):
+    def __init__(self, tool, type, mem=None, cpu=None, extra_args=None):
         super(KubernetesBackend, self).__init__(tool, type, extra_args)
 
-        self.container_image = '{registry}/{image}:latest'.format(
-            registry='docker-registry.tools.wmflabs.org',
-            image=KubernetesBackend.CONFIG[type]['image']
-        )
-        self.container_resources = KubernetesBackend.CONFIG[type]['resources']
         self.webservice = KubernetesBackend.CONFIG[type]['cls'](
             tool, extra_args)
 
-        self.api = pykube.HTTPClient(
-            pykube.KubeConfig.from_file(
-                os.path.expanduser('~/.kube/config')
-            )
+        kubeconfig = pykube.KubeConfig.from_file(
+            os.path.expanduser('~/.kube/config')
         )
+
+        self.current_context = kubeconfig.current_context
+        if self.current_context == "toolforge":
+            # Use the sssd image
+            self.container_image = '{registry}/{image}:latest'.format(
+                registry='docker-registry.tools.wmflabs.org',
+                image=KubernetesBackend.CONFIG[type]['tf-image']
+            )
+            # In this cluster, defaults are used for request so this just
+            # affects the burst, up to certain limits (set as max in the
+            # limitrange)
+            # The namespace quotas also have impact on what can be done.
+            if mem or cpu:
+                self.container_resources = {'limits': {}}
+                if mem:
+                    self.container_resources['limits']['memory'] = mem
+                if cpu:
+                    self.container_resources['limits']['cpu'] = cpu
+            else:
+                # Defaults are cpu: 500m and memory: 512Mi
+                self.container_resources = None
+        else:
+            self.container_resources = KubernetesBackend.CONFIG[type][
+                'resources'
+                ]
+            self.container_image = '{registry}/{image}:latest'.format(
+                registry='docker-registry.tools.wmflabs.org',
+                image=KubernetesBackend.CONFIG[type]['image']
+            )
+
+        self.api = pykube.HTTPClient(kubeconfig)
         # Labels for all objects created by this webservice
         self.webservice_labels = {
             "tools.wmflabs.org/webservice": "true",
             "tools.wmflabs.org/webservice-version": "1",
+            "toolforge": "tool",
             "name": self.tool.name
         }
         # FIXME: Protect against injection?
@@ -246,6 +282,7 @@ class KubernetesBackend(Backend):
         self.shell_labels = {
             'tools.wmflabs.org/webservice-interactive': 'true',
             'tools.wmflabs.org/webservice-interactive-version': '1',
+            "toolforge": "tool",
             'name': 'interactive'
         }
         self.shell_label_selector = ','.join(
@@ -254,6 +291,10 @@ class KubernetesBackend(Backend):
                 self.shell_labels.items()
             ]
         )
+
+    def _get_ns(self):
+        return 'tool-{}'.format(self.tool.name) if (
+            self.current_context == 'toolforge') else self.tool.name
 
     def _find_obj(self, kind, selector):
         """
@@ -264,7 +305,7 @@ class KubernetesBackend(Backend):
         ignored.
         """
         objs = kind.objects(self.api).filter(
-            namespace=self.tool.name,
+            namespace=self._get_ns(),
             selector=selector
         )
         # Ignore objects that are in the process of being deleted.
@@ -316,7 +357,7 @@ class KubernetesBackend(Backend):
             "apiVersion": "v1",
             "metadata": {
                 "name": self.tool.name,
-                "namespace": self.tool.name,
+                "namespace": self._get_ns(),
                 "labels": self.webservice_labels
             },
             "spec": {
@@ -331,6 +372,39 @@ class KubernetesBackend(Backend):
                 "selector": {
                     "name": self.tool.name
                 },
+            }
+        }
+
+    def _get_ingress(self):
+        """
+        Return the full spec of an ingress object for this webservice
+        """
+        return {
+            "apiVersion": "extensions/v1beta1",  # pykube is old
+            "kind": "Ingress",
+            "metadata": {
+                "name": self.tool.name,
+                "namespace": "tool-{}".format(self.tool.name),
+                "annotations": {
+                    "nginx.ingress.kubernetes.io/rewrite-target": "/"
+                },
+                "labels": self.webservice_labels
+            },
+            "spec": {
+                "rules": [
+                    {
+                        "host": "tools.wmflabs.org",
+                        "http": [
+                            {
+                                "path": "/{}".format(self.tool.name),
+                                "backend": {
+                                    "serviceName": self.tool.name,
+                                    "servicePort": 8000
+                                }
+                            }
+                        ]
+                    }
+                ]
             }
         }
 
@@ -358,10 +432,10 @@ class KubernetesBackend(Backend):
 
         return {
             "kind": "Deployment",
-            "apiVersion": "extensions/v1beta1",
+            "apiVersion": "extensions/v1beta1",  # Warning, this is deprecated
             "metadata": {
                 "name": self.tool.name,
-                "namespace": self.tool.name,
+                "namespace": self._get_ns(),
                 "labels": self.webservice_labels
             },
             "spec": {
@@ -393,7 +467,7 @@ class KubernetesBackend(Backend):
             'apiVersion': 'v1',
             'kind': 'Pod',
             'metadata': {
-                'namespace': self.tool.name,
+                'namespace': self._get_ns(),
                 'name': 'interactive',
                 'labels': self.shell_labels,
             },
@@ -416,37 +490,51 @@ class KubernetesBackend(Backend):
         hostMounts = {
             'dumps': '/public/dumps/',
             'home': '/data/project/',
-            'nfs': '/mnt/nfs/',
+            'nfs': '/mnt/nfs/',  # Not sure this should be mounted
             'scratch': '/data/scratch/',
             'wmcs-project': '/etc/wmcs-project',
         }
 
         homedir = '/data/project/{toolname}/'.format(toolname=self.tool.name)
 
-        return {
-            "volumes": [
-                {"name": key, "hostPath": {"path": value}}
-                for key, value in hostMounts.items()
-            ],
-            "containers": [{
-                "name": name,
-                "image": container_image,
-                "command": cmd,
-                "workingDir": homedir,
-                "env": [
-                    # FIXME: This should be set by NSS maybe?!
-                    {"name": "HOME", "value": homedir}
-                ],
-                "ports": ports,
-                "volumeMounts": [
-                    {"name": key, "mountPath": value}
+        if self.current_context == "toolforge":
+            return {
+                "containers": [{
+                    "name": name,
+                    "image": container_image,
+                    "command": cmd,
+                    "workingDir": homedir,
+                    "ports": ports,
+                    "resources": resources,
+                    "tty": tty,
+                    "stdin": stdin
+                }],
+            }
+        else:
+            return {
+                "volumes": [
+                    {"name": key, "hostPath": {"path": value}}
                     for key, value in hostMounts.items()
                 ],
-                "resources": resources,
-                "tty": tty,
-                "stdin": stdin
-            }],
-        }
+                "containers": [{
+                    "name": name,
+                    "image": container_image,
+                    "command": cmd,
+                    "workingDir": homedir,
+                    "env": [
+                        # FIXME: This should be set by NSS maybe?!
+                        {"name": "HOME", "value": homedir}
+                    ],
+                    "ports": ports,
+                    "volumeMounts": [
+                        {"name": key, "mountPath": value}
+                        for key, value in hostMounts.items()
+                    ],
+                    "resources": resources,
+                    "tty": tty,
+                    "stdin": stdin
+                }],
+            }
 
     def request_start(self):
         self.webservice.check()
@@ -460,17 +548,29 @@ class KubernetesBackend(Backend):
         if svc is None:
             pykube.Service(self.api, self._get_svc()).create()
 
+        if self.current_context == "toolforge":
+            ingress = self._find_obj(
+                pykube.Ingress, self.webservice_label_selector)
+            if ingress is None:
+                pykube.Ingress(self.api, self._get_ingress()).create()
+
     def request_stop(self):
+        if self.current_context == "toolforge":
+            self._delete_obj(pykube.Ingress, self.webservice_label_selector)
+
         self._delete_obj(pykube.Service, self.webservice_label_selector)
         # No cascading delete support yet. So we delete all of the objects by
         # hand Can be simplified after
         # https://github.com/kubernetes/kubernetes/pull/23656
+        # Not true of the new cluster ^^
         self._delete_obj(pykube.Deployment, self.webservice_label_selector)
-        self._delete_obj(
-            pykube.ReplicaSet, 'name={name}'.format(name=self.tool.name))
-        self._delete_obj(pykube.Pod, self.webservice_label_selector)
+        if self.current_context != "toolforge":
+            self._delete_obj(
+                pykube.ReplicaSet, 'name={name}'.format(name=self.tool.name))
+            self._delete_obj(pykube.Pod, self.webservice_label_selector)
 
     def get_state(self):
+        # TODO: add some state concept around ingresses
         pod = self._find_obj(pykube.Pod, self.webservice_label_selector)
         if pod is not None:
             if pod.obj['status']['phase'] == 'Running':
