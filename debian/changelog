@@ -1,3 +1,10 @@
+toollabs-webservice (0.48) trusty; urgency=medium
+
+  * Remove user warning on start/restart that access.log feature is not
+    enabled by default [Hieu Pham]
+
+ -- Hieu Pham <hpham@wikimedia.org>  Web, 06 Nov 2019 20:00:00 +0000
+
 toollabs-webservice (0.47) trusty; urgency=medium
 
   * Disable access.log feature from lighttpdwebservice and warn user

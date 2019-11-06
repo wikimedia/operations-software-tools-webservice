@@ -57,10 +57,6 @@ argparser.add_argument('--release',
 
 
 def start(job, message):
-    print('*' * 78, file=sys.stderr)
-    print('Note that access.log is no longer enabled by default (see https://w.wiki/9go)',
-          file=sys.stderr)
-    print('*' * 78, file=sys.stderr)
     try:
         job.request_start()
     except WebService.InvalidWebServiceException as e:
