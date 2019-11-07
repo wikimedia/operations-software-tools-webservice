@@ -224,9 +224,11 @@ class KubernetesBackend(Backend):
         },
     }
 
-    def __init__(self, tool, type, mem=None, cpu=None, extra_args=None):
+    def __init__(
+            self, tool, project, type, mem=None, cpu=None, extra_args=None
+            ):
         super(KubernetesBackend, self).__init__(tool, type, extra_args)
-
+        self.project = project
         self.webservice = KubernetesBackend.CONFIG[type]['cls'](
             tool, extra_args)
 
@@ -393,16 +395,19 @@ class KubernetesBackend(Backend):
             "spec": {
                 "rules": [
                     {
-                        "host": "tools.wmflabs.org",
-                        "http": [
+                        "host": "{}.wmflabs.org".format(self.project),
+                        "http":
                             {
-                                "path": "/{}".format(self.tool.name),
-                                "backend": {
-                                    "serviceName": self.tool.name,
-                                    "servicePort": 8000
-                                }
+                                "paths": [
+                                    {
+                                        "path": "/{}".format(self.tool.name),
+                                        "backend": {
+                                            "serviceName": self.tool.name,
+                                            "servicePort": 8000
+                                        }
+                                    }
+                                ]
                             }
-                        ]
                     }
                 ]
             }
@@ -562,12 +567,13 @@ class KubernetesBackend(Backend):
         # No cascading delete support yet. So we delete all of the objects by
         # hand Can be simplified after
         # https://github.com/kubernetes/kubernetes/pull/23656
-        # Not true of the new cluster ^^
+        # Because we are using old objects in the new cluster (because pykube)
+        # deletion policy must be explicitly set in the namespaces by
+        # maintain-kubeusers and STILL defaults to "orphan"
         self._delete_obj(pykube.Deployment, self.webservice_label_selector)
-        if self.current_context != "toolforge":
-            self._delete_obj(
-                pykube.ReplicaSet, 'name={name}'.format(name=self.tool.name))
-            self._delete_obj(pykube.Pod, self.webservice_label_selector)
+        self._delete_obj(
+            pykube.ReplicaSet, 'name={name}'.format(name=self.tool.name))
+        self._delete_obj(pykube.Pod, self.webservice_label_selector)
 
     def get_state(self):
         # TODO: add some state concept around ingresses

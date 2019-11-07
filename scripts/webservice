@@ -133,6 +133,11 @@ if __name__ == '__main__':
 
     tool = Tool.from_currentuser()
 
+    # In order to more fully enable toolsbeta, we need to know we are there.
+    if os.path.isfile('/etc/wmcs-project'):
+        with open('/etc/wmcs-project') as f:
+            project = f.readline().rstrip()
+
     # We use this logic rather than setting defaults in argparse.
     # This allows us to default to spec in service.manifest but override
     # by specifying --backend option on the CLI
@@ -199,7 +204,9 @@ if __name__ == '__main__':
     if backend == 'gridengine':
         job = GridEngineBackend(tool, args.type, args.extra_args)
     else:
-        job = KubernetesBackend(tool, args.type, args.memory, args.cpu, args.extra_args)
+        job = KubernetesBackend(
+            tool, project, args.type, args.memory, args.cpu, args.extra_args
+            )
 
     tool.manifest['backend'] = backend
 

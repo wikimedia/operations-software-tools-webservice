@@ -1,3 +1,9 @@
+toollabs-webservice (0.50) trusty; urgency=medium
+
+  * Fix error in Ingress object and enable toolsbeta ingresses [Brooke Storm]
+
+ -- Brooke Storm <bstorm@wikimedia.org>  Thu, 07 Nov 2019 20:00:00 +0000
+
 toollabs-webservice (0.49) trusty; urgency=medium
 
   * Introduce the handling for the upgraded k8s cluster [Brooke Storm]
