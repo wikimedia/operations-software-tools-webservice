@@ -1,3 +1,10 @@
+toollabs-webservice (0.51) trusty; urgency=medium
+
+  * Added buster images: golang111, jdk11, php73, python37,
+    ruby25 [Hieu Pham]
+
+ -- Hieu Pham <hpham@wikimedia.org>  Fri, 08 Nov 2019 20:00:00 +0000
+
 toollabs-webservice (0.50) trusty; urgency=medium
 
   * Fix error in Ingress object and enable toolsbeta ingresses [Brooke Storm]

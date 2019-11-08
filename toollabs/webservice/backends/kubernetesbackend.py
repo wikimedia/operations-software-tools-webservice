@@ -57,6 +57,24 @@ class KubernetesBackend(Backend):
                 }
             }
         },
+        'php7.3':  {
+            'cls': LighttpdWebService,
+            'image': 'toolforge-php73-web',
+            'tf-image': 'toolforge-php73-sssd-web',
+            'resources': {
+                'limits': {
+                    # Pods will be killed if they go over memory limit
+                    'memory': '2Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
+                },
+                'requests': {
+                    # Pods are guaranteed at least this many resources
+                    'memory': '256Mi',
+                    'cpu': '0.125'
+                }
+            }
+        },
         'tcl':  {
             'cls': LighttpdPlainWebService,
             'image': 'toollabs-tcl-web',
@@ -111,6 +129,24 @@ class KubernetesBackend(Backend):
                  }
             }
         },
+        'python3.7': {
+            'cls': PythonWebService,
+            'image': 'toolforge-python37-web',
+            'tf-image': 'toolforge-python37-sssd-web',
+            'resources': {
+                'limits': {
+                    # Pods will be killed if they go over memory limit
+                    'memory': '2Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
+                },
+                'requests': {
+                    # Pods are guaranteed at least this many resources
+                    'memory': '256Mi',
+                    'cpu': '0.125'
+                }
+            }
+        },
         'python2': {
             'cls': PythonWebService,
             'image': 'toollabs-python2-web',
@@ -147,6 +183,24 @@ class KubernetesBackend(Backend):
                 }
             }
         },
+        'ruby25':  {
+            'cls': GenericWebService,
+            'image': 'toolforge-ruby25-web',
+            'tf-image': 'toolforge-ruby25-sssd-web',
+            'resources': {
+                'limits': {
+                    # Pods will be killed if they go over memory limit
+                    'memory': '2Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
+                },
+                'requests': {
+                    # Pods are guaranteed at least this many resources
+                    'memory': '256Mi',
+                    'cpu': '0.125'
+                }
+            }
+        },
         'golang': {
             'cls': GenericWebService,
             'image': 'toollabs-golang-web',
@@ -163,6 +217,24 @@ class KubernetesBackend(Backend):
                     'memory': '256Mi',
                     'cpu': '0.125'
                  }
+            }
+        },
+        'golang111': {
+            'cls': GenericWebService,
+            'image': 'toolforge-golang111-web',
+            'tf-image': 'toolforge-golang111-sssd-web',
+            'resources': {
+                'limits': {
+                    # Pods will be killed if they go over memory limit
+                    'memory': '2Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
+                },
+                'requests': {
+                    # Pods are guaranteed at least this many resources
+                    'memory': '256Mi',
+                    'cpu': '0.125'
+                }
             }
         },
         'jdk8': {
@@ -184,6 +256,27 @@ class KubernetesBackend(Backend):
                     'memory': '256Mi',
                     'cpu': '0.125'
                  }
+            }
+        },
+        'jdk11': {
+            'cls': GenericWebService,
+            'image': 'toolforge-jdk11-web',
+            'tf-image': 'toolforge-jdk11-sssd-web',
+            'resources': {
+                'limits': {
+                    # Pods will be killed if they go over memory limit
+                    # Higher Memory Limit for jdk8, but not higher request
+                    # So it can use more memory before being killed, but will
+                    # die when there is a memory crunch
+                    'memory': '4Gi',
+                    # Pods can still burst to more than cpu limit
+                    'cpu': '2',
+                },
+                'requests': {
+                    # Pods are guaranteed at least this many resources
+                    'memory': '256Mi',
+                    'cpu': '0.125'
+                }
             }
         },
         'nodejs': {
