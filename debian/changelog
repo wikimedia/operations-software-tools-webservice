@@ -1,3 +1,10 @@
+toollabs-webservice (0.52) trusty; urgency=medium
+
+  * Urgent fix for label selector mismatch in T237836 [Brooke Storm]
+  * Also protects against injection via naming
+
+ -- Brooke Storm <bstorm@wikimedia.org>  Sat, 09 Nov 2019 20:00:00 +0000
+
 toollabs-webservice (0.51) trusty; urgency=medium
 
   * Added buster images: golang111, jdk11, php73, python37,

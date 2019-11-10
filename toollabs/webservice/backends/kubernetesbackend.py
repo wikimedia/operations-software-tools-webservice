@@ -366,11 +366,13 @@ class KubernetesBackend(Backend):
             "toolforge": "tool",
             "name": self.tool.name
         }
-        # FIXME: Protect against injection?
+
         self.webservice_label_selector = ','.join(
             [
                 '{k}={v}'.format(k=k, v=v) for k, v in
-                self.webservice_labels.items()
+                self.webservice_labels.items() if k not in [
+                    "toolforge", "name"
+                    ]
             ]
         )
 
