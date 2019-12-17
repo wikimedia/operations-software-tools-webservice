@@ -474,7 +474,7 @@ class KubernetesBackend(Backend):
 
     def _get_ingress(self):
         """
-        Return the full spec of an ingress object for this webservice
+        Return the full spec of an ingress object for this webservice.
         """
         return {
             "apiVersion": "extensions/v1beta1",  # pykube is old
@@ -483,7 +483,8 @@ class KubernetesBackend(Backend):
                 "name": self.tool.name,
                 "namespace": "tool-{}".format(self.tool.name),
                 "annotations": {
-                    "nginx.ingress.kubernetes.io/rewrite-target": "/"
+                    "nginx.ingress.kubernetes.io/rewrite-target":
+                        "/{}/$2".format(self.tool.name),
                 },
                 "labels": self.webservice_labels
             },
@@ -495,7 +496,9 @@ class KubernetesBackend(Backend):
                             {
                                 "paths": [
                                     {
-                                        "path": "/{}".format(self.tool.name),
+                                        "path": "/{}(/|$)(.*)".format(
+                                            self.tool.name
+                                        ),
                                         "backend": {
                                             "serviceName": self.tool.name,
                                             "servicePort": 8000
