@@ -1,3 +1,9 @@
+toollabs-webservice (0.53) trusty; urgency=medium
+
+  * Fix for new Toolforge Kubernetes Ingress annotations T241008 [Bryan Davis]
+
+ -- Brooke Storm <bstorm@wikimedia.org>  Wed, 18 Dec 2019 20:00:00 +0000
+
 toollabs-webservice (0.52) trusty; urgency=medium
 
   * Urgent fix for label selector mismatch in T237836 [Brooke Storm]
