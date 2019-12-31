@@ -2,6 +2,7 @@ toollabs-webservice (0.55) jessie; urgency=medium
 
   * Enable persisting custom Kubernetes resources to service manifests.
   * Black formatting and lint-friendly webservice file.
+  * Improve Python 3 compatibility [Kunal Mehta]
 
  -- Brooke Storm <bstorm@wikimedia.org>  Wed, 08 Jan 2020 20:00:00 +0000
 

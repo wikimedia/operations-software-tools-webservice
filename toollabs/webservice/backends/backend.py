@@ -1,8 +1,8 @@
 from abc import ABCMeta, abstractmethod
+from six import with_metaclass
 
 
-class Backend(object):
-    __metaclass__ = ABCMeta
+class Backend(with_metaclass(object, ABCMeta)):
     """
     A webservice backend that submits and runs the actual webservice in
     a cluster
