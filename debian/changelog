@@ -1,3 +1,9 @@
+toollabs-webservice (0.54) jessie; urgency=medium
+
+  * Switch to jessie in changelog for debian-glue CI.
+
+ -- Kunal Mehta <legoktm@member.fsf.org>  Mon, 06 Jan 2020 12:55:06 -0800
+
 toollabs-webservice (0.53) trusty; urgency=medium
 
   * Fix for new Toolforge Kubernetes Ingress annotations T241008 [Bryan Davis]
