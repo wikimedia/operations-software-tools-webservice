@@ -1,3 +1,10 @@
+toollabs-webservice (0.55) jessie; urgency=medium
+
+  * Enable persisting custom Kubernetes resources to service manifests.
+  * Black formatting and lint-friendly webservice file.
+
+ -- Brooke Storm <bstorm@wikimedia.org>  Wed, 08 Jan 2020 20:00:00 +0000
+
 toollabs-webservice (0.54) jessie; urgency=medium
 
   * Switch to jessie in changelog for debian-glue CI.

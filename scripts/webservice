@@ -140,11 +140,13 @@ def stop(job, message):
     return wait_for(lambda: job.get_state() == Backend.STATE_STOPPED, message)
 
 
-def update_manifest(job, action):
+def update_manifest(job, action, cpu, memory):
     """
     Update a tool's service manifest to indicate the type of webservice in use
 
     :param action 'start' or 'stop'
+    :param cpu persists the cpu argument (must be a kube_quant)
+    :param memory persists the mem argument (must be a kube_quant)
     """
     if action == "start":
         if (
@@ -157,10 +159,26 @@ def update_manifest(job, action):
             job.tool.manifest["web"] = job.type
             if job.extra_args is not None:
                 job.tool.manifest["web::extra_args"] = job.extra_args
+
+            if hasattr(job, "container_resources"):
+                # Not using the value directly to avoid persisting values from
+                # the old Kubernetes cluster
+                if cpu is not None:
+                    job.tool.manifest["cpu"] = cpu
+                if memory is not None:
+                    job.tool.manifest["memory"] = memory
+
             job.tool.save_manifest()
     elif action == "stop":
         if "web" in job.tool.manifest:
-            for key in ["distribution", "web", "backend", "web::extra_args"]:
+            for key in [
+                "distribution",
+                "web",
+                "backend",
+                "cpu",
+                "memory",
+                "web::extra_args",
+            ]:
                 if key in job.tool.manifest:
                     del job.tool.manifest[key]
             job.tool.save_manifest()
@@ -232,9 +250,11 @@ if __name__ == "__main__":
         elif args.type == "lighttpd-precise":
             print("*" * 78, file=sys.stderr)
             print(
-                 ("ERROR: Precise hosts are deprecated from Tool Labs\n\t"
-                  "https://wikitech.wikimedia.org/wiki/"
-                  "Tools_Precise_deprecation"),
+                (
+                    "ERROR: Precise hosts are deprecated from Tool Labs\n\t"
+                    "https://wikitech.wikimedia.org/wiki/"
+                    "Tools_Precise_deprecation"
+                ),
                 file=sys.stderr,
             )
             print("*" * 78, file=sys.stderr)
@@ -247,6 +267,13 @@ if __name__ == "__main__":
             sys.exit(1)
         if args.type is None:
             args.type = tool.manifest.get("web", KUBERNETES_DEFAULT_TYPE)
+
+        if args.cpu is None:
+            args.cpu = tool.manifest.get("cpu", None)
+
+        if args.memory is None:
+            args.memory = tool.manifest.get("memory", None)
+
         acceptable_types = KubernetesBackend.CONFIG.keys()
 
     if args.extra_args is None:
@@ -271,19 +298,19 @@ if __name__ == "__main__":
             sys.exit(1)
 
         start(job, "Starting webservice")
-        update_manifest(job, "start")
+        update_manifest(job, "start", args.cpu, args.memory)
 
     elif args.action == "stop":
         if job.get_state() == Backend.STATE_STOPPED:
             print("Your webservice is not running")
         else:
             stop(job, "Stopping webservice")
-        update_manifest(job, "stop")
+        update_manifest(job, "stop", args.cpu, args.memory)
 
     elif args.action == "restart":
         if job.get_state() != Backend.STATE_RUNNING:
             start(job, "Your job is not running, starting")
-            update_manifest(job, "start")
+            update_manifest(job, "start", args.cpu, args.memory)
         else:
             if stop(job, ""):
                 start(job, "Restarting webservice")
