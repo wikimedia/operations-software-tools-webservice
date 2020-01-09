@@ -9,19 +9,25 @@ import sys
 import textwrap
 
 from toollabs.webservice import WebService
-from toollabs.webservice.backends import Backend, GridEngineBackend, KubernetesBackend
+from toollabs.webservice.backends import (
+    Backend,
+    GridEngineBackend,
+    KubernetesBackend,
+)
 from toollabs.common.utils import wait_for
 from toollabs.common import Tool
 
 
-GRIDENGINE_DEFAULT_TYPE = 'lighttpd'
-KUBERNETES_DEFAULT_TYPE = 'php5.6'
+GRIDENGINE_DEFAULT_TYPE = "lighttpd"
+KUBERNETES_DEFAULT_TYPE = "php5.6"
 
 
 def format_types_block(types, default):
     types = sorted(t + " (default)" if t == default else t for t in types)
     joined = ", ".join(types)
-    return textwrap.fill(joined, 55, subsequent_indent=' '*len('Grid Engine backend: '))
+    return textwrap.fill(
+        joined, 55, subsequent_indent=" " * len("Grid Engine backend: ")
+    )
 
 
 description = """
@@ -32,14 +38,16 @@ Kubernetes backend:  {kubernetes}
 Grid Engine backend: {gridengine}
 """.format(
     kubernetes=format_types_block(
-        KubernetesBackend.CONFIG.keys(), KUBERNETES_DEFAULT_TYPE),
+        KubernetesBackend.CONFIG.keys(), KUBERNETES_DEFAULT_TYPE
+    ),
     gridengine=format_types_block(
-        GridEngineBackend.CONFIG.keys(), GRIDENGINE_DEFAULT_TYPE)
+        GridEngineBackend.CONFIG.keys(), GRIDENGINE_DEFAULT_TYPE
+    ),
 )
 
 argparser = argparse.ArgumentParser(
     description=description,
-    formatter_class=argparse.RawDescriptionHelpFormatter
+    formatter_class=argparse.RawDescriptionHelpFormatter,
 )
 
 
@@ -53,8 +61,22 @@ def kube_quant(string):
     base1000: n | u | m | "" | k | M | G | T | P | E
     """
     valid_suffixes = [
-        'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei',
-        'n', 'u', 'm', '', 'k', 'M', 'G', 'T', 'P', 'E'
+        "Ki",
+        "Mi",
+        "Gi",
+        "Ti",
+        "Pi",
+        "Ei",
+        "n",
+        "u",
+        "m",
+        "",
+        "k",
+        "M",
+        "G",
+        "T",
+        "P",
+        "E",
     ]
     pattern = re.compile(r"^(\d+)([A-Za-z]{0,2})$")
     quant_check = pattern.match(string)
@@ -63,31 +85,45 @@ def kube_quant(string):
         if suffix in valid_suffixes:
             return string
 
-    msg = '{} is not a valid Kubernetes quantity'.format(string)
+    msg = "{} is not a valid Kubernetes quantity".format(string)
     raise argparse.ArgumentTypeError(msg)
 
 
-argparser.add_argument('type', help='Type of webservice to start',
-                       nargs='?')
-argparser.add_argument('--backend', help='Which cluster backend to use run the webservice',
-                       choices=['gridengine', 'kubernetes'])
-argparser.add_argument('-m', '--mem', required=False, type=kube_quant,
-                       help='Set higher Kubernetes memory limit (new cluster only)',
-                       dest='memory'
-                       )
-argparser.add_argument('-c', '--cpu', required=False, type=kube_quant,
-                       help='Set a higher Kubernetes cpu limit (new cluster only)',
-                       dest='cpu'
-                       )
-argparser.add_argument('action', help='Action to perform',
-                       choices=['start', 'stop', 'status', 'restart', 'shell'])
-argparser.add_argument('extra_args', help='Extra arguments to be parsed by the chosen webservicetype',
-                       nargs='?')
+argparser.add_argument("type", help="Type of webservice to start", nargs="?")
+argparser.add_argument(
+    "--backend",
+    help="Which cluster backend to use run the webservice",
+    choices=["gridengine", "kubernetes"],
+)
+argparser.add_argument(
+    "-m",
+    "--mem",
+    required=False,
+    type=kube_quant,
+    help="Set higher Kubernetes memory limit (new cluster only)",
+    dest="memory",
+)
+argparser.add_argument(
+    "-c",
+    "--cpu",
+    required=False,
+    type=kube_quant,
+    help="Set a higher Kubernetes cpu limit (new cluster only)",
+    dest="cpu",
+)
+argparser.add_argument(
+    "action",
+    help="Action to perform",
+    choices=["start", "stop", "status", "restart", "shell"],
+)
+argparser.add_argument(
+    "extra_args",
+    help="Extra arguments to be parsed by the chosen webservicetype",
+    nargs="?",
+)
 # Backwards compat with older webservice.
 # Allows for webservice --release trusty lighttpd <action>
-argparser.add_argument('--release',
-                       help=argparse.SUPPRESS,
-                       choices=['trusty'])
+argparser.add_argument("--release", help=argparse.SUPPRESS, choices=["trusty"])
 
 
 def start(job, message):
@@ -106,20 +142,25 @@ def stop(job, message):
 
 def update_manifest(job, action):
     """
-    Update a tool's service manifest to indicate this type of webservice is being used
+    Update a tool's service manifest to indicate the type of webservice in use
 
-    :param action 'start' or 'stop', to say if this is an update for a 'start' or 'stop' action
+    :param action 'start' or 'stop'
     """
-    if action == 'start':
-        if 'web' not in job.tool.manifest or job.tool.manifest['web'] != job.type:
-            job.tool.manifest['distribution'] = platform.linux_distribution()[0]
-            job.tool.manifest['web'] = job.type
+    if action == "start":
+        if (
+            "web" not in job.tool.manifest
+            or job.tool.manifest["web"] != job.type
+        ):
+            job.tool.manifest["distribution"] = platform.linux_distribution()[
+                0
+            ]
+            job.tool.manifest["web"] = job.type
             if job.extra_args is not None:
-                job.tool.manifest['web::extra_args'] = job.extra_args
+                job.tool.manifest["web::extra_args"] = job.extra_args
             job.tool.save_manifest()
-    elif action == 'stop':
-        if 'web' in job.tool.manifest:
-            for key in ['distribution', 'web', 'backend', 'web::extra_args']:
+    elif action == "stop":
+        if "web" in job.tool.manifest:
+            for key in ["distribution", "web", "backend", "web::extra_args"]:
                 if key in job.tool.manifest:
                     del job.tool.manifest[key]
             job.tool.save_manifest()
@@ -128,40 +169,52 @@ def update_manifest(job, action):
         raise Exception("action has to be 'start' or 'stop', got %s" % action)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = argparser.parse_args()
 
     tool = Tool.from_currentuser()
 
     # In order to more fully enable toolsbeta, we need to know we are there.
-    if os.path.isfile('/etc/wmcs-project'):
-        with open('/etc/wmcs-project') as f:
+    if os.path.isfile("/etc/wmcs-project"):
+        with open("/etc/wmcs-project") as f:
             project = f.readline().rstrip()
 
     # We use this logic rather than setting defaults in argparse.
     # This allows us to default to spec in service.manifest but override
     # by specifying --backend option on the CLI
     if args.backend is None:
-        if os.path.exists(os.path.expanduser('~/.webservicerc')) and 'backend' not in tool.manifest:
+        if (
+            os.path.exists(os.path.expanduser("~/.webservicerc"))
+            and "backend" not in tool.manifest
+        ):
             config = ConfigParser.ConfigParser()
-            config.read(os.path.expanduser('~/.webservicerc'))
-            backend = config.get('Default', '--backend')
+            config.read(os.path.expanduser("~/.webservicerc"))
+            backend = config.get("Default", "--backend")
         else:
-            backend = tool.manifest.get('backend', 'gridengine')
+            backend = tool.manifest.get("backend", "gridengine")
     else:
-        if 'backend' in tool.manifest and tool.manifest['backend'] != args.backend and args.action != 'shell':
-            print('Looks like you already have another webservice running, with a %s backend' %
-                  tool.manifest['backend'])
-            print('You should stop that webservice by issuing:')
-            print('    webservice --backend=%s stop' %
-                  tool.manifest['backend'])
-            print('And then start it again with backend %s by issuing:' %
-                  args.backend)
-            print('    webservice --backend=%s start' % args.backend)
+        if (
+            "backend" in tool.manifest
+            and tool.manifest["backend"] != args.backend
+            and args.action != "shell"
+        ):
+            print(
+                "Looks like you already have another webservice running, "
+                "with a {} backend".format(tool.manifest["backend"])
+            )
+            print("You should stop that webservice by issuing:")
+            print(
+                "    webservice --backend=%s stop" % tool.manifest["backend"]
+            )
+            print(
+                "And then start it again with backend %s by issuing:"
+                % args.backend
+            )
+            print("    webservice --backend=%s start" % args.backend)
             sys.exit(1)
         backend = args.backend
 
-    if backend == 'gridengine':
+    if backend == "gridengine":
         # Backwards compatibility hack to support
         # 'webservice --release trusty lighttpd start' invocations
         if args.release is not None:
@@ -175,75 +228,77 @@ if __name__ == '__main__':
             print("Please run again without this argument")
             sys.exit(1)
         if args.type is None:
-            args.type = tool.manifest.get('web', GRIDENGINE_DEFAULT_TYPE)
-        elif args.type == 'lighttpd-precise':
-            print('*' * 78, file=sys.stderr)
+            args.type = tool.manifest.get("web", GRIDENGINE_DEFAULT_TYPE)
+        elif args.type == "lighttpd-precise":
+            print("*" * 78, file=sys.stderr)
             print(
-                'ERROR: Precise hosts are deprecated from Tool Labs\n\t'
-                'https://wikitech.wikimedia.org/wiki/Tools_Precise_deprecation',
-                file=sys.stderr)
-            print('*' * 78, file=sys.stderr)
+                 ("ERROR: Precise hosts are deprecated from Tool Labs\n\t"
+                  "https://wikitech.wikimedia.org/wiki/"
+                  "Tools_Precise_deprecation"),
+                file=sys.stderr,
+            )
+            print("*" * 78, file=sys.stderr)
             sys.exit(1)
         acceptable_types = GridEngineBackend.CONFIG.keys()
-    elif backend == 'kubernetes':
+    elif backend == "kubernetes":
         if args.release is not None:
             print("--release is not implemented for --backend=kubernetes")
             print("Please just pick an appropriate type instead")
             sys.exit(1)
         if args.type is None:
-            args.type = tool.manifest.get('web', KUBERNETES_DEFAULT_TYPE)
+            args.type = tool.manifest.get("web", KUBERNETES_DEFAULT_TYPE)
         acceptable_types = KubernetesBackend.CONFIG.keys()
 
     if args.extra_args is None:
-        args.extra_args = tool.manifest.get('web::extra_args', None)
+        args.extra_args = tool.manifest.get("web::extra_args", None)
 
     if args.type not in acceptable_types:
-        print("type must be one of ", ','.join(sorted(acceptable_types)))
+        print("type must be one of ", ",".join(sorted(acceptable_types)))
         sys.exit(1)
 
-    if backend == 'gridengine':
+    if backend == "gridengine":
         job = GridEngineBackend(tool, args.type, args.extra_args)
     else:
         job = KubernetesBackend(
             tool, project, args.type, args.memory, args.cpu, args.extra_args
-            )
+        )
 
-    tool.manifest['backend'] = backend
+    tool.manifest["backend"] = backend
 
-    if args.action == 'start':
+    if args.action == "start":
         if job.get_state() != Backend.STATE_STOPPED:
-            print('Your job is already running')
+            print("Your job is already running")
             sys.exit(1)
 
-        start(job, 'Starting webservice')
-        update_manifest(job, 'start')
+        start(job, "Starting webservice")
+        update_manifest(job, "start")
 
-    elif args.action == 'stop':
+    elif args.action == "stop":
         if job.get_state() == Backend.STATE_STOPPED:
-            print('Your webservice is not running')
+            print("Your webservice is not running")
         else:
-            stop(job, 'Stopping webservice')
-        update_manifest(job, 'stop')
+            stop(job, "Stopping webservice")
+        update_manifest(job, "stop")
 
-    elif args.action == 'restart':
+    elif args.action == "restart":
         if job.get_state() != Backend.STATE_RUNNING:
-            start(job, 'Your job is not running, starting')
-            update_manifest(job, 'start')
+            start(job, "Your job is not running, starting")
+            update_manifest(job, "start")
         else:
-            if stop(job, ''):
-                start(job, 'Restarting webservice')
+            if stop(job, ""):
+                start(job, "Restarting webservice")
             else:
-                print('ERROR: Pod resisted shutdown')
+                print("ERROR: Pod resisted shutdown")
                 sys.exit(1)
         tool.save_manifest()
-    elif args.action == 'status':
+    elif args.action == "status":
         if job.get_state() != Backend.STATE_STOPPED:
-            print('Your webservice of type', job.type, 'is running', end='')
+            print("Your webservice of type", job.type, "is running", end="")
         else:
-            print('Your webservice is not running', end='')
-    elif args.action == 'shell':
-        if backend != 'kubernetes':
-            print('webservice shell is only supported for kubernetes backend')
+            print("Your webservice is not running", end="")
+    elif args.action == "shell":
+        if backend != "kubernetes":
+            print("webservice shell is only supported for kubernetes backend")
             sys.exit(1)
         job.shell()
     print()  # End program with newline, don't output newline anywhere else :)
