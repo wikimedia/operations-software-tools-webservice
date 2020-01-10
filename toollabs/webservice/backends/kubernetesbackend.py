@@ -7,6 +7,7 @@ import time
 
 import pykube
 
+from toollabs.common.utils import parse_quantity
 from toollabs.webservice.backends import Backend
 from toollabs.webservice.services import GenericWebService
 from toollabs.webservice.services import JSWebService
@@ -342,10 +343,20 @@ class KubernetesBackend(Backend):
             # limitrange)
             # The namespace quotas also have impact on what can be done.
             if mem or cpu:
-                self.container_resources = {"limits": {}}
+                self.container_resources = {"limits": {}, "requests": {}}
                 if mem:
+                    if parse_quantity(mem) < parse_quantity("256Mi"):
+                        self.container_resources["requests"]["memory"] = mem
+                    else:
+                        self.container_resources["requests"][
+                            "memory"
+                        ] = "256Mi"
                     self.container_resources["limits"]["memory"] = mem
                 if cpu:
+                    if parse_quantity(cpu) < parse_quantity("250m"):
+                        self.container_resources["requests"]["cpu"] = cpu
+                    else:
+                        self.container_resources["requests"]["cpu"] = "250m"
                     self.container_resources["limits"]["cpu"] = cpu
             else:
                 # Defaults are cpu: 500m and memory: 512Mi
@@ -439,7 +450,7 @@ class KubernetesBackend(Backend):
         """
         Wait for a pod to become 'ready'
         """
-        for i in range(timeout):
+        for _ in range(timeout):
             pod = self._find_obj(pykube.Pod, label_selector)
             if pod is not None:
                 if pod.obj["status"]["phase"] == "Running":
@@ -485,7 +496,7 @@ class KubernetesBackend(Backend):
                 "annotations": {
                     "nginx.ingress.kubernetes.io/rewrite-target": "/{}/$2".format(
                         self.tool.name
-                    ),
+                    )
                 },
                 "labels": self.webservice_labels,
             },
@@ -554,10 +565,7 @@ class KubernetesBackend(Backend):
         }
 
     def _get_shell_pod(self):
-        cmd = [
-            "/bin/bash",
-            "-il",
-        ]
+        cmd = ["/bin/bash", "-il"]
         return {
             "apiVersion": "v1",
             "kind": "Pod",
@@ -611,7 +619,7 @@ class KubernetesBackend(Backend):
                         "tty": tty,
                         "stdin": stdin,
                     }
-                ],
+                ]
             }
         else:
             return {

@@ -1,3 +1,11 @@
+toollabs-webservice (0.57) jessie; urgency=medium
+
+  * Keep the qosClass Burstable on the Kubernetes backend
+  * Removed unused pykube submodule [Bryan Davis]
+  * Applied black formatting and several new flake8 plugins [Bryan Davis]
+
+ -- Brooke Storm <bstorm@wikimedia.org>  Fri, 10 Jan 2020 21:00:00 +0000
+
 toollabs-webservice (0.56) jessie; urgency=high
 
   * Fix typo in the with_metaclass declaration
