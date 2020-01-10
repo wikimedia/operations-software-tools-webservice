@@ -1,14 +1,15 @@
-import os
-import yaml
-import pwd
 import errno
+import os
+import pwd
 
-with open('/etc/wmcs-project', 'r') as _projectfile:
+import yaml
+
+with open("/etc/wmcs-project", "r") as _projectfile:
     PROJECT = _projectfile.read().strip()
 
 
 class Tool(object):
-    PREFIX = PROJECT + '.'
+    PREFIX = PROJECT + "."
     MANIFEST_VERSION = 3
 
     class InvalidToolException(Exception):
@@ -32,9 +33,9 @@ class Tool(object):
 
         If no service.manifest file is found, returns an empty dict
         """
-        if not hasattr(self, '_manifest'):
+        if not hasattr(self, "_manifest"):
             try:
-                with open(self.get_homedir_subpath('service.manifest')) as f:
+                with open(self.get_homedir_subpath("service.manifest")) as f:
                     self._manifest = yaml.safe_load(f)
                 if self._manifest is None:
                     self._manifest = {}
@@ -53,19 +54,22 @@ class Tool(object):
         by a user (like running a commanad on the commandline). If a race
         happens, whoever wins the os.rename race wins.
         """
-        tilde_file_path = self.get_homedir_subpath('service.manifest~')
+        tilde_file_path = self.get_homedir_subpath("service.manifest~")
         tilde_file_fd = os.open(
-            tilde_file_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
-        tilde_file = os.fdopen(tilde_file_fd, 'w')
+            tilde_file_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644
+        )
+        tilde_file = os.fdopen(tilde_file_fd, "w")
         # Set version if there is none!
-        if 'version' not in self.manifest:
-            self.manifest['version'] = Tool.MANIFEST_VERSION
+        if "version" not in self.manifest:
+            self.manifest["version"] = Tool.MANIFEST_VERSION
         try:
             tilde_file.write(
                 "# This file is used by toollabs infrastructure.\n"
-                "# Please do not edit manually at this time.\n")
+                "# Please do not edit manually at this time.\n"
+            )
             yaml.safe_dump(
-                self._manifest, tilde_file, default_flow_style=False)
+                self._manifest, tilde_file, default_flow_style=False
+            )
         finally:
             tilde_file.close()
 
@@ -73,7 +77,8 @@ class Tool(object):
         # reason, and then manual intervention is needed, but that seems
         # appropriate
         os.rename(
-            tilde_file_path, self.get_homedir_subpath('service.manifest'))
+            tilde_file_path, self.get_homedir_subpath("service.manifest")
+        )
 
     @classmethod
     def from_name(cls, name):
@@ -85,7 +90,7 @@ class Tool(object):
             user_info = pwd.getpwnam(username)
         except KeyError:
             # No such user was found
-            raise Tool.InvalidToolException("No tool with name %s" % (name, ))
+            raise Tool.InvalidToolException("No tool with name %s" % (name,))
         return Tool.from_pwd(user_info)
 
     @classmethod
@@ -103,15 +108,17 @@ class Tool(object):
         """
         if not pwd_entry.pw_name.startswith(Tool.PREFIX):
             raise Tool.InvalidToolException(
-                'Tool username should begin with ' + Tool.PREFIX)
+                "Tool username should begin with " + Tool.PREFIX
+            )
         if pwd_entry.pw_uid < 50000:  # FIXME: Find if it should be < or <=
             raise Tool.InvalidToolException(
-                "uid of tools should be >= 50000, uid is %s" %
-                pwd_entry.pw_uid)
-        toolname = pwd_entry.pw_name[len(Tool.PREFIX):]
+                "uid of tools should be >= 50000, uid is %s" % pwd_entry.pw_uid
+            )
+        toolname = pwd_entry.pw_name[len(Tool.PREFIX) :]
         return cls(
             toolname,
             pwd_entry.pw_name,
             pwd_entry.pw_uid,
             pwd_entry.pw_gid,
-            pwd_entry.pw_dir)
+            pwd_entry.pw_dir,
+        )

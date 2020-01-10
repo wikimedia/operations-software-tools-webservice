@@ -19,7 +19,7 @@ def wait_for(predicate, prompt, timeout=15):
     for i in range(timeout):
         if predicate():
             return True
-        sys.stdout.write('.')
+        sys.stdout.write(".")
         sys.stdout.flush()
         time.sleep(1)
     return False

@@ -7,7 +7,8 @@ from .tomcatservice import TomcatWebService
 from .uwsgiwebservice import UwsgiWebService
 
 webservice_classes = {
-    cls.NAME: cls for cls in [
+    cls.NAME: cls
+    for cls in [
         GenericWebService,
         JSWebService,
         LighttpdPlainWebService,

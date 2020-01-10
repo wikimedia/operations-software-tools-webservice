@@ -7,7 +7,7 @@ class ProxyException(Exception):
 
 def get_active_proxy():
     """Return the active master proxy to register with"""
-    with open('/etc/active-proxy', 'r') as f:
+    with open("/etc/active-proxy", "r") as f:
         return f.read().strip()
 
 
@@ -19,7 +19,7 @@ def get_open_port():
     port.
     """
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(('', 0))
+    s.bind(("", 0))
     port = s.getsockname()[1]
     s.close()
     return port
@@ -34,8 +34,8 @@ def register(port):
         sock.connect((proxy, 8282))
         sock.sendall("register\n.*\nhttp://%s:%u\n" % (current_ip, port))
         res = sock.recv(1024)
-        if res != 'ok':
-            raise ProxyException('Port registration failed!')
+        if res != "ok":
+            raise ProxyException("Port registration failed!")
     finally:
         sock.close()
 
@@ -48,7 +48,7 @@ def unregister():
         sock.connect((proxy, 8282))
         sock.sendall("unregister\n.*\n")
         res = sock.recv(1024)
-        if res != 'ok':
-            raise ProxyException('Port unregistration failed!')
+        if res != "ok":
+            raise ProxyException("Port unregistration failed!")
     finally:
         sock.close()

@@ -1,10 +1,11 @@
 import os
+
 from toollabs.webservice import WebService
 
 
 class GenericWebService(WebService):
-    NAME = 'generic'
-    QUEUE = 'webgrid-generic'
+    NAME = "generic"
+    QUEUE = "webgrid-generic"
 
     def __init__(self, tool, extra_args=None):
         super(GenericWebService, self).__init__(tool, extra_args)
@@ -15,4 +16,4 @@ class GenericWebService(WebService):
     def run(self, port):
         super(GenericWebService, self).run(port)
         os.chdir(self.tool.home)
-        os.execv('/bin/sh', ['/bin/sh', '-c', self.extra_args])
+        os.execv("/bin/sh", ["/bin/sh", "-c", self.extra_args])

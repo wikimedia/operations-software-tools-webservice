@@ -1,4 +1,5 @@
 import os
+
 from toollabs.webservice import WebService
 
 
@@ -619,20 +620,21 @@ class LighttpdPlainWebService(WebService):
     """
     A 'plain' Lighttpd Webserver, without PHP setup by default
     """
-    NAME = 'lighttpd-plain'
-    QUEUE = 'webgrid-lighttpd'
+
+    NAME = "lighttpd-plain"
+    QUEUE = "webgrid-lighttpd"
 
     def check(self):
         # Check for a .lighttpd.conf file or a public_html
-        public_html_path = self.tool.get_homedir_subpath('public_html')
-        lighttpd_conf_path = self.tool.get_homedir_subpath('.lighttpd.conf')
+        public_html_path = self.tool.get_homedir_subpath("public_html")
+        lighttpd_conf_path = self.tool.get_homedir_subpath(".lighttpd.conf")
         if not (
-            os.path.exists(public_html_path) or
-            os.path.exists(lighttpd_conf_path)
+            os.path.exists(public_html_path)
+            or os.path.exists(lighttpd_conf_path)
         ):
             raise WebService.InvalidWebServiceException(
-                'Could not find a public_html folder or a .lighttpd.conf '
-                'file in your tool home.'
+                "Could not find a public_html folder or a .lighttpd.conf "
+                "file in your tool home."
             )
 
     def build_config(self, port, config_template=BASIC_CONFIG_TEMPLATE):
@@ -641,10 +643,10 @@ class LighttpdPlainWebService(WebService):
             username=self.tool.username,
             groupname=self.tool.username,
             home=self.tool.home,
-            port=port
+            port=port,
         )
         try:
-            with open(self.tool.get_homedir_subpath('.lighttpd.conf')) as f:
+            with open(self.tool.get_homedir_subpath(".lighttpd.conf")) as f:
                 config += f.read()
         except IOError:
             pass  # No customized file, not a big deal
@@ -652,25 +654,29 @@ class LighttpdPlainWebService(WebService):
 
     def run(self, port):
         config = self.build_config(port)
-        config_path = os.path.join('/var/run/lighttpd/', self.tool.name)
-        with open(config_path, 'w') as f:
+        config_path = os.path.join("/var/run/lighttpd/", self.tool.name)
+        with open(config_path, "w") as f:
             f.write(config)
 
         os.execv(
-            '/usr/sbin/lighttpd',
-            ['/usr/sbin/lighttpd', '-f', config_path, '-D'])
+            "/usr/sbin/lighttpd",
+            ["/usr/sbin/lighttpd", "-f", config_path, "-D"],
+        )
 
 
 class LighttpdWebService(LighttpdPlainWebService):
     """
     A Lighttpd Webserver with a default PHP setup
     """
-    NAME = 'lighttpd'
-    QUEUE = 'webgrid-lighttpd'
+
+    NAME = "lighttpd"
+    QUEUE = "webgrid-lighttpd"
 
     def build_config(
-        self, port,
-        config_template=BASIC_CONFIG_TEMPLATE + ENABLE_PHP_CONFIG_TEMPLATE
+        self,
+        port,
+        config_template=BASIC_CONFIG_TEMPLATE + ENABLE_PHP_CONFIG_TEMPLATE,
     ):
         return super(LighttpdWebService, self).build_config(
-            port, config_template)
+            port, config_template
+        )
