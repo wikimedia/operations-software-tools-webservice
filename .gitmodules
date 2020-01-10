@@ -1,3 +1,0 @@
-[submodule "submodules/pykube"]
-	path = submodules/pykube
-	url = https://github.com/kelproject/pykube.git
