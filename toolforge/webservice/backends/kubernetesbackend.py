@@ -7,13 +7,13 @@ import time
 
 import pykube
 
-from toollabs.common.utils import parse_quantity
-from toollabs.webservice.backends import Backend
-from toollabs.webservice.services import GenericWebService
-from toollabs.webservice.services import JSWebService
-from toollabs.webservice.services import LighttpdPlainWebService
-from toollabs.webservice.services import LighttpdWebService
-from toollabs.webservice.services import PythonWebService
+from toolforge.common.utils import parse_quantity
+from toolforge.webservice.backends import Backend
+from toolforge.webservice.services import GenericWebService
+from toolforge.webservice.services import JSWebService
+from toolforge.webservice.services import LighttpdPlainWebService
+from toolforge.webservice.services import LighttpdWebService
+from toolforge.webservice.services import PythonWebService
 
 
 class KubernetesBackend(Backend):

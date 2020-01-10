@@ -64,7 +64,7 @@ class Tool(object):
             self.manifest["version"] = Tool.MANIFEST_VERSION
         try:
             tilde_file.write(
-                "# This file is used by toollabs infrastructure.\n"
+                "# This file is used by Toolforge infrastructure.\n"
                 "# Please do not edit manually at this time.\n"
             )
             yaml.safe_dump(

@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="toollabs-webservice",
+    name="toolforge-webservice",
     version="0.1",
     author="Yuvi Panda",
     author_email="yuvipanda@gmail.com",
@@ -12,6 +12,6 @@ setup(
         "scripts/webservice",
         "scripts/deprecated-tomcat-starter",
     ],
-    description="Infrastructure for running webservices on tools.wmflabs.org",
+    description="Infrastructure for running webservices on Toolforge",
     install_requires=["PyYAML", "pykube", "six"],
 )

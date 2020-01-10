@@ -12,14 +12,14 @@ import re
 import sys
 import textwrap
 
-from toollabs.webservice import WebService
-from toollabs.webservice.backends import (
+from toolforge.webservice import WebService
+from toolforge.webservice.backends import (
     Backend,
     GridEngineBackend,
     KubernetesBackend,
 )
-from toollabs.common.utils import wait_for
-from toollabs.common import Tool
+from toolforge.common.utils import wait_for
+from toolforge.common import Tool
 
 
 GRIDENGINE_DEFAULT_TYPE = "lighttpd"

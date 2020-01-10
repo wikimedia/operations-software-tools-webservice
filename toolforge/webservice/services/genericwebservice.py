@@ -1,6 +1,6 @@
 import os
 
-from toollabs.webservice import WebService
+from toolforge.webservice import WebService
 
 
 class GenericWebService(WebService):

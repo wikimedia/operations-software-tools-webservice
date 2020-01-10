@@ -1,9 +1,9 @@
 #!/usr/bin/python -Es
 import argparse
 
-from toollabs.common import Tool
-from toollabs.webservice import proxy
-from toollabs.webservice.services import webservice_classes
+from toolforge.common import Tool
+from toolforge.webservice import proxy
+from toolforge.webservice.services import webservice_classes
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument('--type', help='Type of webservice to start',

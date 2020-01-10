@@ -3,15 +3,15 @@ import re
 import subprocess
 import xml.etree.ElementTree as ET
 
-from toollabs.common.utils import wait_for
-from toollabs.webservice.backends import Backend
-from toollabs.webservice.services import GenericWebService
-from toollabs.webservice.services import JSWebService
-from toollabs.webservice.services import LighttpdPlainWebService
-from toollabs.webservice.services import LighttpdWebService
-from toollabs.webservice.services import PythonWebService
-from toollabs.webservice.services import TomcatWebService
-from toollabs.webservice.services import UwsgiWebService
+from toolforge.common.utils import wait_for
+from toolforge.webservice.backends import Backend
+from toolforge.webservice.services import GenericWebService
+from toolforge.webservice.services import JSWebService
+from toolforge.webservice.services import LighttpdPlainWebService
+from toolforge.webservice.services import LighttpdWebService
+from toolforge.webservice.services import PythonWebService
+from toolforge.webservice.services import TomcatWebService
+from toolforge.webservice.services import UwsgiWebService
 
 
 class GridEngineBackend(Backend):
