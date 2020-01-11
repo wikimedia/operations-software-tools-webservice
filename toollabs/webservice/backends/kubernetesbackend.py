@@ -685,6 +685,22 @@ class KubernetesBackend(Backend):
         )
         self._delete_obj(pykube.Pod, self.webservice_label_selector)
 
+    def request_restart(self):
+        # For most intents and purposes, the only thing necessary
+        # to restart a Kubernetes application is to delete the pods.
+        print("Restarting...")
+        self._delete_obj(pykube.Pod, self.webservice_label_selector)
+        # TODO: It would be cool and not terribly hard here to detect a pod
+        # with an error or crash state and dump the logs of that pod for the
+        # user to examine.
+        if not self._wait_for_pod(self.webservice_label_selector, timeout=30):
+            print(
+                "Your webservice is taking quite while to restart. If it isn't"
+                " up shortly, run a 'webservice stop' and the start command "
+                "used to run this webservice to begin with."
+            )
+            sys.exit(1)
+
     def get_state(self):
         # TODO: add some state concept around ingresses
         pod = self._find_obj(pykube.Pod, self.webservice_label_selector)

@@ -47,3 +47,13 @@ class Backend(with_metaclass(ABCMeta, object)):
         Callers then need to poll get_state() to figure out if it is complete.
         """
         pass
+
+    @abstractmethod
+    def request_restart(self):
+        """
+        Restart the webservice.
+
+        Callers may or may not poll get_state() to figure out if it is complete.
+        The implementation will differ dramatically between backends.
+        """
+        pass

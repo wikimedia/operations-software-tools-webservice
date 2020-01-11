@@ -3,6 +3,7 @@ import re
 import subprocess
 import xml.etree.ElementTree as ET
 
+from toollabs.common.utils import wait_for
 from toollabs.webservice.backends import Backend
 from toollabs.webservice.services import GenericWebService
 from toollabs.webservice.services import JSWebService
@@ -104,6 +105,16 @@ class GridEngineBackend(Backend):
     def request_stop(self):
         command = ["/usr/bin/qdel", self.name]
         subprocess.check_call(command, stdout=open(os.devnull, "wb"))
+
+    def request_restart(self):
+        # On the grid, it is important to take down the service before starting
+        # it so it runs portreleaser, etc.
+        self.request_stop()
+        wait_for(lambda: self.get_state() == Backend.STATE_STOPPED, "")
+        self.request_start()
+        wait_for(
+            lambda: self.get_state() == Backend.STATE_RUNNING, "Restarting..."
+        )
 
     def get_state(self):
         job = self._get_job_xml()
