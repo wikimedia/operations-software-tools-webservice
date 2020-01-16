@@ -494,9 +494,12 @@ class KubernetesBackend(Backend):
                 "name": self.tool.name,
                 "namespace": "tool-{}".format(self.tool.name),
                 "annotations": {
+                    "nginx.ingress.kubernetes.io/configuration-snippet": "rewrite ^(/{})$ $1/ redirect;\n".format(
+                        self.tool.name
+                    ),
                     "nginx.ingress.kubernetes.io/rewrite-target": "/{}/$2".format(
                         self.tool.name
-                    )
+                    ),
                 },
                 "labels": self.webservice_labels,
             },
