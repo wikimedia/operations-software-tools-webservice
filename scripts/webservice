@@ -315,11 +315,7 @@ if __name__ == "__main__":
             start(job, "Your job is not running, starting")
             update_manifest(job, "start", args.cpu, args.memory)
         else:
-            if stop(job, ""):
-                start(job, "Restarting webservice")
-            else:
-                print("ERROR: Pod resisted shutdown")
-                sys.exit(1)
+            job.request_restart()
         tool.save_manifest()
     elif args.action == "status":
         if job.get_state() != Backend.STATE_STOPPED:

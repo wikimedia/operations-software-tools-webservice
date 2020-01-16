@@ -1,3 +1,10 @@
+toollabs-webservice (0.58) jessie; urgency=medium
+
+  * Change restart behavior, especially for Kubernetes
+  * Add a redirect for the ingress objects to tool/ [Arturo Borerro]
+
+ -- Brooke Storm <bstorm@wikimedia.org>  Thu, 16 Jan 2020 21:00:00 +0000
+
 toollabs-webservice (0.57) jessie; urgency=medium
 
   * Keep the qosClass Burstable on the Kubernetes backend
