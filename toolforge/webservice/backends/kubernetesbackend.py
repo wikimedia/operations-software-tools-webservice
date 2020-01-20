@@ -21,224 +21,101 @@ class KubernetesBackend(Backend):
     Backend spawning webservices with a k8s Deployment + Service
     """
 
+    DEFAULT_RESOURCES = {
+        "limits": {
+            # Pods will be killed if they go over memory limit
+            "memory": "2Gi",
+            # Pods can still burst to more than cpu limit
+            "cpu": "2",
+        },
+        "requests": {
+            # Pods are guaranteed at least this many resources
+            "memory": "256Mi",
+            "cpu": "0.125",
+        },
+    }
+
     CONFIG = {
         "php5.6": {
+            "deprecated": True,
             "cls": LighttpdWebService,
             "image": "toollabs-php-web",
             "tf-image": "toolforge-php5-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    "memory": "2Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_RESOURCES,
         },
         "php7.2": {
             "cls": LighttpdWebService,
             "image": "toollabs-php72-web",
             "tf-image": "toolforge-php72-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    "memory": "2Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_RESOURCES,
         },
         "php7.3": {
             "cls": LighttpdWebService,
             "image": "toolforge-php73-web",
             "tf-image": "toolforge-php73-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    "memory": "2Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_RESOURCES,
         },
         "tcl": {
+            "deprecated": True,
             "cls": LighttpdPlainWebService,
             "image": "toollabs-tcl-web",
             "tf-image": "toolforge-tcl86-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    "memory": "2Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_RESOURCES,
         },
         "python": {
+            "deprecated": True,
             "cls": PythonWebService,
             "image": "toollabs-python-web",
             "tf-image": "toolforge-python34-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    "memory": "2Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_RESOURCES,
         },
         "python3.5": {
             "cls": PythonWebService,
             "image": "toollabs-python35-web",
             "tf-image": "toolforge-python35-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    "memory": "2Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_RESOURCES,
         },
         "python3.7": {
             "cls": PythonWebService,
             "image": "toolforge-python37-web",
             "tf-image": "toolforge-python37-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    "memory": "2Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_RESOURCES,
         },
         "python2": {
+            "deprecated": True,
             "cls": PythonWebService,
             "image": "toollabs-python2-web",
             "tf-image": "toolforge-python2-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    "memory": "2Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_RESOURCES,
         },
         "ruby2": {
+            "deprecated": True,
             "cls": GenericWebService,
             "image": "toollabs-ruby-web",
             "tf-image": "toolforge-ruby21-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    "memory": "2Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_RESOURCES,
         },
         "ruby25": {
             "cls": GenericWebService,
             "image": "toolforge-ruby25-web",
             "tf-image": "toolforge-ruby25-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    "memory": "2Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_RESOURCES,
         },
         "golang": {
+            "deprecated": True,
             "cls": GenericWebService,
             "image": "toollabs-golang-web",
             "tf-image": "toolforge-golang-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    "memory": "2Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_RESOURCES,
         },
         "golang111": {
             "cls": GenericWebService,
             "image": "toolforge-golang111-web",
             "tf-image": "toolforge-golang111-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    "memory": "2Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_RESOURCES,
         },
         "jdk8": {
+            "deprecated": True,
             "cls": GenericWebService,
             "image": "toollabs-jdk8-web",
             "tf-image": "toolforge-jdk8-sssd-web",
@@ -281,40 +158,17 @@ class KubernetesBackend(Backend):
             },
         },
         "nodejs": {
+            "deprecated": True,
             "cls": JSWebService,
             "image": "toollabs-nodejs-web",
             "tf-image": "toolforge-node6-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    "memory": "2Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_RESOURCES,
         },
         "node10": {
             "cls": JSWebService,
             "image": "toollabs-node10-web",
             "tf-image": "toolforge-node10-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    "memory": "2Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_RESOURCES,
         },
     }
 

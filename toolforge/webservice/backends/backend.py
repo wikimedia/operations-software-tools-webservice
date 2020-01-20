@@ -18,6 +18,15 @@ class Backend(with_metaclass(ABCMeta, object)):
         self.type = type
         self.extra_args = extra_args
 
+    @property
+    @classmethod
+    @abstractmethod
+    def CONFIG(self):
+        """
+        Overide in subclasses as a dict keyed by type.
+        """
+        pass
+
     @abstractmethod
     def get_state(self):
         """
@@ -57,3 +66,7 @@ class Backend(with_metaclass(ABCMeta, object)):
         The implementation will differ dramatically between backends.
         """
         pass
+
+    def is_deprecated(self, type):
+        """Is this type considered deprecated?"""
+        return type(self).CONFIG[type].get("deprecated", False)

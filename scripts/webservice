@@ -10,7 +10,6 @@ import os
 import platform
 import re
 import sys
-import textwrap
 
 from toolforge.webservice import WebService
 from toolforge.webservice.backends import (
@@ -28,26 +27,32 @@ KUBERNETES_DEFAULT_TYPE = "php5.6"
 # Make all `print()` output go to stderr by default
 print = functools.partial(print, file=sys.stderr)
 
-def format_types_block(types, default):
-    types = sorted(t + " (default)" if t == default else t for t in types)
-    joined = ", ".join(types)
-    return textwrap.fill(
-        joined, 55, subsequent_indent=" " * len("Grid Engine backend: ")
-    )
+def format_types_block(config, default):
+    types = []
+    for name, spec in config.items():
+        extra = ""
+        if name == default:
+            extra = " (default)"
+        elif spec.get("deprecated", False):
+            extra = " (DEPRECATED)"
+        types.append("{}{}".format(name, extra))
+    return "\n  * ".join(sorted(types))
 
 
 description = """
 Online documentation: https://wikitech.wikimedia.org/wiki/Help:Toolforge/Web
 
 Supported webservice types:
-Kubernetes backend:  {kubernetes}
-Grid Engine backend: {gridengine}
+Kubernetes backend:
+  * {kubernetes}
+Grid Engine backend:
+  * {gridengine}
 """.format(
     kubernetes=format_types_block(
-        KubernetesBackend.CONFIG.keys(), KUBERNETES_DEFAULT_TYPE
+        KubernetesBackend.CONFIG, KUBERNETES_DEFAULT_TYPE
     ),
     gridengine=format_types_block(
-        GridEngineBackend.CONFIG.keys(), GRIDENGINE_DEFAULT_TYPE
+        GridEngineBackend.CONFIG, GRIDENGINE_DEFAULT_TYPE
     ),
 )
 
@@ -274,7 +279,8 @@ if __name__ == "__main__":
         args.extra_args = tool.manifest.get("web::extra_args", None)
 
     if args.type not in acceptable_types:
-        print("type must be one of ", ",".join(sorted(acceptable_types)))
+        print("type must be one of:")
+        print(format_types_block(backend_clazz.CONFIG, ""))
         sys.exit(1)
 
     if backend == "gridengine":
@@ -285,6 +291,14 @@ if __name__ == "__main__":
         )
 
     tool.manifest["backend"] = backend
+
+    if job.is_deprecated(args.type):
+        print("DEPRECATED: '{}' type is deprecated.".format(args.type))
+        print(
+            "  See https://wikitech.wikimedia.org/wiki/Help:Toolforge/{}".format("Kubernetes" if backend == "kubernetes" else "Web")
+        )
+        print("  for currently supported types.")
+
 
     if args.action == "start":
         if job.get_state() != Backend.STATE_STOPPED:
