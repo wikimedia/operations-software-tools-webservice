@@ -404,9 +404,9 @@ class KubernetesBackend(Backend):
             else self.tool.name
         )
 
-    def _find_obj(self, kind, selector):
+    def _find_objs(self, kind, selector):
         """
-        Returns object of kind matching selector, or None if it doesn't exist.
+        Return objects of kind matching selector, or None if they don't exist.
 
         Objects that are currently being deleted by the Kubernetes service
         (meaning they have a non-empty metadata.deletionTimestamp value) are
@@ -421,40 +421,25 @@ class KubernetesBackend(Backend):
             for o in objs
             if o.obj["metadata"].get("deletionTimestamp", None) is None
         ]
-        if not objs:
-            return None
-        elif len(objs) == 1:
-            return objs[0]
-        else:
-            raise ValueError(
-                (
-                    "Found {} objects of type {} matching selector {}: {}. "
-                    "See https://phabricator.wikimedia.org/T156626"
-                ).format(
-                    len(objs),
-                    kind.__name__,
-                    selector,
-                    ", ".join(repr(o) for o in objs),
-                )
-            )
 
-    def _delete_obj(self, kind, selector):
+        return objs
+
+    def _delete_objs(self, kind, selector):
         """
-        Delete object of kind matching selector if it exists
+        Delete objects of kind matching selector if they exist
         """
-        o = self._find_obj(kind, selector)
-        if o is not None:
+        o_list = self._find_objs(kind, selector)
+        for o in o_list:
             o.delete()
 
-    def _wait_for_pod(self, label_selector, timeout=30):
+    def _wait_for_pods(self, label_selector, timeout=30):
         """
-        Wait for a pod to become 'ready'
+        Wait for at least 1 pod to become 'ready'
         """
         for _ in range(timeout):
-            pod = self._find_obj(pykube.Pod, label_selector)
-            if pod is not None:
-                if pod.obj["status"]["phase"] == "Running":
-                    return True
+            pods = self._find_objs(pykube.Pod, label_selector)
+            if self._any_pod_in_state(pods, "Running"):
+                return True
             time.sleep(1)
         return False
 
@@ -652,51 +637,61 @@ class KubernetesBackend(Backend):
                 ],
             }
 
+    def _any_pod_in_state(self, podlist, state):
+        """
+        Returns true if any pod in the input list of pods are in a given state
+        """
+        for pod in podlist:
+            if pod.obj["status"]["phase"] == state:
+                return True
+
+        return False
+
     def request_start(self):
         self.webservice.check()
-        deployment = self._find_obj(
+        deployments = self._find_objs(
             pykube.Deployment, self.webservice_label_selector
         )
-        if deployment is None:
+        if len(deployments) == 0:
             pykube.Deployment(self.api, self._get_deployment()).create()
 
-        svc = self._find_obj(pykube.Service, self.webservice_label_selector)
-        if svc is None:
+        svcs = self._find_objs(pykube.Service, self.webservice_label_selector)
+        if len(svcs) == 0:
             pykube.Service(self.api, self._get_svc()).create()
 
         if self.current_context == "toolforge":
-            ingress = self._find_obj(
+            ingresses = self._find_objs(
                 pykube.Ingress, self.webservice_label_selector
             )
-            if ingress is None:
+            if len(ingresses) == 0:
                 pykube.Ingress(self.api, self._get_ingress()).create()
 
     def request_stop(self):
         if self.current_context == "toolforge":
-            self._delete_obj(pykube.Ingress, self.webservice_label_selector)
+            self._delete_objs(pykube.Ingress, self.webservice_label_selector)
 
-        self._delete_obj(pykube.Service, self.webservice_label_selector)
+        self._delete_objs(pykube.Service, self.webservice_label_selector)
         # No cascading delete support yet. So we delete all of the objects by
         # hand Can be simplified after
         # https://github.com/kubernetes/kubernetes/pull/23656
         # Because we are using old objects in the new cluster (because pykube)
         # deletion policy must be explicitly set in the namespaces by
         # maintain-kubeusers and STILL defaults to "orphan"
-        self._delete_obj(pykube.Deployment, self.webservice_label_selector)
-        self._delete_obj(
+        self._delete_objs(pykube.Deployment, self.webservice_label_selector)
+        self._delete_objs(
             pykube.ReplicaSet, "name={name}".format(name=self.tool.name)
         )
-        self._delete_obj(pykube.Pod, self.webservice_label_selector)
+        self._delete_objs(pykube.Pod, self.webservice_label_selector)
 
     def request_restart(self):
         # For most intents and purposes, the only thing necessary
         # to restart a Kubernetes application is to delete the pods.
         print("Restarting...")
-        self._delete_obj(pykube.Pod, self.webservice_label_selector)
+        self._delete_objs(pykube.Pod, self.webservice_label_selector)
         # TODO: It would be cool and not terribly hard here to detect a pod
         # with an error or crash state and dump the logs of that pod for the
         # user to examine.
-        if not self._wait_for_pod(self.webservice_label_selector, timeout=30):
+        if not self._wait_for_pods(self.webservice_label_selector, timeout=30):
             print(
                 "Your webservice is taking quite while to restart. If it isn't"
                 " up shortly, run a 'webservice stop' and the start command "
@@ -706,29 +701,28 @@ class KubernetesBackend(Backend):
 
     def get_state(self):
         # TODO: add some state concept around ingresses
-        pod = self._find_obj(pykube.Pod, self.webservice_label_selector)
-        if pod is not None:
-            if pod.obj["status"]["phase"] == "Running":
-                return Backend.STATE_RUNNING
-            elif pod.obj["status"]["phase"] == "Pending":
-                return Backend.STATE_PENDING
-        svc = self._find_obj(pykube.Service, self.webservice_label_selector)
-        deployment = self._find_obj(
+        pods = self._find_objs(pykube.Pod, self.webservice_label_selector)
+        if self._any_pod_in_state(pods, "Running"):
+            return Backend.STATE_RUNNING
+        if self._any_pod_in_state(pods, "Pending"):
+            return Backend.STATE_PENDING
+        svcs = self._find_objs(pykube.Service, self.webservice_label_selector)
+        deployments = self._find_objs(
             pykube.Deployment, self.webservice_label_selector
         )
-        if svc is not None and deployment is not None:
+        if len(svcs) != 0 and len(deployments) != 0:
             return Backend.STATE_PENDING
         else:
             return Backend.STATE_STOPPED
 
     def shell(self):
         podSpec = self._get_shell_pod()
-        if self._find_obj(pykube.Pod, self.shell_label_selector) is None:
+        if len(self._find_objs(pykube.Pod, self.shell_label_selector)) != 0:
             pykube.Pod(self.api, podSpec).create()
 
-        if not self._wait_for_pod(self.shell_label_selector):
+        if not self._wait_for_pods(self.shell_label_selector):
             print("Pod is not ready in time")
-            self._delete_obj(pykube.Pod, self.shell_label_selector)
+            self._delete_objs(pykube.Pod, self.shell_label_selector)
             sys.exit(1)
         kubectl = subprocess.Popen(
             ["/usr/bin/kubectl", "attach", "--tty", "--stdin", "interactive"]
@@ -741,4 +735,4 @@ class KubernetesBackend(Backend):
         # This isn't true, since we actually kill the pod when done
         print("Pod stopped. Session cannot be resumed.")
 
-        self._delete_obj(pykube.Pod, self.shell_label_selector)
+        self._delete_objs(pykube.Pod, self.shell_label_selector)
