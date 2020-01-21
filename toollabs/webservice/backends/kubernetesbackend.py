@@ -468,15 +468,15 @@ class KubernetesBackend(Backend):
             },
         }
 
-    def _get_ingress(self):
+    def _get_ingress_legacy(self):
         """
-        Return the full spec of an ingress object for this webservice.
+        Returns the full spec of the legacy ingress object for this webservice
         """
         return {
             "apiVersion": "extensions/v1beta1",  # pykube is old
             "kind": "Ingress",
             "metadata": {
-                "name": self.tool.name,
+                "name": "{}-legacy".format(self.tool.name),
                 "namespace": "tool-{}".format(self.tool.name),
                 "annotations": {
                     "nginx.ingress.kubernetes.io/configuration-snippet": "rewrite ^(/{})$ $1/ redirect;\n".format(
@@ -502,6 +502,38 @@ class KubernetesBackend(Backend):
                                         "serviceName": self.tool.name,
                                         "servicePort": 8000,
                                     },
+                                }
+                            ]
+                        },
+                    }
+                ]
+            },
+        }
+
+    def _get_ingress_subdomain(self):
+        """
+        Returns the full spec of the domain-based routing ingress object for
+        this webservice
+        """
+        return {
+            "apiVersion": "extensions/v1beta1",  # pykube is old
+            "kind": "Ingress",
+            "metadata": {
+                "name": "{}-subdomain".format(self.tool.name),
+                "namespace": "tool-{}".format(self.tool.name),
+                "labels": self.webservice_labels,
+            },
+            "spec": {
+                "rules": [
+                    {
+                        "host": "{}.toolforge.org".format(self.tool.name),
+                        "http": {
+                            "paths": [
+                                {
+                                    "backend": {
+                                        "serviceName": self.tool.name,
+                                        "servicePort": 8000,
+                                    }
                                 }
                             ]
                         },
@@ -664,7 +696,10 @@ class KubernetesBackend(Backend):
                 pykube.Ingress, self.webservice_label_selector
             )
             if len(ingresses) == 0:
-                pykube.Ingress(self.api, self._get_ingress()).create()
+                pykube.Ingress(self.api, self._get_ingress_legacy()).create()
+                pykube.Ingress(
+                    self.api, self._get_ingress_subdomain()
+                ).create()
 
     def request_stop(self):
         if self.current_context == "toolforge":
