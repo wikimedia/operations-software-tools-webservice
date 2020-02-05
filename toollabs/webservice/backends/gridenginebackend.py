@@ -76,11 +76,6 @@ class GridEngineBackend(Backend):
 
     def request_start(self):
         self.webservice.check()
-        cmd = "/usr/bin/webservice-runner --register-proxy --type {}".format(
-            self.webservice.name
-        )
-        if self.extra_args:
-            cmd += " --extra_args '%s'" % self.extra_args
         command = [
             "qsub",
             "-e",
@@ -97,8 +92,14 @@ class GridEngineBackend(Backend):
             "y",
             "-N",
             self.name,
-            cmd,
+            "/usr/bin/webservice-runner",
+            "--register-proxy",
+            "--type",
+            self.webservice.name,
         ]
+        if self.extra_args:
+            command.append("--extra_args")
+            command.extend(self.extra_args)
 
         subprocess.check_call(command, stdout=open(os.devnull, "wb"))
 
