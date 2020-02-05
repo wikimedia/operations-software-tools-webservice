@@ -5,6 +5,7 @@ try:
     from configparser import ConfigParser
 except ImportError:
     from ConfigParser import ConfigParser
+import functools
 import os
 import platform
 import re
@@ -24,6 +25,8 @@ from toollabs.common import Tool
 GRIDENGINE_DEFAULT_TYPE = "lighttpd"
 KUBERNETES_DEFAULT_TYPE = "php5.6"
 
+# Make all `print()` output go to stderr by default
+print = functools.partial(print, file=sys.stderr)
 
 def format_types_block(types, default):
     types = sorted(t + " (default)" if t == default else t for t in types)
@@ -305,7 +308,7 @@ if __name__ == "__main__":
 
     elif args.action == "stop":
         if job.get_state() == Backend.STATE_STOPPED:
-            print("Your webservice is not running")
+            print("Your webservice is not running", file=sys.stdout)
         else:
             stop(job, "Stopping webservice")
         update_manifest(job, "stop", args.cpu, args.memory)
@@ -317,14 +320,18 @@ if __name__ == "__main__":
         else:
             job.request_restart()
         tool.save_manifest()
+
     elif args.action == "status":
         if job.get_state() != Backend.STATE_STOPPED:
-            print("Your webservice of type", job.type, "is running", end="")
+            print(
+                "Your webservice of type {} is running on backend {}".format(
+                    job.type, backend),
+                file=sys.stdout)
         else:
-            print("Your webservice is not running", end="")
+            print("Your webservice is not running", file=sys.stdout)
+
     elif args.action == "shell":
         if backend != "kubernetes":
-            print("webservice shell is only supported for kubernetes backend")
+            print("ERROR: shell is only supported for kubernetes backend")
             sys.exit(1)
         job.shell()
-    print()  # End program with newline, don't output newline anywhere else :)
