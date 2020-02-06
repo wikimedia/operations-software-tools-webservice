@@ -194,23 +194,28 @@ class KubernetesBackend(Backend):
             )
             # In this cluster, defaults are used for request so this just
             # affects the burst, up to certain limits (set as max in the
-            # limitrange)
+            # limitrange) as well as a proportional request (which affects
+            # scheduling)
             # The namespace quotas also have impact on what can be done.
             if mem or cpu:
                 self.container_resources = {"limits": {}, "requests": {}}
                 if mem:
-                    if parse_quantity(mem) < parse_quantity("256Mi"):
+                    dec_mem = parse_quantity(mem)
+                    if dec_mem < parse_quantity("256Mi"):
                         self.container_resources["requests"]["memory"] = mem
                     else:
-                        self.container_resources["requests"][
-                            "memory"
-                        ] = "256Mi"
+                        self.container_resources["requests"]["memory"] = (
+                            dec_mem / 2
+                        )
                     self.container_resources["limits"]["memory"] = mem
                 if cpu:
-                    if parse_quantity(cpu) < parse_quantity("250m"):
+                    dec_cpu = parse_quantity(cpu)
+                    if dec_cpu < parse_quantity("250m"):
                         self.container_resources["requests"]["cpu"] = cpu
                     else:
-                        self.container_resources["requests"]["cpu"] = "250m"
+                        self.container_resources["requests"]["cpu"] = (
+                            dec_cpu / 2
+                        )
                     self.container_resources["limits"]["cpu"] = cpu
             else:
                 # Defaults are cpu: 500m and memory: 512Mi
