@@ -9,6 +9,7 @@ import functools
 import os
 import platform
 import re
+import subprocess
 import sys
 
 from toolforge.webservice import WebService
@@ -125,7 +126,7 @@ argparser.add_argument(
 argparser.add_argument(
     "action",
     help="Action to perform",
-    choices=["start", "stop", "status", "restart", "shell"],
+    choices=["start", "stop", "status", "restart", "shell", "migrate"],
 )
 argparser.add_argument(
     "extra_args",
@@ -337,3 +338,34 @@ if __name__ == "__main__":
             print("ERROR: shell is only supported for kubernetes backend")
             sys.exit(1)
         job.shell()
+
+    elif args.action == "migrate":
+        # Temporary action to move workloads from the legacy Kubernetes
+        # cluster to the 2020 Kubernetes cluster.
+        if job.get_state() != Backend.STATE_RUNNING:
+            print("No webservice running.")
+            sys.exit(0)
+        if backend != "kubernetes":
+            print("Webservice is not running on Kubernetes.")
+            sys.exit(0)
+        if job.current_context == "toolforge":
+            print("Webservice is running on 2020 Kubernetes cluster.")
+            sys.exit(0)
+
+        stop(job, "Stopping webservice on legacy Kubernetes cluster")
+        print(file=sys.stdout)
+        try:
+            subprocess.check_call(
+                ["/usr/bin/kubectl", "config", "use-context", "toolforge"]
+            )
+        except subprocess.CalledProcessError as e:
+            print("Failed to change kubectl context: {}".format(e.output))
+            sys.exit(1)
+        # Make a new job object now that context is changed to pick up new
+        # Docker image and mem/cpu processing.
+        newjob = KubernetesBackend(
+            tool, project, args.type, args.memory, args.cpu, args.extra_args
+        )
+        start(newjob, "Starting webservice on 2020 Kubernetes cluster")
+        print(file=sys.stdout)
+        update_manifest(newjob, "start", args.cpu, args.memory)
