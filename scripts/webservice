@@ -259,7 +259,7 @@ if __name__ == "__main__":
             sys.exit(1)
         if args.type is None:
             args.type = tool.manifest.get("web", GRIDENGINE_DEFAULT_TYPE)
-        acceptable_types = GridEngineBackend.CONFIG.keys()
+        acceptable_types = GridEngineBackend.CONFIG
     elif backend == "kubernetes":
         if args.release is not None:
             print("--release is not implemented for --backend=kubernetes")
@@ -274,14 +274,14 @@ if __name__ == "__main__":
         if args.memory is None:
             args.memory = tool.manifest.get("memory", None)
 
-        acceptable_types = KubernetesBackend.CONFIG.keys()
+        acceptable_types = KubernetesBackend.CONFIG
 
     if args.extra_args is None:
         args.extra_args = tool.manifest.get("web::extra_args", None)
 
-    if args.type not in acceptable_types:
+    if args.type not in acceptable_types.keys():
         print("type must be one of:")
-        print(format_types_block(backend_clazz.CONFIG, ""))
+        print(format_types_block(acceptable_types, ""))
         sys.exit(1)
 
     if backend == "gridengine":
