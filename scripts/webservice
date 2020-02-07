@@ -353,7 +353,6 @@ if __name__ == "__main__":
             sys.exit(0)
 
         stop(job, "Stopping webservice on legacy Kubernetes cluster")
-        print(file=sys.stdout)
         try:
             subprocess.check_call(
                 ["/usr/bin/kubectl", "config", "use-context", "toolforge"]
@@ -367,5 +366,4 @@ if __name__ == "__main__":
             tool, project, args.type, args.memory, args.cpu, args.extra_args
         )
         start(newjob, "Starting webservice on 2020 Kubernetes cluster")
-        print(file=sys.stdout)
         update_manifest(newjob, "start", args.cpu, args.memory)

@@ -19,10 +19,14 @@ def wait_for(predicate, prompt, timeout=15):
     sys.stdout.flush()
     for _ in range(timeout):
         if predicate():
+            sys.stdout.write("\n")
+            sys.stdout.flush()
             return True
         sys.stdout.write(".")
         sys.stdout.flush()
         time.sleep(1)
+    sys.stdout.write("\n")
+    sys.stdout.flush()
     return False
 
 
