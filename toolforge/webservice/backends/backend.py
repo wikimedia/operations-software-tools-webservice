@@ -67,6 +67,6 @@ class Backend(with_metaclass(ABCMeta, object)):
         """
         pass
 
-    def is_deprecated(self, type):
+    def is_deprecated(self, wstype):
         """Is this type considered deprecated?"""
-        return type(self).CONFIG[type].get("deprecated", False)
+        return type(self).CONFIG[wstype].get("deprecated", False)
