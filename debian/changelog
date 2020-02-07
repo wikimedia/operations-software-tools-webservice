@@ -1,3 +1,10 @@
+toollabs-webservice (0.60) jessie; urgency=medium
+
+  [ Bryan Davis ]
+  * [ea7ac2a] Fix local 'type' variable shadowing global type() function
+
+ -- Brooke Storm <bstorm@wikimedia.org>  Fri, 07 Feb 2020 22:25:57 +0000
+
 toollabs-webservice (0.59) jessie; urgency=medium
 
   [ Arturo Borrero Gonzalez ]
