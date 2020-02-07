@@ -1,3 +1,25 @@
+toollabs-webservice (0.59) jessie; urgency=medium
+
+  [ Arturo Borrero Gonzalez ]
+  * [b3d9157] .gitignore: ignore nano lock file
+  * [a702e02] kubernetes: add support for multiple objects of any kind
+  * [9d8aeae] kubernetes: add support for domain-based routing in the new kubernetes cluster
+
+  [ Bryan Davis ]
+  * [7d9b25f] Report error messages on stderr
+  * [c842ca8] Remove lighttpd-precise handling
+  * [c219302] Improve support for extra_args
+  * [a33b809] Rename internal "toollabs" package to "toolforge"
+  * [01c276f] Deprecate Jessie based Kubernetes types
+
+  [ Brooke Storm ]
+  * [cf8cc9b] kubernetes: resource requests should be proportional to limits
+
+  [ Bryan Davis ]
+  * [b692f10] Add "migrate" action for 2020 Kubernetes migration
+
+ -- Brooke Storm <bstorm@wikimedia.org>  Fri, 07 Feb 2020 20:37:44 +0000
+
 toollabs-webservice (0.58) jessie; urgency=medium
 
   * Change restart behavior, especially for Kubernetes
