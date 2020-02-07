@@ -1,3 +1,12 @@
+toollabs-webservice (0.61) jessie; urgency=medium
+
+  [ Bryan Davis ]
+  * [cdbca0b] Add missing newline following wait_for() messages
+  * [c5c448a] Fix undefined backend_clazz reference
+  * [0035a8c] Minor whitespace and doc string updates
+
+ -- Brooke Storm <bstorm@wikimedia.org>  Fri, 07 Feb 2020 23:35:39 +0000
+
 toollabs-webservice (0.60) jessie; urgency=medium
 
   [ Bryan Davis ]
