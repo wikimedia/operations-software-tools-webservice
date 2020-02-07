@@ -28,7 +28,9 @@ KUBERNETES_DEFAULT_TYPE = "php5.6"
 # Make all `print()` output go to stderr by default
 print = functools.partial(print, file=sys.stderr)
 
+
 def format_types_block(config, default):
+    """Pretty print a list of runtime types for a backend."""
     types = []
     for name, spec in config.items():
         extra = ""
@@ -299,7 +301,6 @@ if __name__ == "__main__":
             "  See https://wikitech.wikimedia.org/wiki/Help:Toolforge/{}".format("Kubernetes" if backend == "kubernetes" else "Web")
         )
         print("  for currently supported types.")
-
 
     if args.action == "start":
         if job.get_state() != Backend.STATE_STOPPED:
