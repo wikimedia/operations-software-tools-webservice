@@ -204,7 +204,7 @@ class KubernetesBackend(Backend):
                     if dec_mem < parse_quantity("256Mi"):
                         self.container_resources["requests"]["memory"] = mem
                     else:
-                        self.container_resources["requests"]["memory"] = (
+                        self.container_resources["requests"]["memory"] = str(
                             dec_mem / 2
                         )
                     self.container_resources["limits"]["memory"] = mem
@@ -213,7 +213,7 @@ class KubernetesBackend(Backend):
                     if dec_cpu < parse_quantity("250m"):
                         self.container_resources["requests"]["cpu"] = cpu
                     else:
-                        self.container_resources["requests"]["cpu"] = (
+                        self.container_resources["requests"]["cpu"] = str(
                             dec_cpu / 2
                         )
                     self.container_resources["limits"]["cpu"] = cpu
