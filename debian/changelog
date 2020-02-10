@@ -1,3 +1,10 @@
+toollabs-webservice (0.62) jessie; urgency=medium
+
+  [ bstorm ]
+  * [66df749] k8s-resources: resources must be converted to str from Decimal
+
+ -- Brooke Storm <bstorm@wikimedia.org>  Mon, 10 Feb 2020 17:31:49 +0000
+
 toollabs-webservice (0.61) jessie; urgency=medium
 
   [ Bryan Davis ]
