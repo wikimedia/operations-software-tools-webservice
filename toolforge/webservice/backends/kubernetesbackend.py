@@ -612,7 +612,7 @@ class KubernetesBackend(Backend):
 
     def shell(self):
         podSpec = self._get_shell_pod()
-        if len(self._find_objs(pykube.Pod, self.shell_label_selector)) != 0:
+        if len(self._find_objs(pykube.Pod, self.shell_label_selector)) == 0:
             pykube.Pod(self.api, podSpec).create()
 
         if not self._wait_for_pods(self.shell_label_selector):
