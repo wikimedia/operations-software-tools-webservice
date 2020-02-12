@@ -1,3 +1,9 @@
+toollabs-webservice (0.63) jessie; urgency=medium
+
+  * [bee619e] k8s shell: fix logic bug in guard for new Pod creation
+
+ -- Bryan Davis <bd808@wikimedia.org>  Wed, 12 Feb 2020 18:44:40 +0000
+
 toollabs-webservice (0.62) jessie; urgency=medium
 
   [ bstorm ]
