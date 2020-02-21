@@ -56,7 +56,6 @@ class KubernetesBackend(Backend):
             "resources": DEFAULT_RESOURCES,
         },
         "tcl": {
-            "deprecated": True,
             "cls": LighttpdPlainWebService,
             "image": "toollabs-tcl-web",
             "tf-image": "toolforge-tcl86-sssd-web",
