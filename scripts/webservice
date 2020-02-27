@@ -133,7 +133,7 @@ argparser.add_argument(
 argparser.add_argument(
     "extra_args",
     help="Extra arguments to be parsed by the chosen webservicetype",
-    nargs="?",
+    nargs="*",
 )
 # Backwards compat with older webservice.
 # Allows for webservice --release trusty lighttpd <action>
@@ -171,7 +171,7 @@ def update_manifest(job, action, cpu, memory):
                 0
             ]
             job.tool.manifest["web"] = job.type
-            if job.extra_args is not None:
+            if job.extra_args:
                 job.tool.manifest["web::extra_args"] = job.extra_args
 
             if hasattr(job, "container_resources"):
@@ -278,7 +278,7 @@ if __name__ == "__main__":
 
         acceptable_types = KubernetesBackend.CONFIG
 
-    if args.extra_args is None:
+    if not args.extra_args:
         args.extra_args = tool.manifest.get("web::extra_args", None)
 
     if args.type not in acceptable_types.keys():

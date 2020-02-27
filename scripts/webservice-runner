@@ -20,9 +20,9 @@ argparser.add_argument(
     help="Register webservice with proxy",
 )
 argparser.add_argument(
-    "--extra_args",
+    "extra_args",
     help="Extra arguments optionally passed to the chosen webservice type",
-    nargs="?",
+    nargs="*",
 )
 args = argparser.parse_args()
 

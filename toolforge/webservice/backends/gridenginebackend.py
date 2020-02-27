@@ -98,7 +98,6 @@ class GridEngineBackend(Backend):
             self.webservice.name,
         ]
         if self.extra_args:
-            command.append("--extra_args")
             command.extend(self.extra_args)
 
         subprocess.check_call(command, stdout=open(os.devnull, "wb"))
