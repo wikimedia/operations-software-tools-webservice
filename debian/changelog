@@ -1,3 +1,11 @@
+toollabs-webservice (0.64) jessie; urgency=medium
+
+  * [a4d91f8] kubernetes: Remove deprecated flag from tcl image
+  * [73f312d] webservice-runner: Fix --extra-args handling
+  * [8b61ed7] 3rd try at making extra_args handling "better"
+
+ -- Bryan Davis <bd808@wikimedia.org>  Thu, 27 Feb 2020 01:58:14 +0000
+
 toollabs-webservice (0.63) jessie; urgency=medium
 
   * [bee619e] k8s shell: fix logic bug in guard for new Pod creation
