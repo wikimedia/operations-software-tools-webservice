@@ -16,4 +16,4 @@ class GenericWebService(WebService):
     def run(self, port):
         super(GenericWebService, self).run(port)
         os.chdir(self.tool.home)
-        os.execv("/bin/sh", ["/bin/sh", "-c", self.extra_args])
+        os.execv(self.extra_args[0], self.extra_args)

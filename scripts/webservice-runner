@@ -6,14 +6,24 @@ from toolforge.webservice import proxy
 from toolforge.webservice.services import webservice_classes
 
 argparser = argparse.ArgumentParser()
-argparser.add_argument('--type', help='Type of webservice to start',
-                       choices=webservice_classes.keys())
 argparser.add_argument(
-    '--extra_args', help='Extra arguments optionally passed to the chosen webservice type')
+    "--type",
+    help="Type of webservice to start",
+    choices=webservice_classes.keys(),
+)
 argparser.add_argument(
-    '--port', help='Port to bind the webservice to', type=int, default=0)
-argparser.add_argument('--register-proxy', action='store_true',
-                       help='Register webservice with proxy')
+    "--port", help="Port to bind the webservice to", type=int, default=0
+)
+argparser.add_argument(
+    "--register-proxy",
+    action="store_true",
+    help="Register webservice with proxy",
+)
+argparser.add_argument(
+    "--extra_args",
+    help="Extra arguments optionally passed to the chosen webservice type",
+    nargs="?",
+)
 args = argparser.parse_args()
 
 
