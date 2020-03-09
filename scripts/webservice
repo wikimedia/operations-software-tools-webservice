@@ -1,16 +1,18 @@
 #!/usr/bin/python -Es
 from __future__ import print_function
 import argparse
-try:
-    from configparser import ConfigParser
-except ImportError:
-    from ConfigParser import ConfigParser
 import functools
 import os
 import platform
 import re
 import subprocess
 import sys
+import textwrap
+
+try:
+    from configparser import ConfigParser
+except ImportError:
+    from ConfigParser import ConfigParser
 
 from toolforge.webservice import WebService
 from toolforge.webservice.backends import (
@@ -30,7 +32,7 @@ KUBERNETES_DEFAULT_TYPE = "php7.3"
 print = functools.partial(print, file=sys.stderr)
 
 
-def format_types_block(config, default):
+def format_types_block(config, default, leader="\n  * "):
     """Pretty print a list of runtime types for a backend."""
     types = []
     for name, spec in config.items():
@@ -40,30 +42,7 @@ def format_types_block(config, default):
         elif spec.get("deprecated", False):
             extra = " (DEPRECATED)"
         types.append("{}{}".format(name, extra))
-    return "\n  * ".join(sorted(types))
-
-
-description = """
-Online documentation: https://wikitech.wikimedia.org/wiki/Help:Toolforge/Web
-
-Supported webservice types:
-Kubernetes backend:
-  * {kubernetes}
-Grid Engine backend:
-  * {gridengine}
-""".format(
-    kubernetes=format_types_block(
-        KubernetesBackend.CONFIG, KUBERNETES_DEFAULT_TYPE
-    ),
-    gridengine=format_types_block(
-        GridEngineBackend.CONFIG, GRIDENGINE_DEFAULT_TYPE
-    ),
-)
-
-argparser = argparse.ArgumentParser(
-    description=description,
-    formatter_class=argparse.RawDescriptionHelpFormatter,
-)
+    return leader.join(sorted(types))
 
 
 def kube_quant(string):
@@ -102,43 +81,6 @@ def kube_quant(string):
 
     msg = "{} is not a valid Kubernetes quantity".format(string)
     raise argparse.ArgumentTypeError(msg)
-
-
-argparser.add_argument("type", help="Type of webservice to start", nargs="?")
-argparser.add_argument(
-    "--backend",
-    help="Which cluster backend to use run the webservice",
-    choices=["gridengine", "kubernetes"],
-)
-argparser.add_argument(
-    "-m",
-    "--mem",
-    required=False,
-    type=kube_quant,
-    help="Set higher Kubernetes memory limit",
-    dest="memory",
-)
-argparser.add_argument(
-    "-c",
-    "--cpu",
-    required=False,
-    type=kube_quant,
-    help="Set a higher Kubernetes cpu limit",
-    dest="cpu",
-)
-argparser.add_argument(
-    "action",
-    help="Action to perform",
-    choices=["start", "stop", "status", "restart", "shell"],
-)
-argparser.add_argument(
-    "extra_args",
-    help="Extra arguments to be parsed by the chosen webservicetype",
-    nargs="*",
-)
-# Backwards compat with older webservice.
-# Allows for webservice --release trusty lighttpd <action>
-argparser.add_argument("--release", help=argparse.SUPPRESS, choices=["trusty"])
 
 
 def start(job, message):
@@ -203,6 +145,74 @@ def update_manifest(job, action, cpu, memory):
 
 
 if __name__ == "__main__":
+    description = """
+    Online documentation: https://wikitech.wikimedia.org/wiki/Help:Toolforge/Web
+
+    Supported webservice types:
+      Kubernetes backend:
+        * {kubernetes}
+      Grid Engine backend:
+        * {gridengine}
+    """.format(
+        kubernetes=format_types_block(
+            KubernetesBackend.CONFIG,
+            KUBERNETES_DEFAULT_TYPE,
+            leader="\n        * ",
+        ),
+        gridengine=format_types_block(
+            GridEngineBackend.CONFIG,
+            GRIDENGINE_DEFAULT_TYPE,
+            leader="\n        * ",
+        ),
+    )
+
+    argparser = argparse.ArgumentParser(
+        description=textwrap.dedent(description),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    argparser.add_argument(
+        "--backend",
+        help="Which cluster backend to use run the webservice",
+        choices=["gridengine", "kubernetes"],
+    )
+    argparser.add_argument(
+        "type", help="Type of webservice to start", nargs="?"
+    )
+
+    argparser.add_argument(
+        "action",
+        help="Action to perform",
+        choices=["start", "stop", "status", "restart", "shell"],
+    )
+    argparser.add_argument(
+        "extra_args",
+        help="Extra arguments to be parsed by the chosen webservicetype",
+        nargs="*",
+    )
+    # Backwards compat with older webservice.
+    # Allows for webservice --release trusty lighttpd <action>
+    argparser.add_argument(
+        "--release", help=argparse.SUPPRESS, choices=["trusty"]
+    )
+
+    k8s_group = argparser.add_argument_group("Kubernetes backend options")
+    k8s_group.add_argument(
+        "-m",
+        "--mem",
+        required=False,
+        type=kube_quant,
+        help="Set higher Kubernetes memory limit",
+        dest="memory",
+    )
+    k8s_group.add_argument(
+        "-c",
+        "--cpu",
+        required=False,
+        type=kube_quant,
+        help="Set a higher Kubernetes cpu limit",
+        dest="cpu",
+    )
+
     args = argparser.parse_args()
 
     tool = Tool.from_currentuser()
