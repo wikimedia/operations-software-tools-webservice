@@ -39,85 +39,72 @@ class KubernetesBackend(Backend):
         "php5.6": {
             "deprecated": True,
             "cls": LighttpdWebService,
-            "image": "toollabs-php-web",
-            "tf-image": "toolforge-php5-sssd-web",
+            "image": "toolforge-php5-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
         "php7.2": {
             "cls": LighttpdWebService,
-            "image": "toollabs-php72-web",
-            "tf-image": "toolforge-php72-sssd-web",
+            "image": "toolforge-php72-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
         "php7.3": {
             "cls": LighttpdWebService,
-            "image": "toolforge-php73-web",
-            "tf-image": "toolforge-php73-sssd-web",
+            "image": "toolforge-php73-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
         "tcl": {
             "cls": LighttpdPlainWebService,
-            "image": "toollabs-tcl-web",
-            "tf-image": "toolforge-tcl86-sssd-web",
+            "image": "toolforge-tcl86-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
         "python": {
             "deprecated": True,
             "cls": PythonWebService,
-            "image": "toollabs-python-web",
-            "tf-image": "toolforge-python34-sssd-web",
+            "image": "toolforge-python34-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
         "python3.5": {
             "cls": PythonWebService,
-            "image": "toollabs-python35-web",
-            "tf-image": "toolforge-python35-sssd-web",
+            "image": "toolforge-python35-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
         "python3.7": {
             "cls": PythonWebService,
-            "image": "toolforge-python37-web",
-            "tf-image": "toolforge-python37-sssd-web",
+            "image": "toolforge-python37-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
         "python2": {
             "deprecated": True,
             "cls": PythonWebService,
-            "image": "toollabs-python2-web",
-            "tf-image": "toolforge-python2-sssd-web",
+            "image": "toolforge-python2-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
         "ruby2": {
             "deprecated": True,
             "cls": GenericWebService,
-            "image": "toollabs-ruby-web",
-            "tf-image": "toolforge-ruby21-sssd-web",
+            "image": "toolforge-ruby21-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
         "ruby25": {
             "cls": GenericWebService,
-            "image": "toolforge-ruby25-web",
-            "tf-image": "toolforge-ruby25-sssd-web",
+            "image": "toolforge-ruby25-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
         "golang": {
             "deprecated": True,
             "cls": GenericWebService,
-            "image": "toollabs-golang-web",
-            "tf-image": "toolforge-golang-sssd-web",
+            "image": "toolforge-golang-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
         "golang111": {
             "cls": GenericWebService,
-            "image": "toolforge-golang111-web",
-            "tf-image": "toolforge-golang111-sssd-web",
+            "image": "toolforge-golang111-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
         "jdk8": {
             "deprecated": True,
             "cls": GenericWebService,
-            "image": "toollabs-jdk8-web",
-            "tf-image": "toolforge-jdk8-sssd-web",
+            "image": "toolforge-jdk8-sssd-web",
             "resources": {
                 "limits": {
                     # Pods will be killed if they go over memory limit
@@ -137,8 +124,7 @@ class KubernetesBackend(Backend):
         },
         "jdk11": {
             "cls": GenericWebService,
-            "image": "toolforge-jdk11-web",
-            "tf-image": "toolforge-jdk11-sssd-web",
+            "image": "toolforge-jdk11-sssd-web",
             "resources": {
                 "limits": {
                     # Pods will be killed if they go over memory limit
@@ -159,14 +145,12 @@ class KubernetesBackend(Backend):
         "nodejs": {
             "deprecated": True,
             "cls": JSWebService,
-            "image": "toollabs-nodejs-web",
-            "tf-image": "toolforge-node6-sssd-web",
+            "image": "toolforge-node6-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
         "node10": {
             "cls": JSWebService,
-            "image": "toollabs-node10-web",
-            "tf-image": "toolforge-node10-sssd-web",
+            "image": "toolforge-node10-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
     }
@@ -184,49 +168,37 @@ class KubernetesBackend(Backend):
             os.path.expanduser("~/.kube/config")
         )
 
-        self.current_context = kubeconfig.current_context
-        if self.current_context == "toolforge":
-            # Use the sssd image
-            self.container_image = "{registry}/{image}:latest".format(
-                registry="docker-registry.tools.wmflabs.org",
-                image=KubernetesBackend.CONFIG[type]["tf-image"],
-            )
-            # In this cluster, defaults are used for request so this just
-            # affects the burst, up to certain limits (set as max in the
-            # limitrange) as well as a proportional request (which affects
-            # scheduling)
-            # The namespace quotas also have impact on what can be done.
-            if mem or cpu:
-                self.container_resources = {"limits": {}, "requests": {}}
-                if mem:
-                    dec_mem = parse_quantity(mem)
-                    if dec_mem < parse_quantity("256Mi"):
-                        self.container_resources["requests"]["memory"] = mem
-                    else:
-                        self.container_resources["requests"]["memory"] = str(
-                            dec_mem / 2
-                        )
-                    self.container_resources["limits"]["memory"] = mem
-                if cpu:
-                    dec_cpu = parse_quantity(cpu)
-                    if dec_cpu < parse_quantity("250m"):
-                        self.container_resources["requests"]["cpu"] = cpu
-                    else:
-                        self.container_resources["requests"]["cpu"] = str(
-                            dec_cpu / 2
-                        )
-                    self.container_resources["limits"]["cpu"] = cpu
-            else:
-                # Defaults are cpu: 500m and memory: 512Mi
-                self.container_resources = None
+        self.container_image = "{registry}/{image}:latest".format(
+            registry="docker-registry.tools.wmflabs.org",
+            image=KubernetesBackend.CONFIG[type]["image"],
+        )
+        # Defaults are used for request so this just affects the burst, up to
+        # certain limits (set as max in the limitrange) as well as
+        # a proportional request (which affects scheduling).
+        # The namespace quotas also have impact on what can be done.
+        if mem or cpu:
+            self.container_resources = {"limits": {}, "requests": {}}
+            if mem:
+                dec_mem = parse_quantity(mem)
+                if dec_mem < parse_quantity("256Mi"):
+                    self.container_resources["requests"]["memory"] = mem
+                else:
+                    self.container_resources["requests"]["memory"] = str(
+                        dec_mem / 2
+                    )
+                self.container_resources["limits"]["memory"] = mem
+            if cpu:
+                dec_cpu = parse_quantity(cpu)
+                if dec_cpu < parse_quantity("250m"):
+                    self.container_resources["requests"]["cpu"] = cpu
+                else:
+                    self.container_resources["requests"]["cpu"] = str(
+                        dec_cpu / 2
+                    )
+                self.container_resources["limits"]["cpu"] = cpu
         else:
-            self.container_resources = KubernetesBackend.CONFIG[type][
-                "resources"
-            ]
-            self.container_image = "{registry}/{image}:latest".format(
-                registry="docker-registry.tools.wmflabs.org",
-                image=KubernetesBackend.CONFIG[type]["image"],
-            )
+            # Defaults are cpu: 500m and memory: 512Mi
+            self.container_resources = None
 
         self.api = pykube.HTTPClient(kubeconfig)
         # Labels for all objects created by this webservice
@@ -256,11 +228,7 @@ class KubernetesBackend(Backend):
         )
 
     def _get_ns(self):
-        return (
-            "tool-{}".format(self.tool.name)
-            if (self.current_context == "toolforge")
-            else self.tool.name
-        )
+        return "tool-{}".format(self.tool.name)
 
     def _find_objs(self, kind, selector):
         """
@@ -472,59 +440,21 @@ class KubernetesBackend(Backend):
         stdin=False,
         tty=False,
     ):
-        # All the paths we want to mount from host nodes onto container
-        hostMounts = {
-            "dumps": "/public/dumps/",
-            "home": "/data/project/",
-            "nfs": "/mnt/nfs/",  # Not sure this should be mounted
-            "scratch": "/data/scratch/",
-            "wmcs-project": "/etc/wmcs-project",
-        }
-
         homedir = "/data/project/{toolname}/".format(toolname=self.tool.name)
-
-        if self.current_context == "toolforge":
-            return {
-                "containers": [
-                    {
-                        "name": name,
-                        "image": container_image,
-                        "command": cmd,
-                        "workingDir": homedir,
-                        "ports": ports,
-                        "resources": resources,
-                        "tty": tty,
-                        "stdin": stdin,
-                    }
-                ]
-            }
-        else:
-            return {
-                "volumes": [
-                    {"name": key, "hostPath": {"path": value}}
-                    for key, value in hostMounts.items()
-                ],
-                "containers": [
-                    {
-                        "name": name,
-                        "image": container_image,
-                        "command": cmd,
-                        "workingDir": homedir,
-                        "env": [
-                            # FIXME: This should be set by NSS maybe?!
-                            {"name": "HOME", "value": homedir}
-                        ],
-                        "ports": ports,
-                        "volumeMounts": [
-                            {"name": key, "mountPath": value}
-                            for key, value in hostMounts.items()
-                        ],
-                        "resources": resources,
-                        "tty": tty,
-                        "stdin": stdin,
-                    }
-                ],
-            }
+        return {
+            "containers": [
+                {
+                    "name": name,
+                    "image": container_image,
+                    "command": cmd,
+                    "workingDir": homedir,
+                    "ports": ports,
+                    "resources": resources,
+                    "tty": tty,
+                    "stdin": stdin,
+                }
+            ]
+        }
 
     def _any_pod_in_state(self, podlist, state):
         """
@@ -548,19 +478,15 @@ class KubernetesBackend(Backend):
         if len(svcs) == 0:
             pykube.Service(self.api, self._get_svc()).create()
 
-        if self.current_context == "toolforge":
-            ingresses = self._find_objs(
-                pykube.Ingress, self.webservice_label_selector
-            )
-            if len(ingresses) == 0:
-                pykube.Ingress(self.api, self._get_ingress_legacy()).create()
-                pykube.Ingress(
-                    self.api, self._get_ingress_subdomain()
-                ).create()
+        ingresses = self._find_objs(
+            pykube.Ingress, self.webservice_label_selector
+        )
+        if len(ingresses) == 0:
+            pykube.Ingress(self.api, self._get_ingress_legacy()).create()
+            pykube.Ingress(self.api, self._get_ingress_subdomain()).create()
 
     def request_stop(self):
-        if self.current_context == "toolforge":
-            self._delete_objs(pykube.Ingress, self.webservice_label_selector)
+        self._delete_objs(pykube.Ingress, self.webservice_label_selector)
 
         self._delete_objs(pykube.Service, self.webservice_label_selector)
         # No cascading delete support yet. So we delete all of the objects by

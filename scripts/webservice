@@ -115,7 +115,7 @@ argparser.add_argument(
     "--mem",
     required=False,
     type=kube_quant,
-    help="Set higher Kubernetes memory limit (new cluster only)",
+    help="Set higher Kubernetes memory limit",
     dest="memory",
 )
 argparser.add_argument(
@@ -123,13 +123,13 @@ argparser.add_argument(
     "--cpu",
     required=False,
     type=kube_quant,
-    help="Set a higher Kubernetes cpu limit (new cluster only)",
+    help="Set a higher Kubernetes cpu limit",
     dest="cpu",
 )
 argparser.add_argument(
     "action",
     help="Action to perform",
-    choices=["start", "stop", "status", "restart", "shell", "migrate"],
+    choices=["start", "stop", "status", "restart", "shell"],
 )
 argparser.add_argument(
     "extra_args",
@@ -266,11 +266,11 @@ if __name__ == "__main__":
         if args.release is not None:
             print("--release is deprecated and has no effect")
         if args.memory is not None:
-            print("--mem is only for --backend=kubernetes and the new cluster")
+            print("--mem is only for --backend=kubernetes")
             print("Please run again without this argument")
             sys.exit(1)
         if args.cpu is not None:
-            print("--cpu is only for --backend=kubernetes and the new cluster")
+            print("--cpu is only for --backend=kubernetes")
             print("Please run again without this argument")
             sys.exit(1)
         if args.type is None:
@@ -357,32 +357,3 @@ if __name__ == "__main__":
             print("ERROR: shell is only supported for kubernetes backend")
             sys.exit(1)
         job.shell()
-
-    elif args.action == "migrate":
-        # Temporary action to move workloads from the legacy Kubernetes
-        # cluster to the 2020 Kubernetes cluster.
-        if job.get_state() != Backend.STATE_RUNNING:
-            print("No webservice running.")
-            sys.exit(0)
-        if backend != "kubernetes":
-            print("Webservice is not running on Kubernetes.")
-            sys.exit(0)
-        if job.current_context == "toolforge":
-            print("Webservice is running on 2020 Kubernetes cluster.")
-            sys.exit(0)
-
-        stop(job, "Stopping webservice on legacy Kubernetes cluster")
-        try:
-            subprocess.check_call(
-                ["/usr/bin/kubectl", "config", "use-context", "toolforge"]
-            )
-        except subprocess.CalledProcessError as e:
-            print("Failed to change kubectl context: {}".format(e.output))
-            sys.exit(1)
-        # Make a new job object now that context is changed to pick up new
-        # Docker image and mem/cpu processing.
-        newjob = KubernetesBackend(
-            tool, project, args.type, args.memory, args.cpu, args.extra_args
-        )
-        start(newjob, "Starting webservice on 2020 Kubernetes cluster")
-        update_manifest(newjob, "start", args.cpu, args.memory)
