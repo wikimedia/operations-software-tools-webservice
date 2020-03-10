@@ -7,6 +7,7 @@ import time
 
 import pykube
 
+from toolforge.common.tool import PROJECT
 from toolforge.common.utils import parse_quantity
 from toolforge.webservice.backends import Backend
 from toolforge.webservice.services import GenericWebService
@@ -155,11 +156,9 @@ class KubernetesBackend(Backend):
         },
     }
 
-    def __init__(
-        self, tool, project, type, mem=None, cpu=None, extra_args=None
-    ):
-        super(KubernetesBackend, self).__init__(tool, type, extra_args)
-        self.project = project
+    def __init__(self, tool, wstype, mem=None, cpu=None, extra_args=None):
+        super(KubernetesBackend, self).__init__(tool, wstype, extra_args)
+        self.project = PROJECT
         self.webservice = KubernetesBackend.CONFIG[type]["cls"](
             tool, extra_args
         )

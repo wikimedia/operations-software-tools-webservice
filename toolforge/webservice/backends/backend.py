@@ -13,9 +13,9 @@ class Backend(with_metaclass(ABCMeta, object)):
     STATE_RUNNING = 1
     STATE_PENDING = 2
 
-    def __init__(self, tool, type, extra_args=None):
+    def __init__(self, tool, wstype, extra_args=None):
         self.tool = tool
-        self.type = type
+        self.wstype = wstype
         self.extra_args = extra_args
 
     @property
