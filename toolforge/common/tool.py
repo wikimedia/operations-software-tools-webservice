@@ -1,3 +1,4 @@
+import datetime
 import errno
 import os
 import pwd
@@ -10,7 +11,7 @@ with open("/etc/wmcs-project", "r") as _projectfile:
 
 class Tool(object):
     PREFIX = PROJECT + "."
-    MANIFEST_VERSION = 3
+    MANIFEST_VERSION = 4
 
     class InvalidToolException(Exception):
         pass
@@ -59,13 +60,12 @@ class Tool(object):
             tilde_file_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644
         )
         tilde_file = os.fdopen(tilde_file_fd, "w")
-        # Set version if there is none!
-        if "version" not in self.manifest:
-            self.manifest["version"] = Tool.MANIFEST_VERSION
+        self.manifest["version"] = Tool.MANIFEST_VERSION
         try:
             tilde_file.write(
                 "# This file is used by Toolforge infrastructure.\n"
                 "# Please do not edit manually at this time.\n"
+                "# {:%c}\n".format(datetime.datetime.now())
             )
             yaml.safe_dump(
                 self._manifest, tilde_file, default_flow_style=False
