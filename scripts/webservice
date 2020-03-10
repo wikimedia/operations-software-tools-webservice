@@ -99,13 +99,14 @@ def stop(job, message):
     return wait_for(lambda: job.get_state() == Backend.STATE_STOPPED, message)
 
 
-def update_manifest(job, action, cpu, memory):
+def update_manifest(job, action, cpu=None, memory=None, replicas=1):
     """
     Update a tool's service manifest to indicate the type of webservice in use
 
     :param action 'start' or 'stop'
     :param cpu persists the cpu argument (must be a kube_quant)
     :param memory persists the mem argument (must be a kube_quant)
+    :param replicas persists the replicas argument (must be an integer)
     """
     if action == "start":
         if (
@@ -116,9 +117,8 @@ def update_manifest(job, action, cpu, memory):
                 0
             ]
             job.tool.manifest["web"] = job.type
-            if job.extra_args:
-                job.tool.manifest["web::extra_args"] = job.extra_args
-
+            if replicas != 1:
+                job.tool.manifest["replicas"] = replicas
             if hasattr(job, "container_resources"):
                 # Not using the value directly to avoid persisting values from
                 # the old Kubernetes cluster
@@ -126,6 +126,8 @@ def update_manifest(job, action, cpu, memory):
                     job.tool.manifest["cpu"] = cpu
                 if memory is not None:
                     job.tool.manifest["memory"] = memory
+            if job.extra_args:
+                job.tool.manifest["web::extra_args"] = job.extra_args
 
             job.tool.save_manifest()
     elif action == "stop":
@@ -136,6 +138,7 @@ def update_manifest(job, action, cpu, memory):
                 "backend",
                 "cpu",
                 "memory",
+                "replicas",
                 "web::extra_args",
             ]:
                 if key in job.tool.manifest:
@@ -230,6 +233,14 @@ if __name__ == "__main__":
         help="Set a higher Kubernetes cpu limit",
         dest="cpu",
     )
+    k8s_group.add_argument(
+        "-r",
+        "--replicas",
+        required=False,
+        type=int,
+        default=1,
+        help="Set the number of pod replicas to use",
+    )
 
     template_extra_args = None
     # Use the bootstrap argparser to check for a --template=... arg
@@ -249,6 +260,8 @@ if __name__ == "__main__":
             tmpl_argv.append("--cpu={}".format(tmpl["cpu"]))
         if "mem" in tmpl:
             tmpl_argv.append("--mem={}".format(tmpl["mem"]))
+        if "replicas" in tmpl:
+            tmpl_argv.append("--replicas={}".format(tmpl["replicas"]))
         if "type" in tmpl:
             tmpl_argv.append(tmpl["type"])
 
@@ -276,6 +289,7 @@ if __name__ == "__main__":
                 backend=template_args.backend,
                 cpu=template_args.cpu,
                 memory=template_args.memory,
+                replicas=template_args.replicas,
                 type=template_args.type,
             )
             # The argument gathering behavior of extra args does not work as
@@ -362,6 +376,10 @@ if __name__ == "__main__":
             print("--cpu is only for --backend=kubernetes")
             print("Please run again without this argument")
             sys.exit(1)
+        if args.replicas != 1:
+            print("--replicas is only for --backend=kubernetes")
+            print("Please run again without this argument")
+            sys.exit(1)
         if args.type is None:
             args.type = tool.manifest.get("web", GRIDENGINE_DEFAULT_TYPE)
         acceptable_types = GridEngineBackend.CONFIG
@@ -379,6 +397,9 @@ if __name__ == "__main__":
         if args.memory is None:
             args.memory = tool.manifest.get("memory", None)
 
+        if args.replicas == 1:
+            args.replicas = tool.manifest.get("replicas", 1)
+
         acceptable_types = KubernetesBackend.CONFIG
 
     if not args.extra_args:
@@ -392,10 +413,15 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if backend == "gridengine":
-        job = GridEngineBackend(tool, args.type, args.extra_args)
+        job = GridEngineBackend(tool, args.type, extra_args=args.extra_args)
     else:
         job = KubernetesBackend(
-            tool, args.type, args.memory, args.cpu, args.extra_args
+            tool,
+            args.type,
+            mem=args.memory,
+            cpu=args.cpu,
+            replicas=args.replicas,
+            extra_args=args.extra_args,
         )
 
     tool.manifest["backend"] = backend
@@ -415,19 +441,31 @@ if __name__ == "__main__":
             sys.exit(1)
 
         start(job, "Starting webservice")
-        update_manifest(job, "start", args.cpu, args.memory)
+        update_manifest(
+            job,
+            "start",
+            cpu=args.cpu,
+            memory=args.memory,
+            replicas=args.replicas,
+        )
 
     elif args.action == "stop":
         if job.get_state() == Backend.STATE_STOPPED:
             print("Your webservice is not running", file=sys.stdout)
         else:
             stop(job, "Stopping webservice")
-        update_manifest(job, "stop", args.cpu, args.memory)
+        update_manifest(job, "stop")
 
     elif args.action == "restart":
         if job.get_state() != Backend.STATE_RUNNING:
             start(job, "Your job is not running, starting")
-            update_manifest(job, "start", args.cpu, args.memory)
+            update_manifest(
+                job,
+                "start",
+                cpu=args.cpu,
+                memory=args.memory,
+                replicas=args.replicas,
+            )
         else:
             job.request_restart()
         tool.save_manifest()

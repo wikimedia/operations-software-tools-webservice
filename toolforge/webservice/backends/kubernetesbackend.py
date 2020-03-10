@@ -156,7 +156,9 @@ class KubernetesBackend(Backend):
         },
     }
 
-    def __init__(self, tool, wstype, mem=None, cpu=None, extra_args=None):
+    def __init__(
+        self, tool, wstype, mem=None, cpu=None, replicas=1, extra_args=None
+    ):
         super(KubernetesBackend, self).__init__(tool, wstype, extra_args)
         self.project = PROJECT
         self.webservice = KubernetesBackend.CONFIG[type]["cls"](
@@ -199,6 +201,7 @@ class KubernetesBackend(Backend):
             # Defaults are cpu: 500m and memory: 512Mi
             self.container_resources = None
 
+        self.replicas = replicas
         self.api = pykube.HTTPClient(kubeconfig)
         # Labels for all objects created by this webservice
         self.webservice_labels = {
@@ -393,7 +396,7 @@ class KubernetesBackend(Backend):
                 "labels": self.webservice_labels,
             },
             "spec": {
-                "replicas": 1,
+                "replicas": self.replicas,
                 "selector": {"matchLabels": self.webservice_labels},
                 "template": {
                     "metadata": {"labels": self.webservice_labels},
