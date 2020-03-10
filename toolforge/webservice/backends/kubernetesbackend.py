@@ -157,9 +157,18 @@ class KubernetesBackend(Backend):
     }
 
     def __init__(
-        self, tool, wstype, mem=None, cpu=None, replicas=1, extra_args=None
+        self,
+        tool,
+        wstype,
+        canonical=False,
+        mem=None,
+        cpu=None,
+        replicas=1,
+        extra_args=None,
     ):
-        super(KubernetesBackend, self).__init__(tool, wstype, extra_args)
+        super(KubernetesBackend, self).__init__(
+            tool, wstype, canonical=canonical, extra_args=extra_args
+        )
         self.project = PROJECT
         self.webservice = KubernetesBackend.CONFIG[type]["cls"](
             tool, extra_args
@@ -300,7 +309,7 @@ class KubernetesBackend(Backend):
         """
         Returns the full spec of the legacy ingress object for this webservice
         """
-        return {
+        ingress = {
             "apiVersion": "extensions/v1beta1",  # pykube is old
             "kind": "Ingress",
             "metadata": {
@@ -337,6 +346,15 @@ class KubernetesBackend(Backend):
                 ]
             },
         }
+
+        if self.canonical:
+            ingress["metadata"]["annotations"] = {
+                "nginx.ingress.kubernetes.io/permanent-redirect": "https://{}.toolforge.org/$2".format(
+                    self.tool.name
+                )
+            }
+
+        return ingress
 
     def _get_ingress_subdomain(self):
         """

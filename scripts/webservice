@@ -99,14 +99,12 @@ def stop(job, message):
     return wait_for(lambda: job.get_state() == Backend.STATE_STOPPED, message)
 
 
-def update_manifest(job, action, cpu=None, memory=None, replicas=1):
+def update_manifest(job, action, args):
     """
     Update a tool's service manifest to indicate the type of webservice in use
 
     :param action 'start' or 'stop'
-    :param cpu persists the cpu argument (must be a kube_quant)
-    :param memory persists the mem argument (must be a kube_quant)
-    :param replicas persists the replicas argument (must be an integer)
+    :param args parsed cli arguments
     """
     if action == "start":
         if (
@@ -117,15 +115,17 @@ def update_manifest(job, action, cpu=None, memory=None, replicas=1):
                 0
             ]
             job.tool.manifest["web"] = job.type
-            if replicas != 1:
-                job.tool.manifest["replicas"] = replicas
+            if args.canonical:
+                job.tool.manifest["canonical"] = args.canonical
+            if args.replicas != 1:
+                job.tool.manifest["replicas"] = args.replicas
             if hasattr(job, "container_resources"):
                 # Not using the value directly to avoid persisting values from
                 # the old Kubernetes cluster
-                if cpu is not None:
-                    job.tool.manifest["cpu"] = cpu
-                if memory is not None:
-                    job.tool.manifest["memory"] = memory
+                if args.cpu is not None:
+                    job.tool.manifest["cpu"] = args.cpu
+                if args.memory is not None:
+                    job.tool.manifest["memory"] = args.memory
             if job.extra_args:
                 job.tool.manifest["web::extra_args"] = job.extra_args
 
@@ -136,6 +136,7 @@ def update_manifest(job, action, cpu=None, memory=None, replicas=1):
                 "distribution",
                 "web",
                 "backend",
+                "canonical",
                 "cpu",
                 "memory",
                 "replicas",
@@ -192,6 +193,11 @@ if __name__ == "__main__":
         "--backend",
         choices=["gridengine", "kubernetes"],
         help="Which cluster backend to use run the webservice",
+    )
+    argparser.add_argument(
+        "--canonical",
+        action="store_true",
+        help="Redirect legacy URL to the canonical $TOOL.toolforge.org URL",
     )
     argparser.add_argument(
         "type", nargs="?", metavar="TYPE", help="Type of webservice to start",
@@ -256,6 +262,8 @@ if __name__ == "__main__":
         tmpl_argv = []
         if "backend" in tmpl:
             tmpl_argv.append("--backend={}".format(tmpl["backend"]))
+        if "canonical" in tmpl and tmpl["canonical"]:
+            tmpl_argv.append("--canonical")
         if "cpu" in tmpl:
             tmpl_argv.append("--cpu={}".format(tmpl["cpu"]))
         if "mem" in tmpl:
@@ -287,6 +295,7 @@ if __name__ == "__main__":
             # argument parsing phase.
             argparser.set_defaults(
                 backend=template_args.backend,
+                canonical=template_args.canonical,
                 cpu=template_args.cpu,
                 memory=template_args.memory,
                 replicas=template_args.replicas,
@@ -402,6 +411,9 @@ if __name__ == "__main__":
 
         acceptable_types = KubernetesBackend.CONFIG
 
+    if not args.canonical:
+        args.canonical = tool.manifest.get("canonical", False)
+
     if not args.extra_args:
         args.extra_args = tool.manifest.get(
             "web::extra_args", template_extra_args
@@ -413,11 +425,17 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if backend == "gridengine":
-        job = GridEngineBackend(tool, args.type, extra_args=args.extra_args)
+        job = GridEngineBackend(
+            tool,
+            args.type,
+            canonical=args.canonical,
+            extra_args=args.extra_args,
+        )
     else:
         job = KubernetesBackend(
             tool,
             args.type,
+            canonical=args.canonical,
             mem=args.memory,
             cpu=args.cpu,
             replicas=args.replicas,
@@ -441,31 +459,19 @@ if __name__ == "__main__":
             sys.exit(1)
 
         start(job, "Starting webservice")
-        update_manifest(
-            job,
-            "start",
-            cpu=args.cpu,
-            memory=args.memory,
-            replicas=args.replicas,
-        )
+        update_manifest(job, "start", args)
 
     elif args.action == "stop":
         if job.get_state() == Backend.STATE_STOPPED:
             print("Your webservice is not running", file=sys.stdout)
         else:
             stop(job, "Stopping webservice")
-        update_manifest(job, "stop")
+        update_manifest(job, "stop", args)
 
     elif args.action == "restart":
         if job.get_state() != Backend.STATE_RUNNING:
             start(job, "Your job is not running, starting")
-            update_manifest(
-                job,
-                "start",
-                cpu=args.cpu,
-                memory=args.memory,
-                replicas=args.replicas,
-            )
+            update_manifest(job, "start", args)
         else:
             job.request_restart()
         tool.save_manifest()

@@ -38,8 +38,10 @@ class GridEngineBackend(Backend):
         "generic": {"cls": GenericWebService},
     }
 
-    def __init__(self, tool, wstype, extra_args=None):
-        super(GridEngineBackend, self).__init__(tool, wstype, extra_args)
+    def __init__(self, tool, wstype, canonical=False, extra_args=None):
+        super(GridEngineBackend, self).__init__(
+            tool, wstype, canonical=canonical, extra_args=extra_args
+        )
         cfg = GridEngineBackend.CONFIG[self.wstype]
         self.webservice = cfg["cls"](tool, extra_args)
         self.queue = cfg.get("queue", "webgrid-generic")
@@ -99,6 +101,10 @@ class GridEngineBackend(Backend):
             "--type",
             self.webservice.name,
         ]
+        if self.canonical:
+            command.extend(
+                ["--canonical", "{}.toolforge.org".format(self.tool.name)]
+            )
         if self.extra_args:
             command.extend(self.extra_args)
 
