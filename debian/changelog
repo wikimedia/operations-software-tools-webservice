@@ -1,3 +1,22 @@
+toollabs-webservice (0.65) jessie; urgency=medium
+
+  [ Bryan Davis ]
+  * [7b338a0] kubernetes: Set php7.3 as the default type
+
+  [ nj4710 ]
+  * [db4748c] Make Kubernetes the default backend and warn when guessing
+
+  [ Bryan Davis ]
+  * [a2bcba7] Bump manifest version
+  * [45f51b7] Remove temporary code from 2020 Kubernetes migration
+  * [6260393] Refactor argparse setup
+  * [45f3b00] Reuse toolforge.common.tool.PROJECT in KubernetesBackend
+  * [2aa3fcd] Introduce command "template" feature
+  * [119211d] Add support for Kubernetes replica scaling
+  * [96e48e0] Add support for redirecting to toolforge.org
+
+ -- Brooke Storm <bstorm@wikimedia.org>  Tue, 31 Mar 2020 22:08:56 +0000
+
 toollabs-webservice (0.64) jessie; urgency=medium
 
   * [a4d91f8] kubernetes: Remove deprecated flag from tcl image
