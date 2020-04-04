@@ -170,7 +170,7 @@ class KubernetesBackend(Backend):
             tool, wstype, canonical=canonical, extra_args=extra_args
         )
         self.project = PROJECT
-        self.webservice = KubernetesBackend.CONFIG[type]["cls"](
+        self.webservice = KubernetesBackend.CONFIG[self.wstype]["cls"](
             tool, extra_args
         )
 
@@ -180,7 +180,7 @@ class KubernetesBackend(Backend):
 
         self.container_image = "{registry}/{image}:latest".format(
             registry="docker-registry.tools.wmflabs.org",
-            image=KubernetesBackend.CONFIG[type]["image"],
+            image=KubernetesBackend.CONFIG[self.wstype]["image"],
         )
         # Defaults are used for request so this just affects the burst, up to
         # certain limits (set as max in the limitrange) as well as

@@ -45,8 +45,8 @@ class GridEngineBackend(Backend):
         cfg = GridEngineBackend.CONFIG[self.wstype]
         self.webservice = cfg["cls"](tool, extra_args)
         self.queue = cfg.get("queue", "webgrid-generic")
-        self.name = "{type}-{toolname}".format(
-            type=self.wstype, toolname=tool.name
+        self.name = "{wstype}-{toolname}".format(
+            wstype=self.wstype, toolname=tool.name
         )
         try:
             memlimit = "/data/project/.system/config/{}.web-memlimit".format(

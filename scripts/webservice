@@ -27,24 +27,24 @@ from toolforge.common import Tool
 
 
 BACKEND_DEFAULT = "kubernetes"
-GRIDENGINE_DEFAULT_TYPE = "lighttpd"
-KUBERNETES_DEFAULT_TYPE = "php7.3"
+GRIDENGINE_DEFAULT_WSTYPE = "lighttpd"
+KUBERNETES_DEFAULT_WSTYPE = "php7.3"
 
 # Make all `print()` output go to stderr by default
 print = functools.partial(print, file=sys.stderr)
 
 
-def format_types_block(config, default, leader="\n  * "):
-    """Pretty print a list of runtime types for a backend."""
-    types = []
+def format_wstypes_block(config, default, leader="\n  * "):
+    """Pretty print a list of runtime wstypes for a backend."""
+    wstypes = []
     for name, spec in config.items():
         extra = ""
         if name == default:
             extra = " (default)"
         elif spec.get("deprecated", False):
             extra = " (DEPRECATED)"
-        types.append("{}{}".format(name, extra))
-    return leader.join(sorted(types))
+        wstypes.append("{}{}".format(name, extra))
+    return leader.join(sorted(wstypes))
 
 
 def kube_quant(string):
@@ -109,12 +109,12 @@ def update_manifest(job, action, args):
     if action == "start":
         if (
             "web" not in job.tool.manifest
-            or job.tool.manifest["web"] != job.type
+            or job.tool.manifest["web"] != job.wstype
         ):
             job.tool.manifest["distribution"] = platform.linux_distribution()[
                 0
             ]
-            job.tool.manifest["web"] = job.type
+            job.tool.manifest["web"] = job.wstype
             if args.canonical:
                 job.tool.manifest["canonical"] = args.canonical
             if args.replicas != 1:
@@ -160,14 +160,14 @@ if __name__ == "__main__":
       Grid Engine backend:
         * {gridengine}
     """.format(
-        kubernetes=format_types_block(
+        kubernetes=format_wstypes_block(
             KubernetesBackend.CONFIG,
-            KUBERNETES_DEFAULT_TYPE,
+            KUBERNETES_DEFAULT_WSTYPE,
             leader="\n        * ",
         ),
-        gridengine=format_types_block(
+        gridengine=format_wstypes_block(
             GridEngineBackend.CONFIG,
-            GRIDENGINE_DEFAULT_TYPE,
+            GRIDENGINE_DEFAULT_WSTYPE,
             leader="\n        * ",
         ),
     )
@@ -200,7 +200,10 @@ if __name__ == "__main__":
         help="Redirect legacy URL to the canonical $TOOL.toolforge.org URL",
     )
     argparser.add_argument(
-        "type", nargs="?", metavar="TYPE", help="Type of webservice to start",
+        "wstype",
+        nargs="?",
+        metavar="TYPE",
+        help="Type of webservice to start",
     )
 
     allowed_actions = ["start", "stop", "status", "restart", "shell"]
@@ -299,7 +302,7 @@ if __name__ == "__main__":
                 cpu=template_args.cpu,
                 memory=template_args.memory,
                 replicas=template_args.replicas,
-                type=template_args.type,
+                wstype=template_args.wstype,
             )
             # The argument gathering behavior of extra args does not work as
             # a default on the parser. It also will cause problems if the
@@ -389,16 +392,16 @@ if __name__ == "__main__":
             print("--replicas is only for --backend=kubernetes")
             print("Please run again without this argument")
             sys.exit(1)
-        if args.type is None:
-            args.type = tool.manifest.get("web", GRIDENGINE_DEFAULT_TYPE)
-        acceptable_types = GridEngineBackend.CONFIG
+        if args.wstype is None:
+            args.wstype = tool.manifest.get("web", GRIDENGINE_DEFAULT_WSTYPE)
+        acceptable_wstypes = GridEngineBackend.CONFIG
     elif backend == "kubernetes":
         if args.release is not None:
             print("--release is not implemented for --backend=kubernetes")
             print("Please just pick an appropriate type instead")
             sys.exit(1)
-        if args.type is None:
-            args.type = tool.manifest.get("web", KUBERNETES_DEFAULT_TYPE)
+        if args.wstype is None:
+            args.wstype = tool.manifest.get("web", KUBERNETES_DEFAULT_WSTYPE)
 
         if args.cpu is None:
             args.cpu = tool.manifest.get("cpu", None)
@@ -409,7 +412,7 @@ if __name__ == "__main__":
         if args.replicas == 1:
             args.replicas = tool.manifest.get("replicas", 1)
 
-        acceptable_types = KubernetesBackend.CONFIG
+        acceptable_wstypes = KubernetesBackend.CONFIG
 
     if not args.canonical:
         args.canonical = tool.manifest.get("canonical", False)
@@ -419,22 +422,22 @@ if __name__ == "__main__":
             "web::extra_args", template_extra_args
         )
 
-    if args.type not in acceptable_types.keys():
+    if args.wstype not in acceptable_wstypes.keys():
         print("type must be one of:")
-        print(format_types_block(acceptable_types, ""))
+        print(format_wstypes_block(acceptable_wstypes, ""))
         sys.exit(1)
 
     if backend == "gridengine":
         job = GridEngineBackend(
             tool,
-            args.type,
+            args.wstype,
             canonical=args.canonical,
             extra_args=args.extra_args,
         )
     else:
         job = KubernetesBackend(
             tool,
-            args.type,
+            args.wstype,
             canonical=args.canonical,
             mem=args.memory,
             cpu=args.cpu,
@@ -444,8 +447,8 @@ if __name__ == "__main__":
 
     tool.manifest["backend"] = backend
 
-    if job.is_deprecated(args.type):
-        print("DEPRECATED: '{}' type is deprecated.".format(args.type))
+    if job.is_deprecated(args.wstype):
+        print("DEPRECATED: '{}' type is deprecated.".format(args.wstype))
         print(
             "  See https://wikitech.wikimedia.org/wiki/Help:Toolforge/{}".format(
                 "Kubernetes" if backend == "kubernetes" else "Web"
@@ -480,7 +483,7 @@ if __name__ == "__main__":
         if job.get_state() != Backend.STATE_STOPPED:
             print(
                 "Your webservice of type {} is running on backend {}".format(
-                    job.type, backend
+                    job.wstype, backend
                 ),
                 file=sys.stdout,
             )
