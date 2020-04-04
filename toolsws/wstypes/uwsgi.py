@@ -1,6 +1,6 @@
 import os
 
-from toolforge.webservice import WebService
+from .ws import WebService
 
 
 class UwsgiWebService(WebService):

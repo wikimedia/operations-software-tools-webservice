@@ -11,14 +11,12 @@ import textwrap
 import configparser
 import yaml
 
-from toolforge.webservice import WebService
-from toolforge.webservice.backends import (
-    Backend,
-    GridEngineBackend,
-    KubernetesBackend,
-)
-from toolforge.common.utils import wait_for
-from toolforge.common import Tool
+from toolsws.backends import Backend
+from toolsws.backends import GridEngineBackend
+from toolsws.backends import KubernetesBackend
+from toolsws.tool import Tool
+from toolsws.utils import wait_for
+from toolsws.wstypes import WebService
 
 
 BACKEND_DEFAULT = "kubernetes"

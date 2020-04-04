@@ -1,16 +1,16 @@
 #!/usr/bin/python -Es
 import argparse
 
-from toolforge.common import Tool
-from toolforge.webservice import proxy
-from toolforge.webservice.services import webservice_classes
+from toolsws.tool import Tool
+from toolsws import proxy
+from toolsws.wstypes import WSTYPES
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument(
     "--type",
     dest="wstype",
     help="Type of webservice to start",
-    choices=webservice_classes.keys(),
+    choices=WSTYPES.keys(),
 )
 argparser.add_argument(
     "--port", help="Port to bind the webservice to", type=int, default=0
@@ -38,7 +38,7 @@ if args.port != 0:
 else:
     port = proxy.get_open_port()
 
-webservice = webservice_classes[args.wstype](tool, args.extra_args)
+webservice = WSTYPES[args.wstype](tool, args.extra_args)
 
 if args.register_proxy:
     proxy.register(port, args.canonical)

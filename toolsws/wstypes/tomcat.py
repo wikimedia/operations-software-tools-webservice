@@ -1,4 +1,4 @@
-from toolforge.webservice.services import GenericWebService
+from .generic import GenericWebService
 
 
 class TomcatWebService(GenericWebService):
