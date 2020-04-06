@@ -1,11 +1,14 @@
 from __future__ import print_function
 
+import base64
 import os
 import subprocess
 import sys
+import tempfile
 import time
 
-import pykube
+import requests
+import yaml
 
 from toolsws.tool import PROJECT
 from toolsws.utils import parse_quantity
@@ -175,10 +178,6 @@ class KubernetesBackend(Backend):
             tool, extra_args
         )
 
-        kubeconfig = pykube.KubeConfig.from_file(
-            os.path.expanduser("~/.kube/config")
-        )
-
         self.container_image = "{registry}/{image}:latest".format(
             registry="docker-registry.tools.wmflabs.org",
             image=KubernetesBackend.CONFIG[self.wstype]["image"],
@@ -212,7 +211,8 @@ class KubernetesBackend(Backend):
             self.container_resources = None
 
         self.replicas = replicas
-        self.api = pykube.HTTPClient(kubeconfig)
+        self.api = K8sClient.from_file()
+
         # Labels for all objects created by this webservice
         self.webservice_labels = {
             "tools.wmflabs.org/webservice": "true",
@@ -250,32 +250,20 @@ class KubernetesBackend(Backend):
         (meaning they have a non-empty metadata.deletionTimestamp value) are
         ignored.
         """
-        objs = kind.objects(self.api).filter(
-            namespace=self._get_ns(), selector=selector
-        )
+        objs = self.api.get_objects(kind, selector=selector)
         # Ignore objects that are in the process of being deleted.
-        objs = [
+        return [
             o
             for o in objs
-            if o.obj["metadata"].get("deletionTimestamp", None) is None
+            if o["metadata"].get("deletionTimestamp", None) is None
         ]
-
-        return objs
-
-    def _delete_objs(self, kind, selector):
-        """
-        Delete objects of kind matching selector if they exist
-        """
-        o_list = self._find_objs(kind, selector)
-        for o in o_list:
-            o.delete()
 
     def _wait_for_pods(self, label_selector, timeout=30):
         """
         Wait for at least 1 pod to become 'ready'
         """
         for _ in range(timeout):
-            pods = self._find_objs(pykube.Pod, label_selector)
+            pods = self._find_objs("pods", label_selector)
             if self._any_pod_in_state(pods, "Running"):
                 return True
             time.sleep(1)
@@ -311,11 +299,11 @@ class KubernetesBackend(Backend):
         Returns the full spec of the legacy ingress object for this webservice
         """
         ingress = {
-            "apiVersion": "extensions/v1beta1",  # pykube is old
+            "apiVersion": "networking.k8s.io/v1beta1",
             "kind": "Ingress",
             "metadata": {
                 "name": "{}-legacy".format(self.tool.name),
-                "namespace": "tool-{}".format(self.tool.name),
+                "namespace": self._get_ns(),
                 "annotations": {
                     "nginx.ingress.kubernetes.io/configuration-snippet": "rewrite ^(/{})$ $1/ redirect;\n".format(
                         self.tool.name
@@ -365,11 +353,11 @@ class KubernetesBackend(Backend):
         this webservice
         """
         return {
-            "apiVersion": "extensions/v1beta1",  # pykube is old
+            "apiVersion": "networking.k8s.io/v1beta1",
             "kind": "Ingress",
             "metadata": {
                 "name": "{}-subdomain".format(self.tool.name),
-                "namespace": "tool-{}".format(self.tool.name),
+                "namespace": self._get_ns(),
                 "labels": self.webservice_labels,
             },
             "spec": {
@@ -410,7 +398,7 @@ class KubernetesBackend(Backend):
 
         return {
             "kind": "Deployment",
-            "apiVersion": "extensions/v1beta1",  # Warning, this is deprecated
+            "apiVersion": "apps/v1",
             "metadata": {
                 "name": self.tool.name,
                 "namespace": self._get_ns(),
@@ -484,7 +472,7 @@ class KubernetesBackend(Backend):
         Returns true if any pod in the input list of pods are in a given state
         """
         for pod in podlist:
-            if pod.obj["status"]["phase"] == state:
+            if pod["status"]["phase"] == state:
                 return True
 
         return False
@@ -492,43 +480,37 @@ class KubernetesBackend(Backend):
     def request_start(self):
         self.webservice.check()
         deployments = self._find_objs(
-            pykube.Deployment, self.webservice_label_selector
+            "deployments", self.webservice_label_selector
         )
         if len(deployments) == 0:
-            pykube.Deployment(self.api, self._get_deployment()).create()
+            self.api.create_object("deployments", self._get_deployment())
 
-        svcs = self._find_objs(pykube.Service, self.webservice_label_selector)
+        svcs = self._find_objs("services", self.webservice_label_selector)
         if len(svcs) == 0:
-            pykube.Service(self.api, self._get_svc()).create()
+            self.api.create_object("services", self._get_svc())
 
         ingresses = self._find_objs(
-            pykube.Ingress, self.webservice_label_selector
+            "ingresses", self.webservice_label_selector
         )
         if len(ingresses) == 0:
-            pykube.Ingress(self.api, self._get_ingress_legacy()).create()
-            pykube.Ingress(self.api, self._get_ingress_subdomain()).create()
+            self.api.create_object("ingresses", self._get_ingress_legacy())
+            self.api.create_object("ingresses", self._get_ingress_subdomain())
 
     def request_stop(self):
-        self._delete_objs(pykube.Ingress, self.webservice_label_selector)
-
-        self._delete_objs(pykube.Service, self.webservice_label_selector)
-        # No cascading delete support yet. So we delete all of the objects by
-        # hand Can be simplified after
-        # https://github.com/kubernetes/kubernetes/pull/23656
-        # Because we are using old objects in the new cluster (because pykube)
-        # deletion policy must be explicitly set in the namespaces by
-        # maintain-kubeusers and STILL defaults to "orphan"
-        self._delete_objs(pykube.Deployment, self.webservice_label_selector)
-        self._delete_objs(
-            pykube.ReplicaSet, "name={name}".format(name=self.tool.name)
+        selector = self.webservice_label_selector
+        self.api.delete_objects("ingresses", selector)
+        self.api.delete_objects("services", selector)
+        self.api.delete_objects("deployments", selector)
+        self.api.delete_objects(
+            "replicasets", "name={name}".format(name=self.tool.name)
         )
-        self._delete_objs(pykube.Pod, self.webservice_label_selector)
+        self.api.delete_objects("pods", selector)
 
     def request_restart(self):
         # For most intents and purposes, the only thing necessary
         # to restart a Kubernetes application is to delete the pods.
         print("Restarting...")
-        self._delete_objs(pykube.Pod, self.webservice_label_selector)
+        self.api.delete_objects("pods", self.webservice_label_selector)
         # TODO: It would be cool and not terribly hard here to detect a pod
         # with an error or crash state and dump the logs of that pod for the
         # user to examine.
@@ -543,14 +525,14 @@ class KubernetesBackend(Backend):
 
     def get_state(self):
         # TODO: add some state concept around ingresses
-        pods = self._find_objs(pykube.Pod, self.webservice_label_selector)
+        pods = self._find_objs("pods", self.webservice_label_selector)
         if self._any_pod_in_state(pods, "Running"):
             return Backend.STATE_RUNNING
         if self._any_pod_in_state(pods, "Pending"):
             return Backend.STATE_PENDING
-        svcs = self._find_objs(pykube.Service, self.webservice_label_selector)
+        svcs = self._find_objs("services", self.webservice_label_selector)
         deployments = self._find_objs(
-            pykube.Deployment, self.webservice_label_selector
+            "deployments", self.webservice_label_selector
         )
         if len(svcs) != 0 and len(deployments) != 0:
             return Backend.STATE_PENDING
@@ -558,13 +540,12 @@ class KubernetesBackend(Backend):
             return Backend.STATE_STOPPED
 
     def shell(self):
-        podSpec = self._get_shell_pod()
-        if len(self._find_objs(pykube.Pod, self.shell_label_selector)) == 0:
-            pykube.Pod(self.api, podSpec).create()
+        if len(self._find_objs("pods", self.shell_label_selector)) == 0:
+            self.api.create_object("pods", self._get_shell_pod())
 
         if not self._wait_for_pods(self.shell_label_selector):
             print("Pod is not ready in time", file=sys.stderr)
-            self._delete_objs(pykube.Pod, self.shell_label_selector)
+            self.api.delete_objects("pods", self.shell_label_selector)
             sys.exit(1)
         kubectl = subprocess.Popen(
             ["/usr/bin/kubectl", "attach", "--tty", "--stdin", "interactive"]
@@ -577,4 +558,131 @@ class KubernetesBackend(Backend):
         # This isn't true, since we actually kill the pod when done
         print("Pod stopped. Session cannot be resumed.", file=sys.stderr)
 
-        self._delete_objs(pykube.Pod, self.shell_label_selector)
+        self.api.delete_objects("pods", self.shell_label_selector)
+
+
+class K8sClient(object):
+    """Kubernetes API client."""
+
+    VERSIONS = {
+        "deployments": "apps/v1",
+        "ingresses": "networking.k8s.io/v1beta1",
+        "pods": "v1",
+        "replicasets": "apps/v1",
+        "services": "v1",
+    }
+
+    @classmethod
+    def from_file(cls, filename=None):
+        """Create a client from a kubeconfig file."""
+        if not filename:
+            filename = os.getenv("KUBECONFIG", "~/.kube/config")
+        filename = os.path.expanduser(filename)
+        with open(filename) as f:
+            data = yaml.safe_load(f.read())
+        return cls(data)
+
+    def __init__(self, config, timeout=10):
+        """Constructor."""
+        self.config = config
+        self.timeout = timeout
+        self.context = self._find_cfg_obj(
+            "contexts", config["current-context"]
+        )
+        self.cluster = self._find_cfg_obj("clusters", self.context["cluster"])
+        self.server = self.cluster["server"]
+        self.server_ca = self._make_ca_file()
+        self.namespace = self.context["namespace"]
+
+        user = self._find_cfg_obj("users", self.context["user"])
+        self.session = requests.Session()
+        self.session.cert = (user["client-certificate"], user["client-key"])
+        self.session.verify = self.server_ca
+
+    def __del__(self):
+        """Destructor."""
+        if os.path.exists(self.server_ca):
+            os.remove(self.server_ca)
+
+    def _find_cfg_obj(self, kind, name):
+        """Lookup a named object in our config."""
+        for obj in self.config[kind]:
+            if obj["name"] == name:
+                return obj[kind[:-1]]
+        raise KeyError(
+            "Key {} not found in {} section of config".format(name, kind)
+        )
+
+    def _make_ca_file(self):
+        """Copy the CA data into a file and return the filename."""
+        ca = base64.b64decode(self.cluster["certificate-authority-data"])
+        fd, name = tempfile.mkstemp(
+            suffix=".crt", prefix="webservice-k8s", text=True
+        )
+        with os.fdopen(fd, "w+") as f:
+            f.write(ca)
+        return name
+
+    def _make_kwargs(self, url, **kwargs):
+        """Setup kwargs for a Requests request."""
+        version = kwargs.pop("version", "v1")
+        if version == "v1":
+            root = "api"
+        else:
+            root = "apis"
+        kwargs["url"] = "{}/{}/{}/namespaces/{}/{}".format(
+            self.server, root, version, self.namespace, url
+        )
+        name = kwargs.pop("name", None)
+        if name is not None:
+            kwargs["url"] = "{}/{}".format(kwargs["url"], name)
+        if "timeout" not in kwargs:
+            kwargs["timeout"] = self.timeout
+        return kwargs
+
+    def _get(self, url, **kwargs):
+        """GET request."""
+        r = self.session.get(**self._make_kwargs(url, **kwargs))
+        r.raise_for_status()
+        return r.json()
+
+    def _post(self, url, **kwargs):
+        """POST request."""
+        r = self.session.post(**self._make_kwargs(url, **kwargs))
+        r.raise_for_status()
+        return r.status_code
+
+    def _delete(self, url, **kwargs):
+        """DELETE request."""
+        r = self.session.delete(**self._make_kwargs(url, **kwargs))
+        r.raise_for_status()
+        return r.status_code
+
+    def get_objects(self, kind, selector=None):
+        """Get list of objects of the given kind in the namespace."""
+        return self._get(
+            kind,
+            params={"labelSelector": selector},
+            version=K8sClient.VERSIONS[kind],
+        )["items"]
+
+    def delete_objects(self, kind, selector=None):
+        """Delete objects of the given kind in the namespace."""
+        if kind == "services":
+            # Annoyingly Service does not have a Delete Collection option
+            for svc in self.get_objects(kind, selector):
+                self._delete(
+                    kind,
+                    name=svc["metadata"]["name"],
+                    version=K8sClient.VERSIONS[kind],
+                )
+        else:
+            self._delete(
+                kind,
+                params={"labelSelector": selector},
+                version=K8sClient.VERSIONS[kind],
+            )
+
+    def create_object(self, kind, spec):
+        """Create an object of the given kind in the namespace."""
+        return self._post(kind, json=spec, version=K8sClient.VERSIONS[kind],)
