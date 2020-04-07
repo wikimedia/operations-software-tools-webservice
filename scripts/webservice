@@ -5,15 +5,10 @@ import functools
 import os
 import platform
 import re
-import subprocess
 import sys
 import textwrap
 
-try:
-    from configparser import ConfigParser
-except ImportError:
-    from ConfigParser import ConfigParser
-
+import configparser
 import yaml
 
 from toolforge.webservice import WebService
@@ -215,7 +210,7 @@ if __name__ == "__main__":
     )
     argparser.add_argument(
         "extra_args",
-        nargs=argparse.REMAINDER,
+        nargs="*",
         metavar="...",
         help="Extra arguments to be parsed by the chosen TYPE",
     )
@@ -333,11 +328,11 @@ if __name__ == "__main__":
     rc_backend = None
     webservicerc = os.path.expanduser("~/.webservicerc")
     if os.path.exists(webservicerc):
-        config = ConfigParser()
+        config = configparser.ConfigParser()
         config.read(webservicerc)
         try:
             rc_backend = config.get("Default", "--backend")
-        except ConfigParser.Error as e:
+        except configparser.Error as e:
             print("Error reading {}: {}".format(webservicerc, e))
 
     # Select the first of:

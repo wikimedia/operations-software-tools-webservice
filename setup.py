@@ -13,5 +13,5 @@ setup(
         "scripts/deprecated-tomcat-starter",
     ],
     description="Infrastructure for running webservices on Toolforge",
-    install_requires=["PyYAML", "pykube", "six"],
+    install_requires=["PyYAML", "configparser", "pykube", "six"],
 )
