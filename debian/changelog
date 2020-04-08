@@ -1,3 +1,13 @@
+toollabs-webservice (0.66) jessie; urgency=medium
+
+  [ Bryan Davis ]
+  * [1096b6d] Fix partial rename of "type" parameter to "wstype"
+
+  [ Brooke Storm ]
+  * [fc7fb9a] args: A few fixups
+
+ -- Brooke Storm <bstorm@ikimedia.org>  Wed, 08 Apr 2020 00:47:49 +0000
+
 toollabs-webservice (0.65) jessie; urgency=medium
 
   [ Bryan Davis ]
