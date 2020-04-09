@@ -351,7 +351,9 @@ class KubernetesBackend(Backend):
             ingress["metadata"]["annotations"] = {
                 "nginx.ingress.kubernetes.io/permanent-redirect": "https://{}.toolforge.org/$2".format(
                     self.tool.name
-                )
+                ),
+                # permanent redirect but really a temporal one!
+                "nginx.ingress.kubernetes.io/permanent-redirect-code": "307",
             }
 
         return ingress
