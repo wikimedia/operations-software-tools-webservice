@@ -7,7 +7,7 @@ Standards-Version: 3.9.5
 
 Package: toollabs-webservice
 Architecture: all
-Depends: python-jsonpatch, python-six, python-requests, python-yaml, python-configparser, python-pykube, ${misc:Depends}, python:any (<< 2.8), python:any (>= 2.7), python
+Depends: python-jsonpatch, python-six, python-requests, python-yaml, python-configparser, python-pykube, ${misc:Depends}, python:any (<< 2.8), python:any (>= 2.7), python, ${python:Depends}
 Description: Infrastructure for running webservices on tools.wmflabs.org
  Provides scripts and a python package for running and controlling
  user provided webservices on tools.wmflabs.org.

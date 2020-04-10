@@ -1,3 +1,10 @@
+toollabs-webservice (0.67) stretch; urgency=medium
+
+  [ Arturo Borrero Gonzalez ]
+  * [b59e6e5] kubernetes: ingress: use HTTP 307 for canonical redirect
+
+ -- Brooke Storm <bstorm@wikimedia.org>  Fri, 10 Apr 2020 16:15:00 +0000
+
 toollabs-webservice (0.66) jessie; urgency=medium
 
   [ Bryan Davis ]
@@ -6,7 +13,7 @@ toollabs-webservice (0.66) jessie; urgency=medium
   [ Brooke Storm ]
   * [fc7fb9a] args: A few fixups
 
- -- Brooke Storm <bstorm@ikimedia.org>  Wed, 08 Apr 2020 00:47:49 +0000
+ -- Brooke Storm <bstorm@wikimedia.org>  Wed, 08 Apr 2020 00:47:49 +0000
 
 toollabs-webservice (0.65) jessie; urgency=medium
 
@@ -159,7 +166,7 @@ toollabs-webservice (0.48) trusty; urgency=medium
   * Remove user warning on start/restart that access.log feature is not
     enabled by default [Hieu Pham]
 
- -- Hieu Pham <hpham@wikimedia.org>  Web, 06 Nov 2019 20:00:00 +0000
+ -- Hieu Pham <hpham@wikimedia.org>  Wed, 06 Nov 2019 20:00:00 +0000
 
 toollabs-webservice (0.47) trusty; urgency=medium
 
