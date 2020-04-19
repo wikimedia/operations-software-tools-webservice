@@ -349,7 +349,7 @@ class KubernetesBackend(Backend):
 
         if self.canonical:
             ingress["metadata"]["annotations"] = {
-                "nginx.ingress.kubernetes.io/permanent-redirect": "https://{}.toolforge.org/$2".format(
+                "nginx.ingress.kubernetes.io/permanent-redirect": "https://{}.toolforge.org/$2$is_args$args".format(
                     self.tool.name
                 ),
                 # permanent redirect but really a temporal one!
