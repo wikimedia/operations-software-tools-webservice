@@ -1,3 +1,10 @@
+toollabs-webservice (0.68) stretch; urgency=medium
+
+  [ Bryan Davis ]
+  * [3e57863] legacy ingress: propagate query string to toolforge domain
+
+ -- Arturo Borrero Gonzalez <aborrero@wikimedia.org>  Mon, 20 Apr 2020 13:38:43 +0200
+
 toollabs-webservice (0.67) stretch; urgency=medium
 
   [ Arturo Borrero Gonzalez ]
