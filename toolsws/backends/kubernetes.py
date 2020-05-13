@@ -434,7 +434,7 @@ class KubernetesBackend(Backend):
                 "interactive",
                 self.container_image,
                 cmd,
-                resources=None,
+                resources=self.container_resources,
                 ports=None,
                 stdin=True,
                 tty=True,
