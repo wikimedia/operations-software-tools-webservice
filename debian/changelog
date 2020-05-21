@@ -1,3 +1,9 @@
+toollabs-webservice (0.70) stretch; urgency=medium
+
+  * [bc742a2] Apply --mem and --cpu to kubernetes shell pods
+
+ -- Bryan Davis <bd808@wikimedia.org>  Thu, 21 May 2020 21:58:01 +0000
+
 toollabs-webservice (0.69) stretch; urgency=medium
 
   [ Bryan Davis ]
