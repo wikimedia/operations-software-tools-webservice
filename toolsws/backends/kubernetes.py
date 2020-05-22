@@ -1,13 +1,12 @@
 from __future__ import print_function
 
-import base64
 import os
 import subprocess
 import sys
-import tempfile
 import time
 
 import requests
+import urllib3
 import yaml
 
 from toolsws.tool import PROJECT
@@ -561,6 +560,11 @@ class KubernetesBackend(Backend):
         self.api.delete_objects("pods", self.shell_label_selector)
 
 
+# T253412: Disable warnings about unverifed TLS certs when talking to the
+# Kubernetes API endpoint
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
 class K8sClient(object):
     """Kubernetes API client."""
 
@@ -591,18 +595,17 @@ class K8sClient(object):
         )
         self.cluster = self._find_cfg_obj("clusters", self.context["cluster"])
         self.server = self.cluster["server"]
-        self.server_ca = self._make_ca_file()
         self.namespace = self.context["namespace"]
 
         user = self._find_cfg_obj("users", self.context["user"])
         self.session = requests.Session()
         self.session.cert = (user["client-certificate"], user["client-key"])
-        self.session.verify = self.server_ca
-
-    def __del__(self):
-        """Destructor."""
-        if os.path.exists(self.server_ca):
-            os.remove(self.server_ca)
+        # T253412: We are deliberately not validating the api endpoint's TLS
+        # certificate. The only way to do this with a self-signed cert is to
+        # pass the path to a CA bundle. We actually *can* do that, but with
+        # python2 we have seen the associated clean up code fail and leave
+        # /tmp full of orphan files.
+        self.session.verify = False
 
     def _find_cfg_obj(self, kind, name):
         """Lookup a named object in our config."""
@@ -612,16 +615,6 @@ class K8sClient(object):
         raise KeyError(
             "Key {} not found in {} section of config".format(name, kind)
         )
-
-    def _make_ca_file(self):
-        """Copy the CA data into a file and return the filename."""
-        ca = base64.b64decode(self.cluster["certificate-authority-data"])
-        fd, name = tempfile.mkstemp(
-            suffix=".crt", prefix="webservice-k8s", text=True
-        )
-        with os.fdopen(fd, "w+") as f:
-            f.write(ca)
-        return name
 
     def _make_kwargs(self, url, **kwargs):
         """Setup kwargs for a Requests request."""
