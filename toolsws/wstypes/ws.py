@@ -13,8 +13,9 @@ class WebService(object):
     class InvalidWebServiceException(Exception):
         pass
 
-    def __init__(self, tool, extra_args=None):
+    def __init__(self, tool, canonical, extra_args=None):
         self.tool = tool
+        self.canonical = canonical
         self.extra_args = extra_args
 
     @property

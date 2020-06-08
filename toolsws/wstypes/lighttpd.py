@@ -31,7 +31,7 @@ server.stat-cache-engine = "simple"
 server.event-handler = "linux-sysepoll"
 ssl.engine = "disable"
 
-alias.url = ( "/{toolname}" => "{home}/public_html/" )
+{non_canonical}alias.url = ( "/{toolname}" => "{home}/public_html/" )
 
 index-file.names = ( "index.php", "index.html", "index.htm" )
 dir-listing.encoding = "utf-8"
@@ -638,12 +638,16 @@ class LighttpdPlainWebService(WebService):
             )
 
     def build_config(self, port, config_template=BASIC_CONFIG_TEMPLATE):
+        non_canonical = ""
+        if self.canonical:
+            non_canonical = "#"
         config = config_template.format(
             toolname=self.tool.name,
             username=self.tool.username,
             groupname=self.tool.username,
             home=self.tool.home,
             port=port,
+            non_canonical=non_canonical,
         )
         try:
             with open(self.tool.get_homedir_subpath(".lighttpd.conf")) as f:

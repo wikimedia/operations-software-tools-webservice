@@ -38,7 +38,7 @@ if args.port != 0:
 else:
     port = proxy.get_open_port()
 
-webservice = WSTYPES[args.wstype](tool, args.extra_args)
+webservice = WSTYPES[args.wstype](tool, args.canonical, args.extra_args)
 
 if args.register_proxy:
     proxy.register(port, args.canonical)

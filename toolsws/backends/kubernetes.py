@@ -175,9 +175,8 @@ class KubernetesBackend(Backend):
         )
         self.project = PROJECT
         self.webservice = KubernetesBackend.CONFIG[self.wstype]["cls"](
-            tool, extra_args
+            tool, canonical, extra_args
         )
-
         self.container_image = "{registry}/{image}:latest".format(
             registry="docker-registry.tools.wmflabs.org",
             image=KubernetesBackend.CONFIG[self.wstype]["image"],
