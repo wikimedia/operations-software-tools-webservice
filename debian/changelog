@@ -1,3 +1,11 @@
+toollabs-webservice (0.71) stretch; urgency=medium
+
+  * [6d53f05] .gitignore: add wmcs-package-build.py
+  * [ced79c1] Remove validation of Kubernetes self-signed API cert
+  * [b5c4d89] Disable tool name alias in lighttpd config with --canonical
+
+ -- Bryan Davis <bd808@wikimedia.org>  Mon, 15 Jun 2020 17:42:31 +0000
+
 toollabs-webservice (0.70) stretch; urgency=medium
 
   * [bc742a2] Apply --mem and --cpu to kubernetes shell pods
