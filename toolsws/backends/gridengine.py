@@ -44,7 +44,7 @@ class GridEngineBackend(Backend):
             tool, wstype, canonical=canonical, extra_args=extra_args
         )
         cfg = GridEngineBackend.CONFIG[self.wstype]
-        self.webservice = cfg["cls"](tool, extra_args)
+        self.webservice = cfg["cls"](tool, canonical, extra_args)
         self.queue = cfg.get("queue", "webgrid-generic")
         self.name = "{wstype}-{toolname}".format(
             wstype=self.wstype, toolname=tool.name
