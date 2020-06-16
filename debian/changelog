@@ -1,3 +1,9 @@
+toollabs-webservice (0.72) stretch; urgency=medium
+
+  * [62f9105] Pass `--canonical` to webservice-runner inside k8s pod
+
+ -- Bryan Davis <bd808@wikimedia.org>  Tue, 16 Jun 2020 22:48:19 +0000
+
 toollabs-webservice (0.71) stretch; urgency=medium
 
   * [6d53f05] .gitignore: add wmcs-package-build.py
