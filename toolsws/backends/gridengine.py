@@ -81,7 +81,7 @@ class GridEngineBackend(Backend):
 
     def request_start(self):
         self.webservice.check()
-        command = [
+        cmd = [
             "qsub",
             "-e",
             os.path.expanduser("~/error.log"),
@@ -103,17 +103,15 @@ class GridEngineBackend(Backend):
             self.webservice.name,
         ]
         if self.canonical:
-            command.extend(
-                ["--canonical", "{}.toolforge.org".format(self.tool.name)]
-            )
+            cmd.append("--canonical")
         if self.extra_args:
-            command.extend(self.extra_args)
+            cmd.extend(self.extra_args)
 
-        subprocess.check_call(command, stdout=open(os.devnull, "wb"))
+        subprocess.check_call(cmd, stdout=open(os.devnull, "wb"))
 
     def request_stop(self):
-        command = ["/usr/bin/qdel", self.name]
-        subprocess.check_call(command, stdout=open(os.devnull, "wb"))
+        cmd = ["/usr/bin/qdel", self.name]
+        subprocess.check_call(cmd, stdout=open(os.devnull, "wb"))
 
     def request_restart(self):
         # On the grid, it is important to take down the service before starting

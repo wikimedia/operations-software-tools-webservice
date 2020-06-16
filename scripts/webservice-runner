@@ -22,6 +22,7 @@ argparser.add_argument(
 )
 argparser.add_argument(
     "--canonical",
+    action="store_true",
     help="Redirect legacy URL to the canonical $TOOL.toolforge.org URL",
 )
 argparser.add_argument(

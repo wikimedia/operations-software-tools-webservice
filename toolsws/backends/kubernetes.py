@@ -388,7 +388,8 @@ class KubernetesBackend(Backend):
             "--port",
             "8000",
         ]
-
+        if self.canonical:
+            cmd.append("--canonical")
         if self.extra_args:
             cmd.extend(self.extra_args)
 

@@ -25,7 +25,7 @@ def get_open_port():
     return port
 
 
-def register(port, canonical=None):
+def register(port, canonical=False):
     """Register with the master proxy."""
     proxy = get_active_proxy()
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
