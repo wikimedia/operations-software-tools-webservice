@@ -314,26 +314,11 @@ if __name__ == "__main__":
 
     tool = Tool.from_currentuser()
 
-    # We use this logic rather than setting defaults in argparse.
-    # This allows us to default to spec in service.manifest but override
-    # by specifying --backend option on the CLI
-    rc_backend = None
-    webservicerc = os.path.expanduser("~/.webservicerc")
-    if os.path.exists(webservicerc):
-        config = configparser.ConfigParser()
-        config.read(webservicerc)
-        try:
-            rc_backend = config.get("Default", "--backend")
-        except configparser.Error as e:
-            print("Error reading {}: {}".format(webservicerc, e))
-
     # Select the first of:
     # * --backend=... from cli args
+    # * 'backend' from service.template
     # * 'backend' from service.manifest
-    # * --backend=... from ~/.webservicerc
     backend = args.backend
-    if backend is None:
-        backend = tool.manifest.get("backend", rc_backend)
 
     if backend is None:
         print("WARNING: No explict backend provided.")
