@@ -285,47 +285,6 @@ class KubernetesBackend(Backend):
             },
         }
 
-    def _get_ingress_legacy(self):
-        """
-        Returns the full spec of the legacy ingress object for this webservice
-        """
-        ingress = {
-            "apiVersion": "networking.k8s.io/v1beta1",
-            "kind": "Ingress",
-            "metadata": {
-                "name": "{}-legacy".format(self.tool.name),
-                "namespace": self._get_ns(),
-                "annotations": {
-                    "nginx.ingress.kubernetes.io/permanent-redirect": "https://{}.toolforge.org/$2$is_args$args".format(
-                        self.tool.name
-                    ),
-                    "nginx.ingress.kubernetes.io/permanent-redirect-code": "308",
-                },
-                "labels": self.webservice_labels,
-            },
-            "spec": {
-                "rules": [
-                    {
-                        "host": "{}.wmflabs.org".format(self.project),
-                        "http": {
-                            "paths": [
-                                {
-                                    "path": "/{}(/|$)(.*)".format(
-                                        self.tool.name
-                                    ),
-                                    "backend": {
-                                        "serviceName": self.tool.name,
-                                        "servicePort": 8000,
-                                    },
-                                }
-                            ]
-                        },
-                    }
-                ]
-            },
-        }
-        return ingress
-
     def _get_ingress_subdomain(self):
         """
         Returns the full spec of the domain-based routing ingress object for
@@ -471,7 +430,6 @@ class KubernetesBackend(Backend):
             "ingresses", self.webservice_label_selector
         )
         if len(ingresses) == 0:
-            self.api.create_object("ingresses", self._get_ingress_legacy())
             self.api.create_object("ingresses", self._get_ingress_subdomain())
 
     def request_stop(self):
