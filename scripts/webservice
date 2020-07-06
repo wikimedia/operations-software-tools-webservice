@@ -108,8 +108,6 @@ def update_manifest(job, action, args):
                 0
             ]
             job.tool.manifest["web"] = job.wstype
-            if args.canonical:
-                job.tool.manifest["canonical"] = args.canonical
             if args.replicas != 1:
                 job.tool.manifest["replicas"] = args.replicas
             if hasattr(job, "container_resources"):
@@ -129,7 +127,6 @@ def update_manifest(job, action, args):
                 "distribution",
                 "web",
                 "backend",
-                "canonical",
                 "cpu",
                 "memory",
                 "replicas",
@@ -188,11 +185,6 @@ if __name__ == "__main__":
         help="Which cluster backend to use run the webservice",
     )
     argparser.add_argument(
-        "--canonical",
-        action="store_true",
-        help="Redirect legacy URL to the canonical $TOOL.toolforge.org URL",
-    )
-    argparser.add_argument(
         "wstype",
         nargs="?",
         metavar="TYPE",
@@ -216,6 +208,11 @@ if __name__ == "__main__":
     # Allows for webservice --release trusty lighttpd <action>
     argparser.add_argument(
         "--release", help=argparse.SUPPRESS, choices=["trusty"]
+    )
+    # Backwards compat with older webservice.
+    # Allow --canonical cli argument, but don't do anything with it.
+    argparser.add_argument(
+        "--canonical", action="store_true", help=argparse.SUPPRESS
     )
 
     k8s_group = argparser.add_argument_group("Kubernetes backend options")
@@ -258,8 +255,6 @@ if __name__ == "__main__":
         tmpl_argv = []
         if "backend" in tmpl:
             tmpl_argv.append("--backend={}".format(tmpl["backend"]))
-        if "canonical" in tmpl and tmpl["canonical"]:
-            tmpl_argv.append("--canonical")
         if "cpu" in tmpl:
             tmpl_argv.append("--cpu={}".format(tmpl["cpu"]))
         if "mem" in tmpl:
@@ -291,7 +286,6 @@ if __name__ == "__main__":
             # argument parsing phase.
             argparser.set_defaults(
                 backend=template_args.backend,
-                canonical=template_args.canonical,
                 cpu=template_args.cpu,
                 memory=template_args.memory,
                 replicas=template_args.replicas,
@@ -407,9 +401,6 @@ if __name__ == "__main__":
 
         acceptable_wstypes = KubernetesBackend.CONFIG
 
-    if not args.canonical:
-        args.canonical = tool.manifest.get("canonical", False)
-
     if not args.extra_args:
         args.extra_args = tool.manifest.get(
             "web::extra_args", template_extra_args
@@ -421,17 +412,11 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if backend == "gridengine":
-        job = GridEngineBackend(
-            tool,
-            args.wstype,
-            canonical=args.canonical,
-            extra_args=args.extra_args,
-        )
+        job = GridEngineBackend(tool, args.wstype, extra_args=args.extra_args)
     else:
         job = KubernetesBackend(
             tool,
             args.wstype,
-            canonical=args.canonical,
             mem=args.memory,
             cpu=args.cpu,
             replicas=args.replicas,

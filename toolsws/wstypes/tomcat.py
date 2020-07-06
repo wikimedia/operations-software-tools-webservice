@@ -11,8 +11,8 @@ class TomcatWebService(GenericWebService):
 
     NAME = "tomcat"
 
-    def __init__(self, tool, canonical, extra_args=None):
-        super(TomcatWebService, self).__init__(tool, canonical, extra_args)
+    def __init__(self, tool, extra_args=None):
+        super(TomcatWebService, self).__init__(tool, extra_args)
         self.extra_args = [
             "/usr/bin/deprecated-tomcat-starter",
             self.tool.name,

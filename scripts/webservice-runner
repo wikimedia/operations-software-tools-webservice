@@ -21,14 +21,12 @@ argparser.add_argument(
     help="Register webservice with proxy",
 )
 argparser.add_argument(
-    "--canonical",
-    action="store_true",
-    help="Redirect legacy URL to the canonical $TOOL.toolforge.org URL",
-)
-argparser.add_argument(
     "extra_args",
     nargs=argparse.REMAINDER,
     help="Extra arguments optionally passed to the chosen webservice type",
+)
+argparser.add_argument(
+    "--canonical", action="store_true", help=argparse.SUPPRESS,
 )
 args = argparser.parse_args()
 
@@ -39,8 +37,8 @@ if args.port != 0:
 else:
     port = proxy.get_open_port()
 
-webservice = WSTYPES[args.wstype](tool, args.canonical, args.extra_args)
+webservice = WSTYPES[args.wstype](tool, args.extra_args)
 
 if args.register_proxy:
-    proxy.register(port, args.canonical)
+    proxy.register(port)
 webservice.run(port)

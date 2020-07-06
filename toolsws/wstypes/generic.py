@@ -7,8 +7,8 @@ class GenericWebService(WebService):
     NAME = "generic"
     QUEUE = "webgrid-generic"
 
-    def __init__(self, tool, canonical, extra_args=None):
-        super(GenericWebService, self).__init__(tool, canonical, extra_args)
+    def __init__(self, tool, extra_args=None):
+        super(GenericWebService, self).__init__(tool, extra_args)
 
     def check(self):
         return self.extra_args is not None

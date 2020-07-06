@@ -160,21 +160,14 @@ class KubernetesBackend(Backend):
     }
 
     def __init__(
-        self,
-        tool,
-        wstype,
-        canonical=False,
-        mem=None,
-        cpu=None,
-        replicas=1,
-        extra_args=None,
+        self, tool, wstype, mem=None, cpu=None, replicas=1, extra_args=None,
     ):
         super(KubernetesBackend, self).__init__(
-            tool, wstype, canonical=canonical, extra_args=extra_args
+            tool, wstype, extra_args=extra_args
         )
         self.project = PROJECT
         self.webservice = KubernetesBackend.CONFIG[self.wstype]["cls"](
-            tool, canonical, extra_args
+            tool, extra_args
         )
         self.container_image = "{registry}/{image}:latest".format(
             registry="docker-registry.tools.wmflabs.org",
@@ -303,12 +296,10 @@ class KubernetesBackend(Backend):
                 "name": "{}-legacy".format(self.tool.name),
                 "namespace": self._get_ns(),
                 "annotations": {
-                    "nginx.ingress.kubernetes.io/configuration-snippet": "rewrite ^(/{})$ $1/ redirect;\n".format(
+                    "nginx.ingress.kubernetes.io/permanent-redirect": "https://{}.toolforge.org/$2$is_args$args".format(
                         self.tool.name
                     ),
-                    "nginx.ingress.kubernetes.io/rewrite-target": "/{}/$2".format(
-                        self.tool.name
-                    ),
+                    "nginx.ingress.kubernetes.io/permanent-redirect-code": "308",
                 },
                 "labels": self.webservice_labels,
             },
@@ -333,16 +324,6 @@ class KubernetesBackend(Backend):
                 ]
             },
         }
-
-        if self.canonical:
-            ingress["metadata"]["annotations"] = {
-                "nginx.ingress.kubernetes.io/permanent-redirect": "https://{}.toolforge.org/$2$is_args$args".format(
-                    self.tool.name
-                ),
-                # permanent redirect but really a temporal one!
-                "nginx.ingress.kubernetes.io/permanent-redirect-code": "307",
-            }
-
         return ingress
 
     def _get_ingress_subdomain(self):
@@ -388,8 +369,6 @@ class KubernetesBackend(Backend):
             "--port",
             "8000",
         ]
-        if self.canonical:
-            cmd.append("--canonical")
         if self.extra_args:
             cmd.extend(self.extra_args)
 

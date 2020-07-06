@@ -25,15 +25,12 @@ def get_open_port():
     return port
 
 
-def register(port, canonical=False):
+def register(port):
     """Register with the master proxy."""
     proxy = get_active_proxy()
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     current_ip = socket.gethostbyname(socket.getfqdn())
-    if canonical:
-        cmd = "registerCanonical"
-    else:
-        cmd = "register"
+    cmd = "registerCanonical"
 
     try:
         sock.connect((proxy, 8282))
