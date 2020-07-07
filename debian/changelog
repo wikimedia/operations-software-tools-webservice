@@ -1,3 +1,11 @@
+toollabs-webservice (0.73) stretch; urgency=medium
+
+  * [4a7d109] Remove --canonical argument to webservice
+  * [97e70f9] kubernetes: remove legacy ingress generation
+  * [ea5ff0a] Remove $HOME/.webservicerc support
+
+ -- Bryan Davis <bd808@wikimedia.org>  Tue, 07 Jul 2020 23:05:55 +0000
+
 toollabs-webservice (0.72) stretch; urgency=medium
 
   * [62f9105] Pass `--canonical` to webservice-runner inside k8s pod
