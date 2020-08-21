@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import json
 import os
 import subprocess
 import sys
@@ -266,16 +267,6 @@ class KubernetesBackend(Backend):
             ]
         )
 
-        self.shell_labels = {
-            "app.kubernetes.io/component": "webservice-interactive",
-            "app.kubernetes.io/managed-by": "webservice",
-            "toolforge": "tool",
-            "name": "interactive",
-        }
-        self.shell_label_selector = ",".join(
-            ["{k}={v}".format(k=k, v=v) for k, v in self.shell_labels.items()]
-        )
-
     def _get_ns(self):
         return "tool-{}".format(self.tool.name)
 
@@ -403,18 +394,28 @@ class KubernetesBackend(Backend):
             },
         }
 
-    def _get_shell_pod(self):
+    def _get_shell_pod(self, name):
+        """Get the specification for an interactive pod."""
         cmd = ["/bin/bash", "-il"]
+        if self.extra_args:
+            cmd = self.extra_args
         return {
             "apiVersion": "v1",
             "kind": "Pod",
             "metadata": {
                 "namespace": self._get_ns(),
-                "name": "interactive",
-                "labels": self.shell_labels,
+                "name": name,
+                "labels": {
+                    "name": name,
+                    "app.kubernetes.io/component": "webservice-interactive",
+                    "app.kubernetes.io/managed-by": "webservice",
+                    "app.kubernetes.io/version": "2",
+                    # Needed to trigger mounting of volumes
+                    "toolforge": "tool",
+                },
             },
             "spec": self._get_container_spec(
-                "interactive",
+                name,
                 self.container_image,
                 cmd,
                 resources=self.container_resources,
@@ -434,6 +435,7 @@ class KubernetesBackend(Backend):
         stdin=False,
         tty=False,
     ):
+        """Get the specification for a container."""
         homedir = "/data/project/{toolname}/".format(toolname=self.tool.name)
         return {
             "containers": [
@@ -522,25 +524,47 @@ class KubernetesBackend(Backend):
             return Backend.STATE_STOPPED
 
     def shell(self):
-        if len(self._find_objs("pods", self.shell_label_selector)) == 0:
-            self.api.create_object("pods", self._get_shell_pod())
+        """Run an interactive container on the k8s cluster."""
+        name = "shell-{}".format(int(time.time()))
 
-        if not self._wait_for_pods(self.shell_label_selector):
-            print("Pod is not ready in time", file=sys.stderr)
-            self.api.delete_objects("pods", self.shell_label_selector)
-            sys.exit(1)
-        kubectl = subprocess.Popen(
-            ["/usr/bin/kubectl", "attach", "--tty", "--stdin", "interactive"]
-        )
+        shell_env = os.environ.copy()
+        shell_env["GOMAXPROCS"] = "1"
 
-        kubectl.wait()
-        # kubectl attach prints the following when done: Session ended, resume
-        # using 'kubectl attach interactive -c interactive -i -t' command when
-        # the pod is running
-        # This isn't true, since we actually kill the pod when done
-        print("Pod stopped. Session cannot be resumed.", file=sys.stderr)
+        # --overrides is used because there does not seem to be any other way
+        # to tell `kubectl run` what workingDir to use for the container. This
+        # is annoying, but mostly reasonable as a typical Docker image would
+        # set a consistent workingDir in its definition rather than the
+        # backwards compatible with grid engine system that Toolforge uses of
+        # mounting in an external $HOME.
+        cmd = [
+            "/usr/bin/kubectl",
+            "run",
+            name,
+            "--attach=true",
+            "--stdin=true",
+            "--tty=true",
+            "--restart=Never",
+            "--rm=true",
+            "--wait=true",
+            "--quiet=true",
+            "--pod-running-timeout=1m",
+            "--image={}".format(self.container_image),
+            "--overrides={}".format(json.dumps(self._get_shell_pod(name))),
+            "--command=true",
+            "--",
+        ]
+        if self.extra_args:
+            cmd.extend(self.extra_args)
+        else:
+            cmd.extend(["/bin/bash", "-il"])
 
-        self.api.delete_objects("pods", self.shell_label_selector)
+        try:
+            kubectl = subprocess.Popen(cmd, env=shell_env)
+            kubectl.wait()
+            return kubectl.returncode
+        finally:
+            # Belt & suspenders cleanup just in case kubectl leaks the pod
+            self.api.delete_objects("pods", "name={}".format(name))
 
 
 # T253412: Disable warnings about unverifed TLS certs when talking to the

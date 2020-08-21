@@ -489,4 +489,4 @@ if __name__ == "__main__":
         if backend != "kubernetes":
             print("ERROR: shell is only supported for kubernetes backend")
             sys.exit(1)
-        job.shell()
+        sys.exit(job.shell())
