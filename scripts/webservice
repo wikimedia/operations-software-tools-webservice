@@ -319,6 +319,8 @@ if __name__ == "__main__":
     # * 'backend' from service.template
     # * 'backend' from service.manifest
     backend = args.backend
+    if backend is None:
+        backend = tool.manifest.get("backend", None)
 
     if backend is None:
         print("WARNING: No explict backend provided.")
