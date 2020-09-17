@@ -160,7 +160,13 @@ class KubernetesBackend(Backend):
     }
 
     def __init__(
-        self, tool, wstype, mem=None, cpu=None, replicas=1, extra_args=None,
+        self,
+        tool,
+        wstype,
+        mem=None,
+        cpu=None,
+        replicas=1,
+        extra_args=None,
     ):
         super(KubernetesBackend, self).__init__(
             tool, wstype, extra_args=extra_args
@@ -615,4 +621,8 @@ class K8sClient(object):
 
     def create_object(self, kind, spec):
         """Create an object of the given kind in the namespace."""
-        return self._post(kind, json=spec, version=K8sClient.VERSIONS[kind],)
+        return self._post(
+            kind,
+            json=spec,
+            version=K8sClient.VERSIONS[kind],
+        )

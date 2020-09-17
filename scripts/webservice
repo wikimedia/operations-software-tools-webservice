@@ -333,7 +333,9 @@ if __name__ == "__main__":
             manifest_file = tool.get_homedir_subpath("service.manifest")
             print(
                 "Backend '{}' from {} does not match '{}'".format(
-                    tool.manifest["backend"], manifest_file, backend,
+                    tool.manifest["backend"],
+                    manifest_file,
+                    backend,
                 )
             )
             print("  Try stopping your current webservice:")
