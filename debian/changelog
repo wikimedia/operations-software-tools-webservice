@@ -1,3 +1,10 @@
+toollabs-webservice (0.74) stretch; urgency=medium
+
+  * [a38e049] black: reformat with black==20.8b1
+  * [07dcb62] webservice: restore setting backend via service.manifest
+
+ -- Bryan Davis <bd808@wikimedia.org>  Wed, 14 Oct 2020 20:12:27 +0000
+
 toollabs-webservice (0.73) stretch; urgency=medium
 
   * [4a7d109] Remove --canonical argument to webservice
