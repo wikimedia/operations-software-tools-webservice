@@ -142,6 +142,31 @@ def update_manifest(job, action, args):
         raise Exception("action has to be 'start' or 'stop', got %s" % action)
 
 
+def find_service_template():
+    """Look for service.template in different directories"""
+    dirs = ["~", "~/www/python/src", "~/www/js", "~/public_html"]
+    found = []
+    for dir_ in dirs:
+        path = os.path.expanduser(os.path.join(dir_, "service.template"))
+        if os.path.exists(path):
+            found.append(path)
+
+    if len(found) > 1:
+        # Multiple templates found, error
+        print(
+            "Only one service.template file is allowed, multiple were found. "
+            "You will need to remove or rename the others."
+        )
+        for path in found:
+            print("* %s" % path)
+        sys.exit(1)
+    elif len(found) == 1:
+        return found[0]
+    else:
+        # No template
+        return None
+
+
 if __name__ == "__main__":
     description = """
     Online documentation: https://wikitech.wikimedia.org/wiki/Help:Toolforge/Web
@@ -165,7 +190,7 @@ if __name__ == "__main__":
     )
 
     # The bootstrap parser is used to look for a --template=... arg. If one is
-    # found, or if the default $HOME/service.template file exists, then it is
+    # found, or if it exists in one of the default directories, then it is
     # loaded as a YAML file and used to inject defaults into the main argument
     # parser.
     bootstrap = argparse.ArgumentParser(add_help=False)
@@ -249,9 +274,10 @@ if __name__ == "__main__":
     template_extra_args = None
     # Use the bootstrap argparser to check for a --template=... arg
     bootstrap_args, remainder_argv = bootstrap.parse_known_args()
-    default_template = os.path.expanduser("~/service.template")
-    if not bootstrap_args.template_file and os.path.exists(default_template):
-        bootstrap_args.template_file = open(default_template, mode="r")
+    if not bootstrap_args.template_file:
+        template = find_service_template()
+        if template:
+            bootstrap_args.template_file = open(template, mode="r")
     if bootstrap_args.template_file:
         # Load settings from the template file and validate them by running
         # them through argparser as though they had been passed in the command
