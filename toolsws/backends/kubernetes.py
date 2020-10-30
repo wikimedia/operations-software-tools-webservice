@@ -252,8 +252,8 @@ class KubernetesBackend(Backend):
 
         # Labels for all objects created by this webservice
         self.webservice_labels = {
-            "tools.wmflabs.org/webservice": "true",
-            "tools.wmflabs.org/webservice-version": "1",
+            "app.kubernetes.io/component": "web",
+            "app.kubernetes.io/managed-by": "webservice",
             "toolforge": "tool",
             "name": self.tool.name,
         }
@@ -267,8 +267,8 @@ class KubernetesBackend(Backend):
         )
 
         self.shell_labels = {
-            "tools.wmflabs.org/webservice-interactive": "true",
-            "tools.wmflabs.org/webservice-interactive-version": "1",
+            "app.kubernetes.io/component": "webservice-interactive",
+            "app.kubernetes.io/managed-by": "webservice",
             "toolforge": "tool",
             "name": "interactive",
         }
