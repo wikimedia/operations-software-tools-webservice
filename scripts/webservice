@@ -352,10 +352,11 @@ if __name__ == "__main__":
             sys.exit(1)
 
     if backend == "gridengine":
-        # Backwards compatibility hack to support
-        # 'webservice --release trusty lighttpd start' invocations
-        if args.release is not None:
-            print("--release is deprecated and has no effect")
+        if args.release is None:
+            args.release = 'stretch'
+        if args.release not in ['stretch', 'buster']:
+            print("Unsupported release '{}'".format(args.release))
+            sys.exit(1)
         if args.memory is not None:
             print("--mem is only for --backend=kubernetes")
             print("Please run again without this argument")

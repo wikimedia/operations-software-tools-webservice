@@ -26,6 +26,9 @@ class GridEngineBackend(Backend):
     # queue is an optional key that spcifies which queue to run ths one.
     #   options are: webgrid-lighttpd, webgrid-generic
     #   defaults to 'webgrid-generic'
+    # release is an optional key that specifies which release to run this on.
+    #   options are: stretch, buster
+    #   defaults to stretch
     CONFIG = {
         "lighttpd": {"cls": LighttpdWebService, "queue": "webgrid-lighttpd"},
         "lighttpd-plain": {
@@ -45,6 +48,7 @@ class GridEngineBackend(Backend):
         )
         cfg = GridEngineBackend.CONFIG[self.wstype]
         self.webservice = cfg["cls"](tool, extra_args)
+        self.release = cfg.get("release", "stretch")
         self.queue = cfg.get("queue", "webgrid-generic")
         self.name = "{wstype}-{toolname}".format(
             wstype=self.wstype, toolname=tool.name
@@ -92,7 +96,7 @@ class GridEngineBackend(Backend):
             "-q",
             self.queue,
             "-l",
-            "h_vmem=%s" % self.memlimit,
+            "h_vmem=%s,release=%s" % (self.memlimit, self.release),
             "-b",
             "y",
             "-N",
