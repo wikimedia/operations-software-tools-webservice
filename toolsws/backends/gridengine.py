@@ -42,13 +42,13 @@ class GridEngineBackend(Backend):
         "generic": {"cls": GenericWebService},
     }
 
-    def __init__(self, tool, wstype, extra_args=None):
+    def __init__(self, tool, wstype, release, extra_args=None):
         super(GridEngineBackend, self).__init__(
             tool, wstype, extra_args=extra_args
         )
         cfg = GridEngineBackend.CONFIG[self.wstype]
         self.webservice = cfg["cls"](tool, extra_args)
-        self.release = cfg.get("release", "stretch")
+        self.release = cfg.get("release", release)
         self.queue = cfg.get("queue", "webgrid-generic")
         self.name = "{wstype}-{toolname}".format(
             wstype=self.wstype, toolname=tool.name

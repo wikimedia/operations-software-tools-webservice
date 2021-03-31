@@ -20,6 +20,8 @@ from toolsws.wstypes import WebService
 
 
 BACKEND_DEFAULT = "kubernetes"
+GRIDENGINE_DEFAULT_RELEASE = "stretch"
+GRIDENGINE_AVAILABLE_RELEASES = ["stretch", "buster"]
 GRIDENGINE_DEFAULT_WSTYPE = "lighttpd"
 KUBERNETES_DEFAULT_WSTYPE = "php7.3"
 
@@ -205,9 +207,12 @@ if __name__ == "__main__":
         help="Extra arguments to be parsed by the chosen TYPE",
     )
     # Backwards compat with older webservice.
-    # Allows for webservice --release trusty lighttpd <action>
+    # Allows for webservice --release <release> lighttpd <action>
     argparser.add_argument(
-        "--release", help=argparse.SUPPRESS, choices=["trusty"]
+        "--release",
+        help="Choose operating system version required by this job. Defaults to '%(default)s'",
+        choices=GRIDENGINE_AVAILABLE_RELEASES,
+        default=GRIDENGINE_DEFAULT_RELEASE,
     )
     # Backwards compat with older webservice.
     # Allow --canonical cli argument, but don't do anything with it.
@@ -352,11 +357,6 @@ if __name__ == "__main__":
             sys.exit(1)
 
     if backend == "gridengine":
-        if args.release is None:
-            args.release = 'stretch'
-        if args.release not in ['stretch', 'buster']:
-            print("Unsupported release '{}'".format(args.release))
-            sys.exit(1)
         if args.memory is not None:
             print("--mem is only for --backend=kubernetes")
             print("Please run again without this argument")
@@ -402,7 +402,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if backend == "gridengine":
-        job = GridEngineBackend(tool, args.wstype, extra_args=args.extra_args)
+        job = GridEngineBackend(tool, args.wstype, args.release, extra_args=args.extra_args)
     else:
         job = KubernetesBackend(
             tool,
