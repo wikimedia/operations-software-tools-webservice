@@ -399,10 +399,6 @@ if __name__ == "__main__":
             args.wstype = tool.manifest.get("web", GRIDENGINE_DEFAULT_WSTYPE)
         acceptable_wstypes = GridEngineBackend.CONFIG
     elif backend == "kubernetes":
-        if args.release is not None:
-            print("--release is not implemented for --backend=kubernetes")
-            print("Please just pick an appropriate type instead")
-            sys.exit(1)
         if args.wstype is None:
             args.wstype = tool.manifest.get("web", KUBERNETES_DEFAULT_WSTYPE)
 
