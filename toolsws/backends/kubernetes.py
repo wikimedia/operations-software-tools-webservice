@@ -21,6 +21,176 @@ from toolsws.wstypes import PythonWebService
 from .backend import Backend
 
 
+class KubernetesRoutingHandler:
+    """Create and manage service and ingress objects to route HTTP requests."""
+
+    def __init__(self, api, tool, namespace, extra_labels=None):
+        self.api = api
+        self.tool = tool
+        self.namespace = namespace
+
+        # Labels for all objects created by this webservice
+        # TODO: unduplicate
+        self.webservice_labels = {
+            "app.kubernetes.io/component": "web",
+            "app.kubernetes.io/managed-by": "webservice",
+            "toolforge": "tool",
+            "name": self.tool.name,
+        }
+
+        self.webservice_label_selector = ",".join(
+            [
+                "{k}={v}".format(k=k, v=v)
+                for k, v in self.webservice_labels.items()
+                if k not in ["toolforge", "name"]
+            ]
+        )
+
+        # this is after label_selector is created, to make sure we don't have conflicting
+        # objects from different sources
+        if extra_labels is not None:
+            self.webservice_labels.update(extra_labels)
+
+    def _find_objs(self, kind, selector):
+        """
+        Return objects of kind matching selector, or None if they don't exist.
+
+        Objects that are currently being deleted by the Kubernetes service
+        (meaning they have a non-empty metadata.deletionTimestamp value) are
+        ignored.
+        """
+        objs = self.api.get_objects(kind, selector=selector)
+        # Ignore objects that are in the process of being deleted.
+        return [
+            o
+            for o in objs
+            if o["metadata"].get("deletionTimestamp", None) is None
+        ]
+
+    def _get_ingress_subdomain(self):
+        """
+        Returns the full spec of the domain-based routing ingress object for
+        this webservice
+        """
+        return {
+            "apiVersion": "networking.k8s.io/v1beta1",
+            "kind": "Ingress",
+            "metadata": {
+                "name": "{}-subdomain".format(self.tool.name),
+                "namespace": self.namespace,
+                "labels": self.webservice_labels,
+            },
+            "spec": {
+                "rules": [
+                    {
+                        "host": "{}.toolforge.org".format(self.tool.name),
+                        "http": {
+                            "paths": [
+                                {
+                                    "backend": {
+                                        "serviceName": self.tool.name,
+                                        "servicePort": 8000,
+                                    }
+                                }
+                            ]
+                        },
+                    }
+                ]
+            },
+        }
+
+    def _get_svc(self, target_port=8000, selector=None):
+        """
+        Return full spec for the webservice service
+        """
+        service = {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": self.tool.name,
+                "namespace": self.namespace,
+                "labels": self.webservice_labels,
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "http",
+                        "protocol": "TCP",
+                        "port": 8000,
+                        "targetPort": target_port,
+                    }
+                ],
+            },
+        }
+
+        if selector:
+            service["spec"]["selector"] = selector
+
+        return service
+
+    def _get_endpoints(self, ip, port):
+        """
+        Return full spec for an external endpoint object with the specified IP address and port.
+        """
+        return {
+            "kind": "Endpoints",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": self.tool.name,
+                "namespace": self.namespace,
+                "labels": self.webservice_labels,
+            },
+            "subsets": [
+                {
+                    "addresses": [
+                        {
+                            "ip": ip,
+                        },
+                    ],
+                    "ports": [
+                        {
+                            "port": port,
+                            "name": "http",
+                        }
+                    ],
+                }
+            ],
+        }
+
+    def _start_common(self, target_port=8000, service_selector=None):
+        """Create objects used for routing to a web service on any backend."""
+        svcs = self._find_objs("services", self.webservice_label_selector)
+        if len(svcs) == 0:
+            self.api.create_object(
+                "services", self._get_svc(target_port, service_selector)
+            )
+
+        ingresses = self._find_objs(
+            "ingresses", self.webservice_label_selector
+        )
+        if len(ingresses) == 0:
+            self.api.create_object("ingresses", self._get_ingress_subdomain())
+
+    def start_external(self, ip, port):
+        """Create objects required to route traffic to an external service with the specified address and port."""
+        self._start_common(target_port=port)
+
+        endpoints = self._find_objs(
+            "endpoints", self.webservice_label_selector
+        )
+        if len(endpoints) == 0:
+            self.api.create_object("endpoints", self._get_endpoints(ip, port))
+
+    def start_kubernetes(self):
+        """Create objects required to route traffic to a Kubernetes webservice."""
+        self._start_common(service_selector={"name": self.tool.name})
+
+    def stop(self):
+        """Clean up any created objects."""
+        self.api.delete_objects("ingresses", self.webservice_label_selector)
+        self.api.delete_objects("services", self.webservice_label_selector)
+
+
 class KubernetesBackend(Backend):
     """
     Backend spawning webservices with a k8s Deployment + Service
@@ -250,6 +420,9 @@ class KubernetesBackend(Backend):
 
         self.replicas = replicas
         self.api = K8sClient.from_file()
+        self.routing_handler = KubernetesRoutingHandler(
+            self.api, self.tool, self._get_ns()
+        )
 
         # Labels for all objects created by this webservice
         self.webservice_labels = {
@@ -296,63 +469,6 @@ class KubernetesBackend(Backend):
                 return True
             time.sleep(1)
         return False
-
-    def _get_svc(self):
-        """
-        Return full spec for the webservice service
-        """
-        return {
-            "kind": "Service",
-            "apiVersion": "v1",
-            "metadata": {
-                "name": self.tool.name,
-                "namespace": self._get_ns(),
-                "labels": self.webservice_labels,
-            },
-            "spec": {
-                "ports": [
-                    {
-                        "name": "http",
-                        "protocol": "TCP",
-                        "port": 8000,
-                        "targetPort": 8000,
-                    }
-                ],
-                "selector": {"name": self.tool.name},
-            },
-        }
-
-    def _get_ingress_subdomain(self):
-        """
-        Returns the full spec of the domain-based routing ingress object for
-        this webservice
-        """
-        return {
-            "apiVersion": "networking.k8s.io/v1beta1",
-            "kind": "Ingress",
-            "metadata": {
-                "name": "{}-subdomain".format(self.tool.name),
-                "namespace": self._get_ns(),
-                "labels": self.webservice_labels,
-            },
-            "spec": {
-                "rules": [
-                    {
-                        "host": "{}.toolforge.org".format(self.tool.name),
-                        "http": {
-                            "paths": [
-                                {
-                                    "backend": {
-                                        "serviceName": self.tool.name,
-                                        "servicePort": 8000,
-                                    }
-                                }
-                            ]
-                        },
-                    }
-                ]
-            },
-        }
 
     def _get_deployment(self):
         """
@@ -464,26 +580,19 @@ class KubernetesBackend(Backend):
 
     def request_start(self):
         self.webservice.check(self.wstype)
+
         deployments = self._find_objs(
             "deployments", self.webservice_label_selector
         )
         if len(deployments) == 0:
             self.api.create_object("deployments", self._get_deployment())
 
-        svcs = self._find_objs("services", self.webservice_label_selector)
-        if len(svcs) == 0:
-            self.api.create_object("services", self._get_svc())
-
-        ingresses = self._find_objs(
-            "ingresses", self.webservice_label_selector
-        )
-        if len(ingresses) == 0:
-            self.api.create_object("ingresses", self._get_ingress_subdomain())
+        self.routing_handler.start_kubernetes()
 
     def request_stop(self):
+        self.routing_handler.stop()
+
         selector = self.webservice_label_selector
-        self.api.delete_objects("ingresses", selector)
-        self.api.delete_objects("services", selector)
         self.api.delete_objects("deployments", selector)
         self.api.delete_objects(
             "replicasets", "name={name}".format(name=self.tool.name)
@@ -577,6 +686,7 @@ class K8sClient(object):
 
     VERSIONS = {
         "deployments": "apps/v1",
+        "endpoints": "v1",
         "ingresses": "networking.k8s.io/v1beta1",
         "pods": "v1",
         "replicasets": "apps/v1",

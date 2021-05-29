@@ -1,11 +1,14 @@
 import socket
 
+from toolsws.backends.kubernetes import K8sClient, KubernetesRoutingHandler
+from toolsws.tool import Tool
+
 
 class ProxyException(Exception):
     pass
 
 
-def get_active_proxy():
+def get_active_dynamicproxy():
     """Return the active master proxy to register with"""
     with open("/etc/active-proxy", "r") as f:
         return f.read().strip()
@@ -25,9 +28,16 @@ def get_open_port():
     return port
 
 
-def register(port):
-    """Register with the master proxy."""
-    proxy = get_active_proxy()
+def register_dynamicproxy(port):
+    """Register with the dynamicproxy."""
+    proxy = get_active_dynamicproxy()
+    if len(proxy.strip()) == 0:
+        # Kill switch for dynamicproxy: we don't want to create and deploy new
+        # tools-webservice versions to enable/disable dynamicproxy registrations
+        # Instead, treat empty /etc/active-proxy (controlled via Puppet) as
+        # "do not use dynamicproxy"
+        return
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     current_ip = socket.gethostbyname(socket.getfqdn())
     cmd = "registerCanonical"
@@ -46,9 +56,12 @@ def register(port):
         sock.close()
 
 
-def unregister():
-    """Unregister with the master proxy."""
-    proxy = get_active_proxy()
+def unregister_dynamicproxy():
+    """Unregister with the dynamicproxy."""
+    proxy = get_active_dynamicproxy()
+    if len(proxy.strip()) == 0:
+        return
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         sock.connect((proxy, 8282))
@@ -58,3 +71,39 @@ def unregister():
             raise ProxyException("Port unregistration failed!")
     finally:
         sock.close()
+
+
+def get_kubernetes_routing_handler():
+    tool = Tool.from_currentuser()
+    return KubernetesRoutingHandler(
+        K8sClient.from_file(),
+        tool,
+        "tool-{}".format(tool.name),
+        {"webservice.toolforge.org/gridengine": "true"},
+    )
+
+
+def register_kubernetes(port):
+    """Register with the Kubernetes ingress."""
+    routing_handler = get_kubernetes_routing_handler()
+    routing_handler.start_external(
+        socket.gethostbyname(socket.getfqdn()), port
+    )
+
+
+def unregister_kubernetes():
+    """Unregister with the Kubernetes ingress."""
+    routing_handler = get_kubernetes_routing_handler()
+    routing_handler.stop()
+
+
+def register(port):
+    """Register with all used proxies."""
+    register_dynamicproxy(port)
+    register_kubernetes(port)
+
+
+def unregister():
+    """Unregister with all used proxies."""
+    unregister_dynamicproxy()
+    unregister_kubernetes()
