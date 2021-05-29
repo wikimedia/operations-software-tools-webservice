@@ -1,4 +1,6 @@
 import os
+import subprocess
+import sys
 
 from .ws import WebService
 
@@ -18,7 +20,6 @@ class JSWebService(WebService):
 
     def run(self, port):
         super(JSWebService, self).run(port)
-        os.chdir(self.tool.get_homedir_subpath("www/js"))
         npm = False
         for path in ["/usr/local/bin/npm", "/usr/bin/npm"]:
             if os.path.exists(path):
@@ -26,4 +27,10 @@ class JSWebService(WebService):
                 break
         if not npm:
             raise RuntimeError("Cannot find npm")
-        os.execv(npm, [npm, "start"])
+        subprocess.check_call(
+            [npm, "start"],
+            stdin=sys.stdin,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+            cwd=self.tool.get_homedir_subpath("www/js"),
+        )

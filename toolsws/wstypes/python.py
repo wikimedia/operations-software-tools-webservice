@@ -1,4 +1,6 @@
 import os
+import subprocess
+import sys
 
 from .ws import WebService
 
@@ -17,7 +19,7 @@ class PythonWebService(WebService):
 
     def run(self, port):
         super(PythonWebService, self).run(port)
-        args = [
+        command = [
             "/usr/bin/uwsgi",
             # Will ignore plugins that don't load
             "--plugin",
@@ -45,7 +47,7 @@ class PythonWebService(WebService):
         ]
 
         if os.path.exists(self.tool.get_homedir_subpath("www/python/venv")):
-            args += [
+            command += [
                 "--venv",
                 self.tool.get_homedir_subpath("www/python/venv"),
             ]
@@ -53,9 +55,11 @@ class PythonWebService(WebService):
         if os.path.exists(
             self.tool.get_homedir_subpath("www/python/uwsgi.ini")
         ):
-            args += [
+            command += [
                 "--ini",
                 self.tool.get_homedir_subpath("www/python/uwsgi.ini"),
             ]
 
-        os.execv("/usr/bin/uwsgi", args)
+        subprocess.check_call(
+            command, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr
+        )

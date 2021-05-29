@@ -1,4 +1,6 @@
 import os
+import subprocess
+import sys
 
 from .ws import WebService
 
@@ -656,9 +658,11 @@ class LighttpdPlainWebService(WebService):
         with open(config_path, "w") as f:
             f.write(config)
 
-        os.execv(
-            "/usr/sbin/lighttpd",
+        subprocess.check_call(
             ["/usr/sbin/lighttpd", "-f", config_path, "-D"],
+            stdin=sys.stdin,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
         )
 
 

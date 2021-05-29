@@ -1,4 +1,5 @@
-import os
+import subprocess
+import sys
 
 from .ws import WebService
 
@@ -15,5 +16,10 @@ class GenericWebService(WebService):
 
     def run(self, port):
         super(GenericWebService, self).run(port)
-        os.chdir(self.tool.home)
-        os.execv(self.extra_args[0], self.extra_args)
+        subprocess.check_call(
+            self.extra_args,
+            stdin=sys.stdin,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+            cwd=self.tool.home,
+        )

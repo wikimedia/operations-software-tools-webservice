@@ -1,4 +1,6 @@
 import os
+import subprocess
+import sys
 
 from .ws import WebService
 
@@ -17,7 +19,7 @@ class UwsgiWebService(WebService):
 
     def run(self, port):
         super(UwsgiWebService, self).run(port)
-        args = [
+        command = [
             "/usr/bin/uwsgi",
             "--http-socket",
             ":" + str(port),
@@ -32,4 +34,6 @@ class UwsgiWebService(WebService):
             "--master",
         ]
 
-        os.execv("/usr/bin/uwsgi", args)
+        subprocess.check_call(
+            command, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr
+        )
