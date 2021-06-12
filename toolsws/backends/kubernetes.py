@@ -9,7 +9,7 @@ import requests
 import urllib3
 import yaml
 
-from toolsws.tool import PROJECT
+from toolsws.tool import Tool
 from toolsws.utils import parse_quantity
 from toolsws.wstypes import GenericWebService
 from toolsws.wstypes import JSWebService
@@ -171,7 +171,7 @@ class KubernetesBackend(Backend):
         super(KubernetesBackend, self).__init__(
             tool, wstype, extra_args=extra_args
         )
-        self.project = PROJECT
+        self.project = Tool.get_current_project()
         self.webservice = KubernetesBackend.CONFIG[self.wstype]["cls"](
             tool, extra_args
         )

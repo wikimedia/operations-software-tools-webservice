@@ -34,8 +34,12 @@ def register(port):
 
     try:
         sock.connect((proxy, 8282))
-        sock.sendall("%s\n.*\nhttp://%s:%u\n" % (cmd, current_ip, port))
-        res = sock.recv(1024)
+        sock.sendall(
+            ("%s\n.*\nhttp://%s:%u\n" % (cmd, current_ip, port)).encode(
+                "utf-8"
+            )
+        )
+        res = sock.recv(1024).decode("utf-8")
         if res != "ok":
             raise ProxyException("Port registration failed!")
     finally:
@@ -48,8 +52,8 @@ def unregister():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         sock.connect((proxy, 8282))
-        sock.sendall("unregister\n.*\n")
-        res = sock.recv(1024)
+        sock.sendall("unregister\n.*\n".encode("utf-8"))
+        res = sock.recv(1024).decode("utf-8")
         if res != "ok":
             raise ProxyException("Port unregistration failed!")
     finally:

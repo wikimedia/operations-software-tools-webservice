@@ -2,12 +2,17 @@ Source: toollabs-webservice
 Maintainer: Yuvi Panda <yuvipanda@gmail.com>
 Section: python
 Priority: optional
-Build-Depends: python-setuptools, python-all, debhelper (>= 9), dh-python
+Build-Depends: debhelper (>= 9), 
+  python3-requests,
+  python3-yaml,
+  python3-setuptools,
+  python3-all,
+  dh-python
 Standards-Version: 3.9.5
 
 Package: toollabs-webservice
 Architecture: all
-Depends: python-configparser, python-requests, python-six, python-yaml, ${misc:Depends}, python:any (<< 2.8), python:any (>= 2.7), python, ${python:Depends}
+Depends: ${misc:Depends}, ${python3:Depends}
 Description: Infrastructure for running webservices on tools.wmflabs.org
  Provides scripts and a python package for running and controlling
  user provided webservices on tools.wmflabs.org.

@@ -5,12 +5,21 @@ import pwd
 
 import yaml
 
-with open("/etc/wmcs-project", "r") as _projectfile:
-    PROJECT = _projectfile.read().strip()
 
+class Tool:
+    _PROJECT = None
 
-class Tool(object):
-    PREFIX = PROJECT + "."
+    @staticmethod
+    def get_current_project():
+        if Tool._PROJECT is None:
+            with open("/etc/wmcs-project", "r") as _projectfile:
+                Tool._PROJECT = _projectfile.read().strip()
+        return Tool._PROJECT
+
+    @staticmethod
+    def get_prefix():
+        return Tool.get_current_project() + "."
+
     MANIFEST_VERSION = 4
 
     class InvalidToolException(Exception):
@@ -85,7 +94,7 @@ class Tool(object):
         """
         Create a Tool instance from a tool name
         """
-        username = Tool.PREFIX + name
+        username = Tool.get_prefix() + name
         try:
             user_info = pwd.getpwnam(username)
         except KeyError:
@@ -106,15 +115,15 @@ class Tool(object):
         """
         Creates a Tool instance from a given pwd entry
         """
-        if not pwd_entry.pw_name.startswith(Tool.PREFIX):
+        if not pwd_entry.pw_name.startswith(Tool.get_prefix()):
             raise Tool.InvalidToolException(
-                "Tool username should begin with " + Tool.PREFIX
+                "Tool username should begin with " + Tool.get_prefix()
             )
         if pwd_entry.pw_uid < 50000:  # FIXME: Find if it should be < or <=
             raise Tool.InvalidToolException(
                 "uid of tools should be >= 50000, uid is %s" % pwd_entry.pw_uid
             )
-        toolname = pwd_entry.pw_name[len(Tool.PREFIX) :]
+        toolname = pwd_entry.pw_name[len(Tool.get_prefix()) :]
         return cls(
             toolname,
             pwd_entry.pw_name,
