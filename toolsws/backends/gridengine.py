@@ -71,7 +71,7 @@ class GridEngineBackend(Backend):
         output = subprocess.check_output(["qstat", "-xml"])
 
         # Fix XML.
-        output = re.sub("JATASK:[^>]*", "jatask", output)
+        output = re.sub("JATASK:[^>]*", "jatask", output.decode("utf-8"))
 
         # GE is stupid.
         # Returns output like:
