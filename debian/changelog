@@ -1,3 +1,26 @@
+toollabs-webservice (0.75) stretch; urgency=medium
+
+  [ Arturo Borrero Gonzalez ]
+  * [0faae4c] Revert "Remove 'release' qsub label"
+  * [f1616b2] gridengine: cleaner release default
+
+  [ Kunal Mehta ]
+  * [cf60dcf] Look for service.template in various code directories
+
+  [ Arturo Borrero Gonzalez ]
+  * [ac4752f] scripts/webservice: don't check for the release arg in k8s backend
+
+  [ Taavi Väänänen ]
+  * [3fc73d5] Use Python 3
+
+  [ Brooke Storm ]
+  * [aac0e4c] python3: fix encoding in grid output
+
+  [ Taavi Väänänen ]
+  * [89c04cf] Replace os.execv with subprocess.check_call
+
+ -- Brooke Storm <bstorm@wikimedia.org>  Wed, 16 Jun 2021 18:50:28 +0000
+
 toollabs-webservice (0.74) stretch; urgency=medium
 
   * [a38e049] black: reformat with black==20.8b1
