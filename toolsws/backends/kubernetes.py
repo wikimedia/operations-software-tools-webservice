@@ -56,6 +56,11 @@ class KubernetesBackend(Backend):
             "image": "toolforge-php73-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
+        "php7.4": {
+            "cls": LighttpdWebService,
+            "image": "toolforge-php74-sssd-web",
+            "resources": DEFAULT_RESOURCES,
+        },
         "tcl": {
             "cls": LighttpdPlainWebService,
             "image": "toolforge-tcl86-sssd-web",
@@ -77,6 +82,11 @@ class KubernetesBackend(Backend):
             "image": "toolforge-python37-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
+        "python3.9": {
+            "cls": PythonWebService,
+            "image": "toolforge-python39-sssd-web",
+            "resources": DEFAULT_RESOURCES,
+        },
         "python2": {
             "deprecated": True,
             "cls": PythonWebService,
@@ -92,6 +102,11 @@ class KubernetesBackend(Backend):
         "ruby25": {
             "cls": GenericWebService,
             "image": "toolforge-ruby25-sssd-web",
+            "resources": DEFAULT_RESOURCES,
+        },
+        "ruby27": {
+            "cls": GenericWebService,
+            "image": "toolforge-ruby27-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
         "golang": {
@@ -146,6 +161,26 @@ class KubernetesBackend(Backend):
                 },
             },
         },
+        "jdk17": {
+            "cls": GenericWebService,
+            "image": "toolforge-jdk17-sssd-web",
+            "resources": {
+                "limits": {
+                    # Pods will be killed if they go over memory limit
+                    # Higher Memory Limit for jdk8, but not higher request
+                    # So it can use more memory before being killed, but will
+                    # die when there is a memory crunch
+                    "memory": "4Gi",
+                    # Pods can still burst to more than cpu limit
+                    "cpu": "2",
+                },
+                "requests": {
+                    # Pods are guaranteed at least this many resources
+                    "memory": "256Mi",
+                    "cpu": "0.125",
+                },
+            },
+        },
         "nodejs": {
             "deprecated": True,
             "cls": JSWebService,
@@ -155,6 +190,11 @@ class KubernetesBackend(Backend):
         "node10": {
             "cls": JSWebService,
             "image": "toolforge-node10-sssd-web",
+            "resources": DEFAULT_RESOURCES,
+        },
+        "node12": {
+            "cls": JSWebService,
+            "image": "toolforge-node12-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
     }
