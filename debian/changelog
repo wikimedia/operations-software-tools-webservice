@@ -1,3 +1,9 @@
+toollabs-webservice (0.76) stretch; urgency=medium
+
+  * [afc07c5] kubernetes: Add Bullseye images
+
+ -- Taavi Väänänen <hi@taavi.wtf>  Sun, 15 Aug 2021 19:29:40 +0300
+
 toollabs-webservice (0.75) stretch; urgency=medium
 
   [ Arturo Borrero Gonzalez ]
