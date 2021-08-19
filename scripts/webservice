@@ -84,7 +84,7 @@ def start(job, message):
     try:
         job.request_start()
     except WebService.InvalidWebServiceException as e:
-        raise SystemExit(e.message)
+        raise SystemExit(str(e)) from e
     # FIXME: Treat pending state differently.
     return wait_for(lambda: job.get_state() == Backend.STATE_RUNNING, message)
 
