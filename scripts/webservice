@@ -3,12 +3,10 @@ from __future__ import print_function
 import argparse
 import functools
 import os
-import platform
 import re
 import sys
 import textwrap
 
-import configparser
 import yaml
 
 from toolsws.backends import Backend
@@ -102,14 +100,18 @@ def update_manifest(job, action, args):
     :param args parsed cli arguments
     """
     if action == "start":
+        release = job.release if hasattr(job, "release") else None
+
         if (
             "web" not in job.tool.manifest
             or job.tool.manifest["web"] != job.wstype
+            or job.tool.manifest.get("release", None) != release
         ):
-            job.tool.manifest["distribution"] = platform.linux_distribution()[
-                0
-            ]
             job.tool.manifest["web"] = job.wstype
+            if release:
+                job.tool.manifest["release"] = job.release
+            elif "release" in job.tool.manifest:
+                del job.tool.manifest["release"]
             if args.replicas != 1:
                 job.tool.manifest["replicas"] = args.replicas
             if hasattr(job, "container_resources"):
@@ -126,7 +128,8 @@ def update_manifest(job, action, args):
     elif action == "stop":
         if "web" in job.tool.manifest:
             for key in [
-                "distribution",
+                "distribution",  # no longer set, drop from old files
+                "release",
                 "web",
                 "backend",
                 "cpu",
@@ -286,6 +289,8 @@ if __name__ == "__main__":
         tmpl_argv = []
         if "backend" in tmpl:
             tmpl_argv.append("--backend={}".format(tmpl["backend"]))
+        if "release" in tmpl:
+            tmpl_argv.append("--release={}".format(tmpl["release"]))
         if "cpu" in tmpl:
             tmpl_argv.append("--cpu={}".format(tmpl["cpu"]))
         if "mem" in tmpl:
