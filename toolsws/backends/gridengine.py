@@ -84,7 +84,7 @@ class GridEngineBackend(Backend):
         return job_name_node
 
     def request_start(self):
-        self.webservice.check()
+        self.webservice.check(self.wstype)
         cmd = [
             "qsub",
             "-e",

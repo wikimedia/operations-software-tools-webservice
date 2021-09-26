@@ -9,7 +9,7 @@ class JSWebService(WebService):
     NAME = "nodejs"
     QUEUE = "webgrid-generic"
 
-    def check(self):
+    def check(self, wstype):
         package_path = self.tool.get_homedir_subpath("www/js/package.json")
         if not os.path.exists(package_path):
             raise WebService.InvalidWebServiceException(

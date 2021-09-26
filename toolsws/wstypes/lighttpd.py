@@ -624,7 +624,7 @@ class LighttpdPlainWebService(WebService):
     NAME = "lighttpd-plain"
     QUEUE = "webgrid-lighttpd"
 
-    def check(self):
+    def check(self, wstype):
         # Check for a .lighttpd.conf file or a public_html
         public_html_path = self.tool.get_homedir_subpath("public_html")
         lighttpd_conf_path = self.tool.get_homedir_subpath(".lighttpd.conf")

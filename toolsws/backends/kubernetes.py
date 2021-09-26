@@ -463,7 +463,7 @@ class KubernetesBackend(Backend):
         return False
 
     def request_start(self):
-        self.webservice.check()
+        self.webservice.check(self.wstype)
         deployments = self._find_objs(
             "deployments", self.webservice_label_selector
         )
