@@ -1,3 +1,19 @@
+toollabs-webservice (0.77) stretch; urgency=medium
+
+  [ Taavi Väänänen ]
+  * [34d8855] Replace distro with os release
+
+  [ nskaggs ]
+  * [9ec5481] Fix webservice failing with error trying to raise exception
+
+  [ Kunal Mehta ]
+  * [be6b151] Use common k8s labels
+
+  [ Bryan Davis ]
+  * [fd2d21a] Make `webservice shell` scriptable
+
+ -- Brooke Storm <bstorm@wikimedia.org>  Wed, 29 Sep 2021 20:19:47 +0000
+
 toollabs-webservice (0.76) stretch; urgency=medium
 
   * [afc07c5] kubernetes: Add Bullseye images
