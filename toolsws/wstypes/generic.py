@@ -11,7 +11,7 @@ class GenericWebService(WebService):
     def __init__(self, tool, extra_args=None):
         super(GenericWebService, self).__init__(tool, extra_args)
 
-    def check(self):
+    def check(self, wstype):
         return self.extra_args is not None
 
     def run(self, port):

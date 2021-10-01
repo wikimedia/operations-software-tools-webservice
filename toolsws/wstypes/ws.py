@@ -26,7 +26,7 @@ class WebService(object):
                 "WebService subclass needs NAME class attribute"
             )
 
-    def check(self):
+    def check(self, wstype):
         """
         Check if this webservice type can execute for current tool.
         Returns nothing if it is a valid webservice type, throws an exception

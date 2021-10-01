@@ -9,7 +9,7 @@ class UwsgiWebService(WebService):
     NAME = "uwsgi-plain"
     QUEUE = "webgrid-generic"
 
-    def check(self):
+    def check(self, wstype):
         src_path = self.tool.get_homedir_subpath("uwsgi.ini")
         if not os.path.exists(src_path):
             raise WebService.InvalidWebServiceException(
