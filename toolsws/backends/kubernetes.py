@@ -73,7 +73,7 @@ class KubernetesRoutingHandler:
         this webservice
         """
         return {
-            "apiVersion": "networking.k8s.io/v1beta1",
+            "apiVersion": "networking.k8s.io/v1",
             "kind": "Ingress",
             "metadata": {
                 "name": "{}-subdomain".format(self.tool.name),
@@ -87,15 +87,21 @@ class KubernetesRoutingHandler:
                         "http": {
                             "paths": [
                                 {
+                                    "path": "/",
+                                    "pathType": "Prefix",
                                     "backend": {
-                                        "serviceName": self.tool.name,
-                                        "servicePort": 8000,
-                                    }
-                                }
-                            ]
+                                        "service": {
+                                            "name": self.tool.name,
+                                            "port": {
+                                                "number": 8000,
+                                            },
+                                        },
+                                    },
+                                },
+                            ],
                         },
-                    }
-                ]
+                    },
+                ],
             },
         }
 
@@ -687,7 +693,7 @@ class K8sClient(object):
     VERSIONS = {
         "deployments": "apps/v1",
         "endpoints": "v1",
-        "ingresses": "networking.k8s.io/v1beta1",
+        "ingresses": "networking.k8s.io/v1",
         "pods": "v1",
         "replicasets": "apps/v1",
         "services": "v1",
