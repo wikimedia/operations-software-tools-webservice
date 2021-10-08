@@ -19,12 +19,10 @@ class PythonWebService(WebService):
 
         # If we have a version in the web service type name, check venv
         # is made properly if it exists
-        if (
-            os.path.exists(self.tool.get_homedir_subpath("www/python/venv"))
-            and wstype.statswith("python3")
-            and wstype != "python3"
-        ):
-            python_version_minor = wstype[len("python3") :]
+        if os.path.exists(
+            self.tool.get_homedir_subpath("www/python/venv")
+        ) and wstype.startswith("python3."):
+            python_version_minor = wstype[len("python3.") :]
             python_binary_path = self.tool.get_homedir_subpath(
                 "www/python/venv/bin/python3.{minor}".format(
                     minor=python_version_minor
@@ -35,7 +33,7 @@ class PythonWebService(WebService):
                 raise WebService.InvalidWebServiceException(
                     "The virtual environment in ~/www/python/venv appears to be for a wrong Python version. "
                     "Did you make it in `webservice {type} shell`?".format(
-                        type=type
+                        type=wstype
                     )
                 )
 
