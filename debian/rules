@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-export PYBUILD_NAME=toollabs-webservice
+export PYBUILD_NAME=toolforge-webservice
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild

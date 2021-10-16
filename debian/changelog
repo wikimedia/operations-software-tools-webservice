@@ -1,3 +1,10 @@
+toolforge-webservice (0.78) stretch; urgency=medium
+
+  * Rename package name to toolforge-webservice.
+  * ...
+
+ -- Taavi Väänänen <hi@taavi.wtf>  Sat, 16 Oct 2021 15:19:52 +0300
+
 toollabs-webservice (0.77) stretch; urgency=medium
 
   [ Taavi Väänänen ]

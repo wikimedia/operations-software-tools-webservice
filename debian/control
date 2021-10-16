@@ -1,23 +1,28 @@
-Source: toollabs-webservice
+Source: toolforge-webservice
 Maintainer: Yuvi Panda <yuvipanda@gmail.com>
 Section: python
 Priority: optional
-Build-Depends: debhelper (>= 9), 
+Build-Depends: debhelper (>= 9),
   python3-requests,
   python3-yaml,
   python3-setuptools,
   python3-all,
   dh-python
-Standards-Version: 3.9.5
+Standards-Version: 4.6.0
 
-Package: toollabs-webservice
+Package: toolforge-webservice
 Architecture: all
 Depends: ${misc:Depends}, ${python3:Depends}
-Description: Infrastructure for running webservices on tools.wmflabs.org
+Provides: toollabs-webservice
+Conflicts: toollabs-webservice
+Replaces: toollabs-webservice
+Description: Infrastructure for running webservices on Toolforge
  Provides scripts and a python package for running and controlling
- user provided webservices on tools.wmflabs.org.
+ user provided webservices on Toolforge.
  .
  webservice is the user facing script that can start / stop / restart
  webservices when run from commandline in bastion hosts.
- webservice-runner is the script that starts on the exec hosts and
- exec's to the appropriate command to run the webserver itself.
+ .
+ webservice-runner is the script that starts on the exec hosts or
+ Docker containers and executes to the appropriate command to run the
+ webserver itself.
