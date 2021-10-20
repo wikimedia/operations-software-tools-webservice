@@ -1,9 +1,12 @@
 toolforge-webservice (0.78) stretch; urgency=medium
 
-  * Rename package name to toolforge-webservice.
-  * ...
+  * [2fc781e] Identify when venvs are for wrong Python versions
+  * [4efb2e5] Route Grid engine web requests via Kubernetes
+  * [9119c40] kubernetes: Use Ingress v1 API
+  * [5b18cb0] fix python version check
+  * [c83a33f] debian: Rename package to toolforge-webservice
 
- -- Taavi Väänänen <hi@taavi.wtf>  Sat, 16 Oct 2021 15:19:52 +0300
+ -- Taavi Väänänen <hi@taavi.wtf>  Wed, 20 Oct 2021 14:22:44 +0300
 
 toollabs-webservice (0.77) stretch; urgency=medium
 
