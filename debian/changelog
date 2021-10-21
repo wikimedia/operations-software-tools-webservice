@@ -1,3 +1,9 @@
+toolforge-webservice (0.79) stretch; urgency=medium
+
+  * [49af9fd] wstypes.python: Revert version check
+
+ -- Taavi Väänänen <hi@taavi.wtf>  Thu, 21 Oct 2021 12:34:22 +0300
+
 toolforge-webservice (0.78) stretch; urgency=medium
 
   * [2fc781e] Identify when venvs are for wrong Python versions
