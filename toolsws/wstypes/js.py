@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import sys
@@ -16,6 +17,15 @@ class JSWebService(WebService):
                 "Could not find ~/www/js/package.json. "
                 "Are you sure you have a proper nodejs "
                 "application in ~/www/js?"
+            )
+
+        with open(package_path, "r") as package_file:
+            package_data = json.load(package_file)
+
+        if "start" not in package_data.get("scripts", {}):
+            raise WebService.InvalidWebServiceException(
+                "'start' script was not defined in ~/www/js/package.json. "
+                "Are you sure you have a proper nodejs application in ~/www/js?"
             )
 
     def run(self, port):
