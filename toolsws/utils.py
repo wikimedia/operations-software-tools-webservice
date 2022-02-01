@@ -113,4 +113,4 @@ def parse_quantity(quantity):
         raise ValueError("{} has unknown suffix".format(quantity))
 
     exponent = Decimal(exponents[suffix[0]])
-    return number * (base ** exponent)
+    return number * (base**exponent)
