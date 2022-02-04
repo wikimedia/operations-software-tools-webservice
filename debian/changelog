@@ -1,3 +1,16 @@
+toolforge-webservice (0.80) stretch; urgency=medium
+
+  [ Taavi Väänänen ]
+  * [87d87a8] Check for start npm script
+
+  [ Arturo Borrero Gonzalez ]
+  * [4383a46] toolsws: utils: format with black
+
+  [ Taavi Väänänen ]
+  * [b300043] proxy: Don't crash on SGE for tools without Kubernetes credentials
+
+ -- Taavi Väänänen <hi@taavi.wtf>  Sat, 05 Feb 2022 00:34:03 +0200
+
 toolforge-webservice (0.79) stretch; urgency=medium
 
   * [49af9fd] wstypes.python: Revert version check
