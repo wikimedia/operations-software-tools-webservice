@@ -1,6 +1,10 @@
 import socket
 
-from toolsws.backends.kubernetes import K8sClient, KubernetesRoutingHandler
+from toolsws.backends.kubernetes import (
+    K8sClient,
+    KubernetesConfigFileNotFoundException,
+    KubernetesRoutingHandler,
+)
 from toolsws.tool import Tool
 
 
@@ -75,8 +79,14 @@ def unregister_dynamicproxy():
 
 def get_kubernetes_routing_handler():
     tool = Tool.from_currentuser()
+
+    try:
+        k8s_client = K8sClient.from_file()
+    except KubernetesConfigFileNotFoundException:
+        return None
+
     return KubernetesRoutingHandler(
-        K8sClient.from_file(),
+        k8s_client,
         tool,
         "tool-{}".format(tool.name),
         {"webservice.toolforge.org/gridengine": "true"},
@@ -86,15 +96,17 @@ def get_kubernetes_routing_handler():
 def register_kubernetes(port):
     """Register with the Kubernetes ingress."""
     routing_handler = get_kubernetes_routing_handler()
-    routing_handler.start_external(
-        socket.gethostbyname(socket.getfqdn()), port
-    )
+    if routing_handler:
+        routing_handler.start_external(
+            socket.gethostbyname(socket.getfqdn()), port
+        )
 
 
 def unregister_kubernetes():
     """Unregister with the Kubernetes ingress."""
     routing_handler = get_kubernetes_routing_handler()
-    routing_handler.stop()
+    if routing_handler:
+        routing_handler.stop()
 
 
 def register(port):

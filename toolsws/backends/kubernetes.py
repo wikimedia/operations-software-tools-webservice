@@ -21,6 +21,14 @@ from toolsws.wstypes import PythonWebService
 from .backend import Backend
 
 
+class KubernetesException(Exception):
+    """Base class for exceptions related to the Kubernetes backend."""
+
+
+class KubernetesConfigFileNotFoundException(KubernetesException):
+    """Raised when a Kubernetes client is attempted to be created but the configuration file does not exist."""
+
+
 class KubernetesRoutingHandler:
     """Create and manage service and ingress objects to route HTTP requests."""
 
@@ -705,6 +713,10 @@ class K8sClient(object):
         if not filename:
             filename = os.getenv("KUBECONFIG", "~/.kube/config")
         filename = os.path.expanduser(filename)
+
+        if not os.path.exists(filename):
+            raise KubernetesConfigFileNotFoundException(filename)
+
         with open(filename) as f:
             data = yaml.safe_load(f.read())
         return cls(data)
