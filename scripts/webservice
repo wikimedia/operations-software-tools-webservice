@@ -322,6 +322,7 @@ if __name__ == "__main__":
             # argument parsing phase.
             argparser.set_defaults(
                 backend=template_args.backend,
+                release=template_args.release,
                 cpu=template_args.cpu,
                 memory=template_args.memory,
                 replicas=template_args.replicas,
