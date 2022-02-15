@@ -1,3 +1,10 @@
+toolforge-webservice (0.81) stretch; urgency=medium
+
+  [ Lucas Werkmeister ]
+  * [02cfb52] Fix parsing release in service.template
+
+ -- Bryan Davis <bd808@wikimedia.org>  Tue, 15 Feb 2022 22:13:06 +0000
+
 toolforge-webservice (0.80) stretch; urgency=medium
 
   [ Taavi Väänänen ]
