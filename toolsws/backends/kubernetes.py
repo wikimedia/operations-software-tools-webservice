@@ -212,10 +212,8 @@ class KubernetesBackend(Backend):
 
     DEFAULT_RESOURCES = {
         "limits": {
-            # Pods will be killed if they go over memory limit
-            "memory": "2Gi",
-            # Pods can still burst to more than cpu limit
-            "cpu": "2",
+            "memory": "512Mi",
+            "cpu": "0.5",
         },
         "requests": {
             # Pods are guaranteed at least this many resources
@@ -223,6 +221,23 @@ class KubernetesBackend(Backend):
             "cpu": "0.125",
         },
     }
+
+    DEFAULT_JDK_RESOURCES = (
+        {
+            "limits": {
+                # Higher Memory Limit for JDK based webservices, but not
+                # higher request, so it can use more memory before being
+                # killed, but will die when there is a memory crunch.
+                "memory": "1Gi",
+                "cpu": "0.5",
+            },
+            "requests": {
+                # Pods are guaranteed at least this many resources
+                "memory": "256Mi",
+                "cpu": "0.125",
+            },
+        },
+    )
 
     CONFIG = {
         "php5.6": {
@@ -309,62 +324,17 @@ class KubernetesBackend(Backend):
             "deprecated": True,
             "cls": GenericWebService,
             "image": "toolforge-jdk8-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    # Higher Memory Limit for jdk8, but not higher request
-                    # So it can use more memory before being killed, but will
-                    # die when there is a memory crunch
-                    "memory": "4Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_JDK_RESOURCES,
         },
         "jdk11": {
             "cls": GenericWebService,
             "image": "toolforge-jdk11-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    # Higher Memory Limit for jdk8, but not higher request
-                    # So it can use more memory before being killed, but will
-                    # die when there is a memory crunch
-                    "memory": "4Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_JDK_RESOURCES,
         },
         "jdk17": {
             "cls": GenericWebService,
             "image": "toolforge-jdk17-sssd-web",
-            "resources": {
-                "limits": {
-                    # Pods will be killed if they go over memory limit
-                    # Higher Memory Limit for jdk8, but not higher request
-                    # So it can use more memory before being killed, but will
-                    # die when there is a memory crunch
-                    "memory": "4Gi",
-                    # Pods can still burst to more than cpu limit
-                    "cpu": "2",
-                },
-                "requests": {
-                    # Pods are guaranteed at least this many resources
-                    "memory": "256Mi",
-                    "cpu": "0.125",
-                },
-            },
+            "resources": DEFAULT_JDK_RESOURCES,
         },
         "nodejs": {
             "deprecated": True,
@@ -396,41 +366,35 @@ class KubernetesBackend(Backend):
         super(KubernetesBackend, self).__init__(
             tool, wstype, extra_args=extra_args
         )
+
+        config = KubernetesBackend.CONFIG[self.wstype]
+
         self.project = Tool.get_current_project()
-        self.webservice = KubernetesBackend.CONFIG[self.wstype]["cls"](
-            tool, extra_args
-        )
+        self.webservice = config["cls"](tool, extra_args)
         self.container_image = "{registry}/{image}:latest".format(
             registry="docker-registry.tools.wmflabs.org",
-            image=KubernetesBackend.CONFIG[self.wstype]["image"],
+            image=config["image"],
         )
-        # Defaults are used for request so this just affects the burst, up to
-        # certain limits (set as max in the limitrange) as well as
-        # a proportional request (which affects scheduling).
-        # The namespace quotas also have impact on what can be done.
-        if mem or cpu:
-            self.container_resources = {"limits": {}, "requests": {}}
-            if mem:
-                dec_mem = parse_quantity(mem)
-                if dec_mem < parse_quantity("256Mi"):
-                    self.container_resources["requests"]["memory"] = mem
-                else:
-                    self.container_resources["requests"]["memory"] = str(
-                        dec_mem / 2
-                    )
-                self.container_resources["limits"]["memory"] = mem
-            if cpu:
-                dec_cpu = parse_quantity(cpu)
-                if dec_cpu < parse_quantity("250m"):
-                    self.container_resources["requests"]["cpu"] = cpu
-                else:
-                    self.container_resources["requests"]["cpu"] = str(
-                        dec_cpu / 2
-                    )
-                self.container_resources["limits"]["cpu"] = cpu
-        else:
-            # Defaults are cpu: 500m and memory: 512Mi
-            self.container_resources = None
+
+        self.container_resources = config["resources"]
+
+        if mem:
+            dec_mem = parse_quantity(mem)
+            if dec_mem < parse_quantity("256Mi"):
+                self.container_resources["requests"]["memory"] = mem
+            else:
+                self.container_resources["requests"]["memory"] = str(
+                    dec_mem / 2
+                )
+            self.container_resources["limits"]["memory"] = mem
+
+        if cpu:
+            dec_cpu = parse_quantity(cpu)
+            if dec_cpu < parse_quantity("250m"):
+                self.container_resources["requests"]["cpu"] = cpu
+            else:
+                self.container_resources["requests"]["cpu"] = str(dec_cpu / 2)
+            self.container_resources["limits"]["cpu"] = cpu
 
         self.replicas = replicas
         self.api = K8sClient.from_file()
