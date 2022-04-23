@@ -1,3 +1,13 @@
+toolforge-webservice (0.82) stretch; urgency=medium
+
+  [ Taavi Väänänen ]
+  * [d212329] kubernetes: Fix default resource handling
+
+  [ Bryan Davis ]
+  * [9725d35] k8s: add perl5.32 type
+
+ -- Bryan Davis <bd808@wikimedia.org>  Sat, 23 Apr 2022 17:48:07 +0000
+
 toolforge-webservice (0.81) stretch; urgency=medium
 
   [ Lucas Werkmeister ]
