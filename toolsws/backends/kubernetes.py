@@ -352,6 +352,11 @@ class KubernetesBackend(Backend):
             "image": "toolforge-node12-sssd-web",
             "resources": DEFAULT_RESOURCES,
         },
+        "perl5.32": {
+            "cls": LighttpdPlainWebService,
+            "image": "toolforge-perl532-sssd-web",
+            "resources": DEFAULT_RESOURCES,
+        },
     }
 
     def __init__(
