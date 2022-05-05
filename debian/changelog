@@ -1,3 +1,9 @@
+toolforge-webservice (0.83) stretch; urgency=medium
+
+  * [bbac0f7] kubernetes: fix DEFAULT_JDK_RESOURCES
+
+ -- Taavi Väänänen <hi@taavi.wtf>  Thu, 05 May 2022 20:10:28 +0300
+
 toolforge-webservice (0.82) stretch; urgency=medium
 
   [ Taavi Väänänen ]
