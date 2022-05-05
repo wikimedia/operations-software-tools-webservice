@@ -222,22 +222,20 @@ class KubernetesBackend(Backend):
         },
     }
 
-    DEFAULT_JDK_RESOURCES = (
-        {
-            "limits": {
-                # Higher Memory Limit for JDK based webservices, but not
-                # higher request, so it can use more memory before being
-                # killed, but will die when there is a memory crunch.
-                "memory": "1Gi",
-                "cpu": "0.5",
-            },
-            "requests": {
-                # Pods are guaranteed at least this many resources
-                "memory": "256Mi",
-                "cpu": "0.125",
-            },
+    DEFAULT_JDK_RESOURCES = {
+        "limits": {
+            # Higher Memory Limit for JDK based webservices, but not
+            # higher request, so it can use more memory before being
+            # killed, but will die when there is a memory crunch.
+            "memory": "1Gi",
+            "cpu": "0.5",
         },
-    )
+        "requests": {
+            # Pods are guaranteed at least this many resources
+            "memory": "256Mi",
+            "cpu": "0.125",
+        },
+    }
 
     CONFIG = {
         "php5.6": {

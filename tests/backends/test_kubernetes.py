@@ -89,4 +89,5 @@ def test_KubernetesBackend_parse_resources(
         given.get("cpu", None),
     )
 
+    assert type(backend.container_resources) is dict
     assert backend.container_resources == expected
