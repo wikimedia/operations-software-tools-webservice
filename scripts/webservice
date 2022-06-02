@@ -18,7 +18,7 @@ from toolsws.wstypes import WebService
 
 
 BACKEND_DEFAULT = "kubernetes"
-GRIDENGINE_DEFAULT_RELEASE = "stretch"
+GRIDENGINE_DEFAULT_RELEASE = "buster"
 GRIDENGINE_AVAILABLE_RELEASES = ["stretch", "buster"]
 GRIDENGINE_DEFAULT_WSTYPE = "lighttpd"
 KUBERNETES_DEFAULT_WSTYPE = "php7.3"
