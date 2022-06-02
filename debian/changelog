@@ -1,3 +1,9 @@
+toolforge-webservice (0.84) stretch; urgency=medium
+
+  * [530ba7d] gridengine: default to buster
+
+ -- Taavi Väänänen <hi@taavi.wtf>  Thu, 02 Jun 2022 12:55:56 +0300
+
 toolforge-webservice (0.83) stretch; urgency=medium
 
   * [bbac0f7] kubernetes: fix DEFAULT_JDK_RESOURCES
