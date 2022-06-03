@@ -1,3 +1,9 @@
+toolforge-webservice (0.86) stretch; urgency=medium
+
+  * [cd5fad7] Revert "proxy: horrible hack for T309821"
+
+ -- Bryan Davis <bd808@wikimedia.org>  Fri, 03 Jun 2022 13:07:03 +0000
+
 toolforge-webservice (0.85) stretch; urgency=medium
 
   * [9f7926c] proxy: horrible hack for T309821
