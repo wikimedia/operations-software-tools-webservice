@@ -1,3 +1,9 @@
+toolforge-webservice (0.85) stretch; urgency=medium
+
+  * [9f7926c] proxy: horrible hack for T309821
+
+ -- Bryan Davis <bd808@wikimedia.org>  Fri, 03 Jun 2022 02:51:48 +0000
+
 toolforge-webservice (0.84) stretch; urgency=medium
 
   * [530ba7d] gridengine: default to buster
