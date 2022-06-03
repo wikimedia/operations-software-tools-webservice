@@ -54,7 +54,7 @@ def register_dynamicproxy(port):
             )
         )
         res = sock.recv(1024).decode("utf-8")
-        if res != "ok":
+        if res not in ["ok", ""]:  # T309821: FIXME
             raise ProxyException("Port registration failed!")
     finally:
         sock.close()
@@ -71,7 +71,7 @@ def unregister_dynamicproxy():
         sock.connect((proxy, 8282))
         sock.sendall("unregister\n.*\n".encode("utf-8"))
         res = sock.recv(1024).decode("utf-8")
-        if res != "ok":
+        if res not in ["ok", ""]:  # T309821: FIXME
             raise ProxyException("Port unregistration failed!")
     finally:
         sock.close()
