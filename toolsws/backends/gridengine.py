@@ -27,7 +27,7 @@ class GridEngineBackend(Backend):
     #   options are: webgrid-lighttpd, webgrid-generic
     #   defaults to 'webgrid-generic'
     # release is an optional key that specifies which release to run this on.
-    #   options are: stretch, buster
+    #   options are: buster
     #   defaults to buster
     CONFIG = {
         "lighttpd": {"cls": LighttpdWebService, "queue": "webgrid-lighttpd"},
