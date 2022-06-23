@@ -1,3 +1,9 @@
+toolforge-webservice (0.87) stretch; urgency=medium
+
+  * [b05ae49] Remove stretch support
+
+ -- Taavi Väänänen <hi@taavi.wtf>  Thu, 23 Jun 2022 17:54:19 +0300
+
 toolforge-webservice (0.86) stretch; urgency=medium
 
   * [cd5fad7] Revert "proxy: horrible hack for T309821"
