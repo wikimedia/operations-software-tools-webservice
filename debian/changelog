@@ -1,3 +1,13 @@
+toolforge-webservice (0.88) buster; urgency=medium
+
+  [ Taavi Väänänen ]
+  * [6a2959e] tox: Pin flake8 to 4.0.x for now
+
+  [ FNegri ]
+  * [b61a9d3] Add new Node16 image
+
+ -- FNegri <fnegri@wikimedia.org>  Tue, 02 Aug 2022 11:02:16 +0000
+
 toolforge-webservice (0.87) stretch; urgency=medium
 
   * [b05ae49] Remove stretch support
