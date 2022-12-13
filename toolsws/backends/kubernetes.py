@@ -237,128 +237,161 @@ class KubernetesBackend(Backend):
         },
     }
 
+    DEFAULT_REGISTRY = "docker-registry.tools.wmflabs.org"
+
+    DEFAULT_BUILD_SERVICE_REGISTRY = "harbor.toolsbeta.wmflabs.org"
+
     CONFIG = {
         "php5.6": {
             "deprecated": True,
             "cls": LighttpdWebService,
-            "image": "toolforge-php5-sssd-web",
+            "image": "toolforge-php5-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "php7.2": {
             "cls": LighttpdWebService,
-            "image": "toolforge-php72-sssd-web",
+            "image": "toolforge-php72-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "php7.3": {
             "cls": LighttpdWebService,
-            "image": "toolforge-php73-sssd-web",
+            "image": "toolforge-php73-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "php7.4": {
             "cls": LighttpdWebService,
-            "image": "toolforge-php74-sssd-web",
+            "image": "toolforge-php74-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "tcl": {
             "cls": LighttpdPlainWebService,
-            "image": "toolforge-tcl86-sssd-web",
+            "image": "toolforge-tcl86-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "python": {
             "deprecated": True,
             "cls": PythonWebService,
-            "image": "toolforge-python34-sssd-web",
+            "image": "toolforge-python34-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "python3.5": {
             "cls": PythonWebService,
-            "image": "toolforge-python35-sssd-web",
+            "image": "toolforge-python35-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "python3.7": {
             "cls": PythonWebService,
-            "image": "toolforge-python37-sssd-web",
+            "image": "toolforge-python37-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "python3.9": {
             "cls": PythonWebService,
-            "image": "toolforge-python39-sssd-web",
+            "image": "toolforge-python39-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "python2": {
             "deprecated": True,
             "cls": PythonWebService,
-            "image": "toolforge-python2-sssd-web",
+            "image": "toolforge-python2-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "ruby2": {
             "deprecated": True,
             "cls": GenericWebService,
-            "image": "toolforge-ruby21-sssd-web",
+            "image": "toolforge-ruby21-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "ruby25": {
             "cls": GenericWebService,
-            "image": "toolforge-ruby25-sssd-web",
+            "image": "toolforge-ruby25-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "ruby27": {
             "cls": GenericWebService,
-            "image": "toolforge-ruby27-sssd-web",
+            "image": "toolforge-ruby27-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "golang": {
             "deprecated": True,
             "cls": GenericWebService,
-            "image": "toolforge-golang-sssd-web",
+            "image": "toolforge-golang-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "golang111": {
             "cls": GenericWebService,
-            "image": "toolforge-golang111-sssd-web",
+            "image": "toolforge-golang111-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "jdk8": {
             "deprecated": True,
             "cls": GenericWebService,
-            "image": "toolforge-jdk8-sssd-web",
+            "image": "toolforge-jdk8-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_JDK_RESOURCES,
         },
         "jdk11": {
             "cls": GenericWebService,
-            "image": "toolforge-jdk11-sssd-web",
+            "image": "toolforge-jdk11-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_JDK_RESOURCES,
         },
         "jdk17": {
             "cls": GenericWebService,
-            "image": "toolforge-jdk17-sssd-web",
+            "image": "toolforge-jdk17-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_JDK_RESOURCES,
         },
         "nodejs": {
             "deprecated": True,
             "cls": JSWebService,
-            "image": "toolforge-node6-sssd-web",
+            "image": "toolforge-node6-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "node10": {
             "cls": JSWebService,
-            "image": "toolforge-node10-sssd-web",
+            "image": "toolforge-node10-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "node12": {
             "cls": JSWebService,
-            "image": "toolforge-node12-sssd-web",
+            "image": "toolforge-node12-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "node16": {
             "cls": JSWebService,
-            "image": "toolforge-node16-sssd-web",
+            "image": "toolforge-node16-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
         },
         "perl5.32": {
             "cls": LighttpdPlainWebService,
-            "image": "toolforge-perl532-sssd-web",
+            "image": "toolforge-perl532-sssd-web:latest",
+            "registry": DEFAULT_REGISTRY,
             "resources": DEFAULT_RESOURCES,
+        },
+        "buildservice": {
+            "cls": GenericWebService,
+            "registry": DEFAULT_BUILD_SERVICE_REGISTRY,
+            "resources": DEFAULT_RESOURCES,
+            "cmd": [],
         },
     }
 
@@ -366,6 +399,7 @@ class KubernetesBackend(Backend):
         self,
         tool,
         wstype,
+        buildservice_image=None,
         mem=None,
         cpu=None,
         replicas=1,
@@ -379,8 +413,12 @@ class KubernetesBackend(Backend):
 
         self.project = Tool.get_current_project()
         self.webservice = config["cls"](tool, extra_args)
-        self.container_image = "{registry}/{image}:latest".format(
-            registry="docker-registry.tools.wmflabs.org",
+
+        if buildservice_image:
+            config["image"] = buildservice_image
+
+        self.container_image = "{registry}/{image}".format(
+            registry=config["registry"],
             image=config["image"],
         )
 
@@ -460,13 +498,18 @@ class KubernetesBackend(Backend):
         """
         Return the full spec of the deployment object for this webservice
         """
-        cmd = [
-            "/usr/bin/webservice-runner",
-            "--type",
-            self.webservice.name,
-            "--port",
-            "8000",
-        ]
+        config = KubernetesBackend.CONFIG[self.wstype]
+        cmd = config.get(
+            "cmd",
+            [
+                "/usr/bin/webservice-runner",
+                "--type",
+                self.webservice.name,
+                "--port",
+                "8000",
+            ],
+        )
+
         if self.extra_args:
             cmd.extend(self.extra_args)
 

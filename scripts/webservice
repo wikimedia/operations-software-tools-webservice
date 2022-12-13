@@ -108,6 +108,10 @@ def update_manifest(job, action, args):
             or job.tool.manifest.get("release", None) != release
         ):
             job.tool.manifest["web"] = job.wstype
+            if args.buildservice_image is not None:
+                job.tool.manifest["buildservice-image"] = args.buildservice_image
+            elif "buildservice-image" in job.tool.manifest:
+                del job.tool.manifest["buildservice-image"]
             if release:
                 job.tool.manifest["release"] = job.release
             elif "release" in job.tool.manifest:
@@ -131,6 +135,7 @@ def update_manifest(job, action, args):
                 "distribution",  # no longer set, drop from old files
                 "release",
                 "web",
+                "buildservice-image",
                 "backend",
                 "cpu",
                 "memory",
@@ -228,6 +233,11 @@ if __name__ == "__main__":
         metavar="ACTION",
         help="Action to perform: {}".format(", ".join(allowed_actions)),
     )
+    # This will be validated further down the script and must be provided when wstype is buildservice
+    argparser.add_argument(
+        "--buildservice-image",
+        help="Image to use when webservice type is buildservice e.g. toolsbeta/python:snap"
+    )
     argparser.add_argument(
         "extra_args",
         nargs="*",
@@ -297,6 +307,8 @@ if __name__ == "__main__":
             tmpl_argv.append("--mem={}".format(tmpl["mem"]))
         if "replicas" in tmpl:
             tmpl_argv.append("--replicas={}".format(tmpl["replicas"]))
+        if "buildservice-image"  in tmpl:
+            tmpl_argv.append("--buildservice-image={}".format(tmpl["buildservice-image"]))
         if "type" in tmpl:
             tmpl_argv.append(tmpl["type"])
 
@@ -408,6 +420,9 @@ if __name__ == "__main__":
         if args.wstype is None:
             args.wstype = tool.manifest.get("web", KUBERNETES_DEFAULT_WSTYPE)
 
+        if args.buildservice_image is None and args.wstype == "buildservice":
+            args.buildservice_image = tool.manifest.get("buildservice-image", None)
+
         if args.cpu is None:
             args.cpu = tool.manifest.get("cpu", None)
 
@@ -429,12 +444,22 @@ if __name__ == "__main__":
         print(format_wstypes_block(acceptable_wstypes, ""))
         sys.exit(1)
 
+    if args.wstype == "buildservice" and not args.buildservice_image:
+        print("--buildservice-image must be provided when webservice type is 'buildservice'.")
+        print("review the arguments passed and try again")
+        sys.exit(1)
+    elif args.wstype != "buildservice" and args.buildservice_image:
+        print("--buildservice-image must not be provided when webservice type is  not 'buildservice'")
+        print("review the arguments passed and try again")
+        sys.exit(1)
+
     if backend == "gridengine":
         job = GridEngineBackend(tool, args.wstype, args.release, extra_args=args.extra_args)
     else:
         job = KubernetesBackend(
             tool,
             args.wstype,
+            buildservice_image=args.buildservice_image,
             mem=args.memory,
             cpu=args.cpu,
             replicas=args.replicas,

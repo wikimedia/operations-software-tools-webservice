@@ -85,8 +85,8 @@ def test_KubernetesBackend_parse_resources(
     backend = KubernetesBackend(
         fake_tool,
         wstype,
-        given.get("mem", None),
-        given.get("cpu", None),
+        mem=given.get("mem", None),
+        cpu=given.get("cpu", None),
     )
 
     assert type(backend.container_resources) is dict
