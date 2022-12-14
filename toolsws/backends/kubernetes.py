@@ -239,7 +239,7 @@ class KubernetesBackend(Backend):
 
     DEFAULT_REGISTRY = "docker-registry.tools.wmflabs.org"
 
-    DEFAULT_BUILD_SERVICE_REGISTRY = "harbor.toolsbeta.wmflabs.org"
+    DEFAULT_BUILD_SERVICE_REGISTRY = "harbor.tools.wmflabs.org"
 
     CONFIG = {
         "php5.6": {
@@ -399,6 +399,7 @@ class KubernetesBackend(Backend):
         self,
         tool,
         wstype,
+        webservice_config,
         buildservice_image=None,
         mem=None,
         cpu=None,
@@ -416,6 +417,9 @@ class KubernetesBackend(Backend):
 
         if buildservice_image:
             config["image"] = buildservice_image
+            config["registry"] = webservice_config.get(
+                "buildservice_repository", self.DEFAULT_BUILD_SERVICE_REGISTRY
+            )
 
         self.container_image = "{registry}/{image}".format(
             registry=config["registry"],

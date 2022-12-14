@@ -87,6 +87,7 @@ def test_KubernetesBackend_parse_resources(
         wstype,
         mem=given.get("mem", None),
         cpu=given.get("cpu", None),
+        webservice_config={},
     )
 
     assert type(backend.container_resources) is dict
