@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import time
+from typing import List
 
 import requests
 import urllib3
@@ -203,6 +204,43 @@ class KubernetesRoutingHandler:
         """Clean up any created objects."""
         self.api.delete_objects("ingresses", self.webservice_label_selector)
         self.api.delete_objects("services", self.webservice_label_selector)
+
+
+def traverse(obj, keys: List):
+    for key in keys:
+        obj = obj[key]
+    return obj
+
+
+def _containers_are_same(first, second) -> bool:
+    for key in [
+        ["replicas"],
+        ["template", "spec", "containers", 0, "image"],
+        ["template", "spec", "containers", 0, "command"],
+    ]:
+        if traverse(first, key) != traverse(second, key):
+            return False
+
+    for key in [
+        ["template", "spec", "containers", 0, "resources", "limits", "memory"],
+        ["template", "spec", "containers", 0, "resources", "limits", "cpu"],
+        [
+            "template",
+            "spec",
+            "containers",
+            0,
+            "resources",
+            "requests",
+            "memory",
+        ],
+        ["template", "spec", "containers", 0, "resources", "requests", "cpu"],
+    ]:
+        if parse_quantity(traverse(first, key)) != parse_quantity(
+            traverse(second, key)
+        ):
+            return False
+
+    return True
 
 
 class KubernetesBackend(Backend):
@@ -633,10 +671,20 @@ class KubernetesBackend(Backend):
         self.api.delete_objects("pods", selector)
 
     def request_restart(self):
+        print("Restarting...")
+
         # For most intents and purposes, the only thing necessary
         # to restart a Kubernetes application is to delete the pods.
-        print("Restarting...")
-        self.api.delete_objects("pods", self.webservice_label_selector)
+        # However, if the replace command also specifies updated
+        # container resources (for example CPU or memory), we need
+        # to completely replace the Deployment object.
+        if not _containers_are_same(
+            self._get_live_deployment()["spec"], self._get_deployment()["spec"]
+        ):
+            self.api.replace_object("deployments", self._get_deployment())
+        else:
+            self.api.delete_objects("pods", self.webservice_label_selector)
+
         # TODO: It would be cool and not terribly hard here to detect a pod
         # with an error or crash state and dump the logs of that pod for the
         # user to examine.
@@ -657,13 +705,19 @@ class KubernetesBackend(Backend):
         if self._any_pod_in_state(pods, "Pending"):
             return Backend.STATE_PENDING
         svcs = self._find_objs("services", self.webservice_label_selector)
-        deployments = self._find_objs(
-            "deployments", self.webservice_label_selector
-        )
-        if len(svcs) != 0 and len(deployments) != 0:
+        deployment = self._get_live_deployment()
+        if len(svcs) != 0 and deployment:
             return Backend.STATE_PENDING
         else:
             return Backend.STATE_STOPPED
+
+    def _get_live_deployment(self):
+        deployments = self._find_objs(
+            "deployments", self.webservice_label_selector
+        )
+        if len(deployments) == 1:
+            return deployments[0]
+        return None
 
     def shell(self):
         """Run an interactive container on the k8s cluster."""
@@ -799,6 +853,12 @@ class K8sClient(object):
         r.raise_for_status()
         return r.status_code
 
+    def _put(self, url, **kwargs):
+        """PUT request."""
+        r = self.session.put(**self._make_kwargs(url, **kwargs))
+        r.raise_for_status()
+        return r.status_code
+
     def _delete(self, url, **kwargs):
         """DELETE request."""
         r = self.session.delete(**self._make_kwargs(url, **kwargs))
@@ -835,5 +895,14 @@ class K8sClient(object):
         return self._post(
             kind,
             json=spec,
+            version=K8sClient.VERSIONS[kind],
+        )
+
+    def replace_object(self, kind, spec):
+        """Replace an object of the given kind in the namespace."""
+        return self._put(
+            kind,
+            json=spec,
+            name=spec["metadata"]["name"],
             version=K8sClient.VERSIONS[kind],
         )

@@ -505,6 +505,7 @@ if __name__ == "__main__":
             update_manifest(job, "start", args)
         else:
             job.request_restart()
+            update_manifest(job, "start", args)
         tool.save_manifest()
 
     elif args.action == "status":
