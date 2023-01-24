@@ -1,11 +1,10 @@
-from __future__ import print_function
-
+from functools import lru_cache
 import json
 import os
 import subprocess
 import sys
 import time
-from typing import List
+from typing import List, Optional
 
 import requests
 import urllib3
@@ -249,189 +248,90 @@ class KubernetesBackend(Backend):
     """
 
     DEFAULT_RESOURCES = {
-        "limits": {
-            "memory": "512Mi",
-            "cpu": "0.5",
+        "default": {
+            "limits": {
+                "memory": "512Mi",
+                "cpu": "0.5",
+            },
+            "requests": {
+                # Pods are guaranteed at least this many resources
+                "memory": "256Mi",
+                "cpu": "0.125",
+            },
         },
-        "requests": {
-            # Pods are guaranteed at least this many resources
-            "memory": "256Mi",
-            "cpu": "0.125",
+        "jdk": {
+            "limits": {
+                # Higher Memory Limit for JDK based webservices, but not
+                # higher request, so it can use more memory before being
+                # killed, but will die when there is a memory crunch.
+                "memory": "1Gi",
+                "cpu": "0.5",
+            },
+            "requests": {
+                # Pods are guaranteed at least this many resources
+                "memory": "256Mi",
+                "cpu": "0.125",
+            },
         },
     }
 
-    DEFAULT_JDK_RESOURCES = {
-        "limits": {
-            # Higher Memory Limit for JDK based webservices, but not
-            # higher request, so it can use more memory before being
-            # killed, but will die when there is a memory crunch.
-            "memory": "1Gi",
-            "cpu": "0.5",
-        },
-        "requests": {
-            # Pods are guaranteed at least this many resources
-            "memory": "256Mi",
-            "cpu": "0.125",
-        },
+    CONFIG_VARIANT_KEY = "webservice"
+    # TODO: make configurable
+    CONFIG_IMAGE_TAG = "latest"
+    CONFIG_SUPPORTED_WS_TYPES = {
+        "generic": GenericWebService,
+        "js": JSWebService,
+        "lighttpd": LighttpdWebService,
+        "lighttpd-plain": LighttpdPlainWebService,
+        "python": PythonWebService,
     }
-
-    DEFAULT_REGISTRY = "docker-registry.tools.wmflabs.org"
 
     DEFAULT_BUILD_SERVICE_REGISTRY = "harbor.tools.wmflabs.org"
 
-    CONFIG = {
-        "php5.6": {
-            "deprecated": True,
-            "cls": LighttpdWebService,
-            "image": "toolforge-php5-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "php7.2": {
-            "cls": LighttpdWebService,
-            "image": "toolforge-php72-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "php7.3": {
-            "cls": LighttpdWebService,
-            "image": "toolforge-php73-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "php7.4": {
-            "cls": LighttpdWebService,
-            "image": "toolforge-php74-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "tcl": {
-            "cls": LighttpdPlainWebService,
-            "image": "toolforge-tcl86-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "python": {
-            "deprecated": True,
-            "cls": PythonWebService,
-            "image": "toolforge-python34-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "python3.5": {
-            "cls": PythonWebService,
-            "image": "toolforge-python35-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "python3.7": {
-            "cls": PythonWebService,
-            "image": "toolforge-python37-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "python3.9": {
-            "cls": PythonWebService,
-            "image": "toolforge-python39-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "python2": {
-            "deprecated": True,
-            "cls": PythonWebService,
-            "image": "toolforge-python2-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "ruby2": {
-            "deprecated": True,
-            "cls": GenericWebService,
-            "image": "toolforge-ruby21-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "ruby25": {
-            "cls": GenericWebService,
-            "image": "toolforge-ruby25-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "ruby27": {
-            "cls": GenericWebService,
-            "image": "toolforge-ruby27-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "golang": {
-            "deprecated": True,
-            "cls": GenericWebService,
-            "image": "toolforge-golang-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "golang111": {
-            "cls": GenericWebService,
-            "image": "toolforge-golang111-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "jdk8": {
-            "deprecated": True,
-            "cls": GenericWebService,
-            "image": "toolforge-jdk8-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_JDK_RESOURCES,
-        },
-        "jdk11": {
-            "cls": GenericWebService,
-            "image": "toolforge-jdk11-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_JDK_RESOURCES,
-        },
-        "jdk17": {
-            "cls": GenericWebService,
-            "image": "toolforge-jdk17-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_JDK_RESOURCES,
-        },
-        "nodejs": {
-            "deprecated": True,
-            "cls": JSWebService,
-            "image": "toolforge-node6-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "node10": {
-            "cls": JSWebService,
-            "image": "toolforge-node10-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "node12": {
-            "cls": JSWebService,
-            "image": "toolforge-node12-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "node16": {
-            "cls": JSWebService,
-            "image": "toolforge-node16-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "perl5.32": {
-            "cls": LighttpdPlainWebService,
-            "image": "toolforge-perl532-sssd-web:latest",
-            "registry": DEFAULT_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-        },
-        "buildservice": {
-            "cls": GenericWebService,
-            "registry": DEFAULT_BUILD_SERVICE_REGISTRY,
-            "resources": DEFAULT_RESOURCES,
-            "cmd": [],
-        },
-    }
+    @staticmethod
+    @lru_cache()
+    def get_types():
+        client = K8sClient.from_file()
+        configmap = client.get_object(
+            "configmaps", "image-config", namespace="tf-public"
+        )
+        yaml_data = yaml.safe_load(configmap["data"]["images-v1.yaml"])
+
+        types = {
+            "buildservice": {
+                "cls": GenericWebService,
+                "resources": KubernetesBackend.DEFAULT_RESOURCES["default"],
+                "use_webservice_runner": False,
+                # TODO: this is not really deprecated, but it's not really ready
+                # for widespread usage either. So for now we call it deprecated
+                # to hide it from the list, since there isn't a better state
+                # available.
+                "state": "deprecated",
+            }
+        }
+
+        for name, data in yaml_data.items():
+            if KubernetesBackend.CONFIG_VARIANT_KEY not in data["variants"]:
+                continue
+
+            variant = data["variants"][KubernetesBackend.CONFIG_VARIANT_KEY]
+            resources = variant["extra"].get("resources", "default")
+
+            # TODO: this dict might benefit from being a separate class
+            # or an instance of WebService directly
+            types[name] = {
+                "cls": KubernetesBackend.CONFIG_SUPPORTED_WS_TYPES[
+                    variant["extra"]["wstype"]
+                ],
+                "image": "{image}:{tag}".format(
+                    image=variant["image"],
+                    tag=KubernetesBackend.CONFIG_IMAGE_TAG,
+                ),
+                "resources": KubernetesBackend.DEFAULT_RESOURCES[resources],
+                "state": data["state"],
+            }
+
+        return types
 
     def __init__(
         self,
@@ -448,23 +348,24 @@ class KubernetesBackend(Backend):
             tool, wstype, extra_args=extra_args
         )
 
-        config = KubernetesBackend.CONFIG[self.wstype]
+        config = KubernetesBackend.get_types()[self.wstype]
 
         self.project = Tool.get_current_project()
         self.webservice = config["cls"](tool, extra_args)
 
-        if buildservice_image:
-            config["image"] = buildservice_image
-            config["registry"] = webservice_config.get(
-                "buildservice_repository", self.DEFAULT_BUILD_SERVICE_REGISTRY
+        if self.wstype == "buildservice":
+            self.container_image = "{registry}/{image}".format(
+                registry=webservice_config.get(
+                    "buildservice_repository",
+                    self.DEFAULT_BUILD_SERVICE_REGISTRY,
+                ),
+                image=buildservice_image,
             )
-
-        self.container_image = "{registry}/{image}".format(
-            registry=config["registry"],
-            image=config["image"],
-        )
+        else:
+            self.container_image = config["image"]
 
         self.container_resources = config["resources"]
+        self.use_webservice_runner = config.get("use_webservice_runner", True)
 
         if mem:
             dec_mem = parse_quantity(mem)
@@ -540,17 +441,16 @@ class KubernetesBackend(Backend):
         """
         Return the full spec of the deployment object for this webservice
         """
-        config = KubernetesBackend.CONFIG[self.wstype]
-        cmd = config.get(
-            "cmd",
-            [
+        if self.use_webservice_runner:
+            cmd = [
                 "/usr/bin/webservice-runner",
                 "--type",
                 self.webservice.name,
                 "--port",
                 "8000",
-            ],
-        )
+            ]
+        else:
+            cmd = []
 
         if self.extra_args:
             cmd.extend(self.extra_args)
@@ -772,6 +672,7 @@ class K8sClient(object):
     """Kubernetes API client."""
 
     VERSIONS = {
+        "configmaps": "v1",
         "deployments": "apps/v1",
         "endpoints": "v1",
         "ingresses": "networking.k8s.io/v1",
@@ -831,9 +732,14 @@ class K8sClient(object):
             root = "api"
         else:
             root = "apis"
+
+        # use "or" syntax in case namespace is present but set as None
+        namespace = kwargs.pop("namespace", None) or self.namespace
+
         kwargs["url"] = "{}/{}/{}/namespaces/{}/{}".format(
-            self.server, root, version, self.namespace, url
+            self.server, root, version, namespace, url
         )
+
         name = kwargs.pop("name", None)
         if name is not None:
             kwargs["url"] = "{}/{}".format(kwargs["url"], name)
@@ -864,6 +770,17 @@ class K8sClient(object):
         r = self.session.delete(**self._make_kwargs(url, **kwargs))
         r.raise_for_status()
         return r.status_code
+
+    def get_object(
+        self, kind: str, name: str, *, namespace: Optional[str] = None
+    ):
+        """Get the object with the specified name and of the given kind in the namespace."""
+        return self._get(
+            kind,
+            name=name,
+            version=K8sClient.VERSIONS[kind],
+            namespace=namespace,
+        )
 
     def get_objects(self, kind, selector=None):
         """Get list of objects of the given kind in the namespace."""

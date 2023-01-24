@@ -12,6 +12,7 @@ import yaml
 from toolsws.backends import Backend
 from toolsws.backends import GridEngineBackend
 from toolsws.backends import KubernetesBackend
+from toolsws.backends.kubernetes import KubernetesConfigFileNotFoundException
 from toolsws.tool import Tool
 from toolsws.utils import wait_for
 from toolsws.wstypes import WebService
@@ -21,7 +22,7 @@ BACKEND_DEFAULT = "kubernetes"
 GRIDENGINE_DEFAULT_RELEASE = "buster"
 GRIDENGINE_AVAILABLE_RELEASES = ["buster"]
 GRIDENGINE_DEFAULT_WSTYPE = "lighttpd"
-KUBERNETES_DEFAULT_WSTYPE = "php7.3"
+KUBERNETES_DEFAULT_WSTYPE = "php7.4"
 WEBSERVICE_CONFIG_PATH = "/etc/toolforge/webservice.yaml"
 
 # Make all `print()` output go to stderr by default
@@ -32,11 +33,12 @@ def format_wstypes_block(config, default, leader="\n  * "):
     """Pretty print a list of runtime wstypes for a backend."""
     wstypes = []
     for name, spec in config.items():
+        if spec.get("state", "active") == "deprecated":
+            continue
+
         extra = ""
         if name == default:
             extra = " (default)"
-        elif spec.get("deprecated", False):
-            extra = " (DEPRECATED)"
         wstypes.append("{}{}".format(name, extra))
     return leader.join(sorted(wstypes))
 
@@ -177,6 +179,18 @@ def find_service_template():
 
 
 if __name__ == "__main__":
+    try:
+        kubernetes_types = format_wstypes_block(
+            KubernetesBackend.get_types(),
+            KUBERNETES_DEFAULT_WSTYPE,
+            leader="\n        * ",
+        )
+    except KubernetesConfigFileNotFoundException:
+        # This is a workaround for a few tools that have an underscore in their name
+        # and for that reason don't have a K8s namespace available (this is T301015).
+        # TODO: get the authors of those tools to rename to a variant with a dash instead
+        kubernetes_types = "(not available for this tool, please contact the admins for details)"
+
     description = """
     Online documentation: https://wikitech.wikimedia.org/wiki/Help:Toolforge/Web
 
@@ -186,13 +200,9 @@ if __name__ == "__main__":
       Grid Engine backend:
         * {gridengine}
     """.format(
-        kubernetes=format_wstypes_block(
-            KubernetesBackend.CONFIG,
-            KUBERNETES_DEFAULT_WSTYPE,
-            leader="\n        * ",
-        ),
+        kubernetes=kubernetes_types,
         gridengine=format_wstypes_block(
-            GridEngineBackend.CONFIG,
+            GridEngineBackend.get_types(),
             GRIDENGINE_DEFAULT_WSTYPE,
             leader="\n        * ",
         ),
@@ -421,7 +431,7 @@ if __name__ == "__main__":
             sys.exit(1)
         if args.wstype is None:
             args.wstype = tool.manifest.get("web", GRIDENGINE_DEFAULT_WSTYPE)
-        acceptable_wstypes = GridEngineBackend.CONFIG
+        acceptable_wstypes = GridEngineBackend.get_types()
     elif backend == "kubernetes":
         if args.wstype is None:
             args.wstype = tool.manifest.get("web", KUBERNETES_DEFAULT_WSTYPE)
@@ -438,7 +448,7 @@ if __name__ == "__main__":
         if args.replicas == 1:
             args.replicas = tool.manifest.get("replicas", 1)
 
-        acceptable_wstypes = KubernetesBackend.CONFIG
+        acceptable_wstypes = KubernetesBackend.get_types()
 
     if not args.extra_args:
         args.extra_args = tool.manifest.get(

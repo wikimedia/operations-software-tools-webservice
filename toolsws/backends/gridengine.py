@@ -20,33 +20,38 @@ class GridEngineBackend(Backend):
     A gridengine job that starts / stops a HTTP serving process (webservice)
     """
 
-    # Specify config for each type that this backend accepts
-    # Key is name of type passed in by commandline
-    # cls is the Webservice class to instantiate
-    # queue is an optional key that spcifies which queue to run ths one.
-    #   options are: webgrid-lighttpd, webgrid-generic
-    #   defaults to 'webgrid-generic'
-    # release is an optional key that specifies which release to run this on.
-    #   options are: buster
-    #   defaults to buster
-    CONFIG = {
-        "lighttpd": {"cls": LighttpdWebService, "queue": "webgrid-lighttpd"},
-        "lighttpd-plain": {
-            "cls": LighttpdPlainWebService,
-            "queue": "webgrid-lighttpd",
-        },
-        "uwsgi-python": {"cls": PythonWebService},
-        "uwsgi-plain": {"cls": UwsgiWebService},
-        "nodejs": {"cls": JSWebService},
-        "tomcat": {"cls": TomcatWebService},
-        "generic": {"cls": GenericWebService},
-    }
+    @staticmethod
+    def get_types():
+        # Specify config for each type that this backend accepts
+        # Key is name of type passed in by commandline
+        # cls is the Webservice class to instantiate
+        # queue is an optional key that spcifies which queue to run ths one.
+        #   options are: webgrid-lighttpd, webgrid-generic
+        #   defaults to 'webgrid-generic'
+        # release is an optional key that specifies which release to run this on.
+        #   options are: buster
+        #   defaults to buster
+        return {
+            "lighttpd": {
+                "cls": LighttpdWebService,
+                "queue": "webgrid-lighttpd",
+            },
+            "lighttpd-plain": {
+                "cls": LighttpdPlainWebService,
+                "queue": "webgrid-lighttpd",
+            },
+            "uwsgi-python": {"cls": PythonWebService},
+            "uwsgi-plain": {"cls": UwsgiWebService},
+            "nodejs": {"cls": JSWebService},
+            "tomcat": {"cls": TomcatWebService},
+            "generic": {"cls": GenericWebService},
+        }
 
     def __init__(self, tool, wstype, release, extra_args=None):
         super(GridEngineBackend, self).__init__(
             tool, wstype, extra_args=extra_args
         )
-        cfg = GridEngineBackend.CONFIG[self.wstype]
+        cfg = GridEngineBackend.get_types()[self.wstype]
         self.webservice = cfg["cls"](tool, extra_args)
         self.release = cfg.get("release", release)
         self.queue = cfg.get("queue", "webgrid-generic")

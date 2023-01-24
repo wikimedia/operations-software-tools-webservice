@@ -16,10 +16,9 @@ class Backend(metaclass=ABCMeta):
         self.wstype = wstype
         self.extra_args = extra_args
 
-    @property
-    @classmethod
+    @staticmethod
     @abstractmethod
-    def CONFIG(self):
+    def get_types():
         """
         Overide in subclasses as a dict keyed by type.
         """
@@ -67,4 +66,5 @@ class Backend(metaclass=ABCMeta):
 
     def is_deprecated(self, wstype):
         """Is this type considered deprecated?"""
-        return type(self).CONFIG[wstype].get("deprecated", False)
+        state = type(self).get_types()[wstype].get("state", "stable")
+        return state == "deprecated"
