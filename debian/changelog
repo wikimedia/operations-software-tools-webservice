@@ -1,3 +1,9 @@
+toolforge-webservice (0.90) buster; urgency=medium
+
+  * [1d14488] kubernetes: Fix restart for some tools with default resources
+
+ -- Taavi Väänänen <hi@taavi.wtf>  Wed, 01 Feb 2023 21:11:18 +0200
+
 toolforge-webservice (0.89) buster; urgency=medium
 
   [ Arturo Borrero Gonzalez ]
