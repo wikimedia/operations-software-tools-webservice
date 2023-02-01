@@ -207,7 +207,14 @@ class KubernetesRoutingHandler:
 
 def traverse(obj, keys: List):
     for key in keys:
-        obj = obj[key]
+        try:
+            # note that this can't use .get(), as sometimes
+            # those are lists
+            obj = obj[key]
+        except KeyError:
+            # sometimes default resources for example are not present,
+            # deal with them properly
+            return None
     return obj
 
 
