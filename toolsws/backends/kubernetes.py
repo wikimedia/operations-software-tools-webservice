@@ -241,9 +241,15 @@ def _containers_are_same(first, second) -> bool:
         ],
         ["template", "spec", "containers", 0, "resources", "requests", "cpu"],
     ]:
-        if parse_quantity(traverse(first, key)) != parse_quantity(
-            traverse(second, key)
-        ):
+        first_quantity = traverse(first, key)
+        if first_quantity:
+            first_quantity = parse_quantity(first_quantity)
+
+        second_quantity = traverse(second, key)
+        if second_quantity:
+            second_quantity = parse_quantity(second_quantity)
+
+        if first_quantity != second_quantity:
             return False
 
     return True
