@@ -1,3 +1,9 @@
+toolforge-webservice (0.91) buster; urgency=medium
+
+  * [9b8b660] kubernetes: fix null handling
+
+ -- Taavi Väänänen <hi@taavi.wtf>  Wed, 01 Feb 2023 21:32:36 +0200
+
 toolforge-webservice (0.90) buster; urgency=medium
 
   * [1d14488] kubernetes: Fix restart for some tools with default resources
