@@ -3,7 +3,6 @@ from .js import JSWebService
 from .lighttpd import LighttpdPlainWebService
 from .lighttpd import LighttpdWebService
 from .python import PythonWebService
-from .tomcat import TomcatWebService
 from .uwsgi import UwsgiWebService
 from .ws import WebService
 
@@ -16,7 +15,6 @@ WSTYPES = {
         LighttpdPlainWebService,
         LighttpdWebService,
         PythonWebService,
-        TomcatWebService,
         UwsgiWebService,
     ]
 }

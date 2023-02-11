@@ -9,7 +9,6 @@ from toolsws.wstypes import JSWebService
 from toolsws.wstypes import LighttpdPlainWebService
 from toolsws.wstypes import LighttpdWebService
 from toolsws.wstypes import PythonWebService
-from toolsws.wstypes import TomcatWebService
 from toolsws.wstypes import UwsgiWebService
 
 from .backend import Backend
@@ -43,7 +42,6 @@ class GridEngineBackend(Backend):
             "uwsgi-python": {"cls": PythonWebService},
             "uwsgi-plain": {"cls": UwsgiWebService},
             "nodejs": {"cls": JSWebService},
-            "tomcat": {"cls": TomcatWebService},
             "generic": {"cls": GenericWebService},
         }
 

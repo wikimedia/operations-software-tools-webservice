@@ -10,7 +10,6 @@ setup(
     scripts=[
         "scripts/webservice-runner",
         "scripts/webservice",
-        "scripts/deprecated-tomcat-starter",
     ],
     description="Infrastructure for running webservices on Toolforge",
     install_requires=["PyYAML", "requests"],
