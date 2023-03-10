@@ -5,7 +5,7 @@ from toolsws.tool import Tool
 from toolsws import proxy
 from toolsws.wstypes import WSTYPES
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         "--type",
@@ -32,7 +32,6 @@ if __name__ == '__main__':
         help=argparse.SUPPRESS,
     )
     args = argparser.parse_args()
-
 
     tool = Tool.from_currentuser()
     if args.port != 0:

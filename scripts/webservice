@@ -119,7 +119,9 @@ def update_manifest(job, action, args):
         ):
             job.tool.manifest["web"] = job.wstype
             if args.buildservice_image is not None:
-                job.tool.manifest["buildservice-image"] = args.buildservice_image
+                job.tool.manifest[
+                    "buildservice-image"
+                ] = args.buildservice_image
             if release:
                 job.tool.manifest["release"] = job.release
             elif "release" in job.tool.manifest:
@@ -326,8 +328,10 @@ if __name__ == "__main__":
             tmpl_argv.append("--mem={}".format(tmpl["mem"]))
         if "replicas" in tmpl:
             tmpl_argv.append("--replicas={}".format(tmpl["replicas"]))
-        if "buildservice-image"  in tmpl:
-            tmpl_argv.append("--buildservice-image={}".format(tmpl["buildservice-image"]))
+        if "buildservice-image" in tmpl:
+            tmpl_argv.append(
+                "--buildservice-image={}".format(tmpl["buildservice-image"])
+            )
         if "type" in tmpl:
             tmpl_argv.append(tmpl["type"])
 
@@ -444,7 +448,9 @@ if __name__ == "__main__":
             args.wstype = tool.manifest.get("web", KUBERNETES_DEFAULT_WSTYPE)
 
         if args.wstype == "buildservice" and not args.buildservice_image:
-            print("--buildservice-image must be provided when webservice type is 'buildservice'.")
+            print(
+                "--buildservice-image must be provided when webservice type is 'buildservice'."
+            )
             print("review the arguments passed and try again")
             sys.exit(1)
 
@@ -470,7 +476,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if backend == "gridengine":
-        job = GridEngineBackend(tool, args.wstype, args.release, extra_args=args.extra_args)
+        job = GridEngineBackend(
+            tool, args.wstype, args.release, extra_args=args.extra_args
+        )
     else:
         job = KubernetesBackend(
             tool,
@@ -480,7 +488,7 @@ if __name__ == "__main__":
             cpu=args.cpu,
             replicas=args.replicas,
             extra_args=args.extra_args,
-            webservice_config=webservice_config
+            webservice_config=webservice_config,
         )
 
     tool.manifest["backend"] = backend
