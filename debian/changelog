@@ -1,3 +1,10 @@
+toolforge-webservice (0.92) buster; urgency=medium
+
+  [ Taavi Väänänen ]
+  * [a875e41] Drop Tomcat support
+
+ -- Slavina Stefanova <sstefanova@wikimedia.org>  Mon, 13 Mar 2023 11:08:36 +0000
+
 toolforge-webservice (0.91) buster; urgency=medium
 
   * [9b8b660] kubernetes: fix null handling
