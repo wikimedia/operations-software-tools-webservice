@@ -299,7 +299,7 @@ class KubernetesBackend(Backend):
         "python": PythonWebService,
     }
 
-    DEFAULT_BUILD_SERVICE_REGISTRY = "harbor.tools.wmflabs.org"
+    DEFAULT_BUILD_SERVICE_REGISTRY = "tools-harbor.wmcloud.org"
 
     @staticmethod
     @lru_cache()
