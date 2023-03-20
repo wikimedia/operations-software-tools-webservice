@@ -536,14 +536,12 @@ class KubernetesBackend(Backend):
         tty=False,
     ):
         """Get the specification for a container."""
-        homedir = "/data/project/{toolname}/".format(toolname=self.tool.name)
-        return {
+        spec = {
             "containers": [
                 {
                     "name": name,
                     "image": container_image,
                     "command": cmd,
-                    "workingDir": homedir,
                     "ports": ports,
                     "resources": resources,
                     "tty": tty,
@@ -551,6 +549,20 @@ class KubernetesBackend(Backend):
                 }
             ]
         }
+
+        if self.wstype == "buildservice":
+            spec["containers"][0]["env"] = [
+                {
+                    "name": "NO_HOME",
+                    "value": "a buildservice pod does not need a home env",
+                }
+            ]
+        else:
+            spec["containers"][0][
+                "workingDir"
+            ] = "/data/project/{toolname}/".format(toolname=self.tool.name)
+
+        return spec
 
     def _any_pod_in_state(self, podlist, state):
         """
