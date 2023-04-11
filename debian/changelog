@@ -1,3 +1,10 @@
+toolforge-webservice (0.93) buster; urgency=medium
+
+  * [a720721] k8s: update harbor fqdn to the proxy url
+  * [7eeec00] kubernetes: set NO_HOME for bulidservice and unset workingDir
+
+ -- David Caro <dcaro@wikimedia.org>  Tue, 11 Apr 2023 13:57:38 +0000
+
 toolforge-webservice (0.92) buster; urgency=medium
 
   [ Taavi Väänänen ]
