@@ -29,6 +29,13 @@ WEBSERVICE_CONFIG_PATH = "/etc/toolforge/webservice.yaml"
 print = functools.partial(print, file=sys.stderr)
 
 
+def generate_default_buildservice_image_name(tool):
+    buildservice_image = tool.manifest.get("buildservice-image", None)
+    if buildservice_image is None:
+        buildservice_image = "{0}/{0}:latest".format(tool.name)
+    return buildservice_image
+
+
 def format_wstypes_block(config, default, leader="\n  * "):
     """Pretty print a list of runtime wstypes for a backend."""
     wstypes = []
@@ -113,8 +120,6 @@ def update_manifest(job, action, args):
             job.tool.manifest["web"] = job.wstype
             if args.buildservice_image is not None:
                 job.tool.manifest["buildservice-image"] = args.buildservice_image
-            elif "buildservice-image" in job.tool.manifest:
-                del job.tool.manifest["buildservice-image"]
             if release:
                 job.tool.manifest["release"] = job.release
             elif "release" in job.tool.manifest:
@@ -208,6 +213,8 @@ if __name__ == "__main__":
         ),
     )
 
+    tool = Tool.from_currentuser()
+
     # The bootstrap parser is used to look for a --template=... arg. If one is
     # found, or if it exists in one of the default directories, then it is
     # loaded as a YAML file and used to inject defaults into the main argument
@@ -244,10 +251,11 @@ if __name__ == "__main__":
         metavar="ACTION",
         help="Action to perform: {}".format(", ".join(allowed_actions)),
     )
-    # This will be validated further down the script and must be provided when wstype is buildservice
+    # this will be ignored if the wstype is not buildservice
     argparser.add_argument(
         "--buildservice-image",
-        help="Image to use when webservice type is buildservice e.g. toolsbeta/python:snap"
+        default=generate_default_buildservice_image_name(tool),
+        help="Image to use when webservice type is buildservice e.g. toolsbeta/python:snap [default: %(default)s]",
     )
     argparser.add_argument(
         "extra_args",
@@ -350,6 +358,7 @@ if __name__ == "__main__":
                 memory=template_args.memory,
                 replicas=template_args.replicas,
                 wstype=template_args.wstype,
+                buildservice_image=template_args.buildservice_image,
             )
             # The argument gathering behavior of extra args does not work as
             # a default on the parser. It also will cause problems if the
@@ -376,8 +385,6 @@ if __name__ == "__main__":
             webservice_config = yaml.safe_load(config)
 
     args = argparser.parse_args(args=remainder_argv)
-
-    tool = Tool.from_currentuser()
 
     # Select the first of:
     # * --backend=... from cli args
@@ -436,8 +443,10 @@ if __name__ == "__main__":
         if args.wstype is None:
             args.wstype = tool.manifest.get("web", KUBERNETES_DEFAULT_WSTYPE)
 
-        if args.buildservice_image is None and args.wstype == "buildservice":
-            args.buildservice_image = tool.manifest.get("buildservice-image", None)
+        if args.wstype == "buildservice" and not args.buildservice_image:
+            print("--buildservice-image must be provided when webservice type is 'buildservice'.")
+            print("review the arguments passed and try again")
+            sys.exit(1)
 
         if args.cpu is None:
             args.cpu = tool.manifest.get("cpu", None)
@@ -458,15 +467,6 @@ if __name__ == "__main__":
     if args.wstype not in acceptable_wstypes.keys():
         print("type must be one of:")
         print(format_wstypes_block(acceptable_wstypes, ""))
-        sys.exit(1)
-
-    if args.wstype == "buildservice" and not args.buildservice_image:
-        print("--buildservice-image must be provided when webservice type is 'buildservice'.")
-        print("review the arguments passed and try again")
-        sys.exit(1)
-    elif args.wstype != "buildservice" and args.buildservice_image:
-        print("--buildservice-image must not be provided when webservice type is  not 'buildservice'")
-        print("review the arguments passed and try again")
         sys.exit(1)
 
     if backend == "gridengine":
