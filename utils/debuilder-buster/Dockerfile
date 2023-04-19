@@ -1,4 +1,4 @@
-FROM debian:buster
+FROM docker-registry.wikimedia.org/buster
 ARG DEBIAN_FRONTEND noninteractive
 
 COPY buster-backports.list /etc/apt/sources.list.d/

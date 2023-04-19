@@ -1,4 +1,4 @@
-FROM debian:bullseye
+FROM docker-registry.wikimedia.org/bullseye
 ARG DEBIAN_FRONTEND noninteractive
 
 COPY bullseye-backports.list /etc/apt/sources.list.d/
