@@ -5,3 +5,12 @@
 .tox/
 /.python-version
 /wmcs-package-build.py
+/build
+/.pybuild
+/debian/files
+/debian/toolforge-webservice.debhelper.log
+/debian/toolforge-webservice.postinst.debhelper
+/debian/toolforge-webservice.prerm.debhelper
+/debian/toolforge-webservice.substvars
+/debian/toolforge-webservice/
+/debian/.debhelper/
