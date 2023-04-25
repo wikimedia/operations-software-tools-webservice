@@ -716,9 +716,16 @@ class K8sClient(object):
         if not os.path.exists(filename):
             raise KubernetesConfigFileNotFoundException(filename)
 
+        # when loading relative paths from kubeconfig, do it from the file itself, like
+        # the official libraries
+        old_path = os.curdir
+        os.chdir(os.path.dirname(filename))
         with open(filename) as f:
             data = yaml.safe_load(f.read())
-        return cls(data)
+        try:
+            return cls(data)
+        finally:
+            os.chdir(old_path)
 
     def __init__(self, config, timeout=10):
         """Constructor."""
@@ -733,7 +740,10 @@ class K8sClient(object):
 
         user = self._find_cfg_obj("users", self.context["user"])
         self.session = requests.Session()
-        self.session.cert = (user["client-certificate"], user["client-key"])
+        self.session.cert = (
+            os.path.realpath(user["client-certificate"]),
+            os.path.realpath(user["client-key"]),
+        )
         # T253412: We are deliberately not validating the api endpoint's TLS
         # certificate. The only way to do this with a self-signed cert is to
         # pass the path to a CA bundle. We actually *can* do that, but with
