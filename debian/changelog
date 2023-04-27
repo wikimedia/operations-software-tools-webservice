@@ -1,3 +1,18 @@
+toolforge-webservice (0.94) buster; urgency=medium
+
+  [ David Caro ]
+  * [5a641d5] debian: add defaults for changelog generation
+
+  [ Raymond Ndibe ]
+  * [fdb7735] tools-webservice: set default for buildservice-image
+
+  [ David Caro ]
+  * [beff18f] build: add helper scripts
+  * [9ac5517] build_deb: use wikimedia images
+  * [02b7bdc] k8s: Allow loading relative paths on kubeconfig certs
+
+ -- Francesco Negri <fnegri@wikimedia.org>  Thu, 27 Apr 2023 14:33:04 +0000
+
 toolforge-webservice (0.93) buster; urgency=medium
 
   * [a720721] k8s: update harbor fqdn to the proxy url
