@@ -32,7 +32,7 @@ print = functools.partial(print, file=sys.stderr)
 def generate_default_buildservice_image_name(tool):
     buildservice_image = tool.manifest.get("buildservice-image", None)
     if buildservice_image is None:
-        buildservice_image = "{0}/{0}:latest".format(tool.name)
+        buildservice_image = "{0}/{0}:latest".format(f"tool-{tool.name}")
     return buildservice_image
 
 
