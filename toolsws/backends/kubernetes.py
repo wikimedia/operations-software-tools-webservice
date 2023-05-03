@@ -315,11 +315,7 @@ class KubernetesBackend(Backend):
                 "cls": GenericWebService,
                 "resources": KubernetesBackend.DEFAULT_RESOURCES["default"],
                 "use_webservice_runner": False,
-                # TODO: this is not really deprecated, but it's not really ready
-                # for widespread usage either. So for now we call it deprecated
-                # to hide it from the list, since there isn't a better state
-                # available.
-                "state": "deprecated",
+                "state": "stable",
             }
         }
 
