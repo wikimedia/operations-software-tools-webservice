@@ -1,3 +1,17 @@
+toolforge-webservice (0.95) buster; urgency=medium
+
+  [ Raymond Ndibe ]
+  * [bea59e6] webservice: add tool- prefix
+
+  [ Taavi Väänänen ]
+  * [4fee94e] build: format scripts/ with black too
+  * [23f1ed1] webservice: set argparse help program correctly in toolforge-cli
+  * [0d37a26] debian: provision toolforge-webservice symlink
+  * [bdf5fe9] webservice: Improve --buildservice-image help message
+  * [ea7d622] kubernetes: Remove deprecated state from buildservice
+
+ -- David Caro <dcaro@wikimedia.org>  Wed, 03 May 2023 14:56:55 +0000
+
 toolforge-webservice (0.94) buster; urgency=medium
 
   [ David Caro ]
