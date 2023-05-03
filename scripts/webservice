@@ -229,10 +229,13 @@ if __name__ == "__main__":
         help="service.template to use when starting a webservice",
     )
 
+    toolforge_cli_in_use = "TOOLFORGE_CLI" in os.environ
+
     argparser = argparse.ArgumentParser(
         description=textwrap.dedent(description),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         parents=[bootstrap],
+        prog="toolforge webservice" if toolforge_cli_in_use else None,
     )
     argparser.add_argument(
         "--backend",
