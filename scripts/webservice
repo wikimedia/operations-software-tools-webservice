@@ -260,7 +260,7 @@ if __name__ == "__main__":
     argparser.add_argument(
         "--buildservice-image",
         default=generate_default_buildservice_image_name(tool),
-        help="Image to use when webservice type is buildservice e.g. toolsbeta/python:snap [default: %(default)s]",
+        help="Image to use for buildservice type. Defaults to '%(default)s'",
     )
     argparser.add_argument(
         "extra_args",
