@@ -537,7 +537,6 @@ class KubernetesBackend(Backend):
                 {
                     "name": name,
                     "image": container_image,
-                    "command": cmd,
                     "ports": ports,
                     "resources": resources,
                     "tty": tty,
@@ -545,6 +544,8 @@ class KubernetesBackend(Backend):
                 }
             ]
         }
+        if cmd:
+            spec["containers"][0]["command"] = cmd
 
         if self.wstype == "buildservice":
             spec["containers"][0]["env"] = [
