@@ -8,6 +8,7 @@ from toolforge_weld.kubernetes import K8sClient
 from toolsws.backends.kubernetes import (
     _containers_are_same,
     KubernetesBackend,
+    KubernetesRoutingHandler,
 )
 from toolsws.tool import Tool
 from toolsws.wstypes.ws import WebService
@@ -120,18 +121,21 @@ php7.4:
 
 
 @pytest.fixture
-def patch_k8s_client_from_file(monkeypatch):
-    def mock_from_file(*args, **kwargs):
-        client = K8sClient(
-            server="https://example.com:6443",
-            namespace="tool-test",
-            tls_cert_file=Path("/tmp/fake.crt"),
-            tls_key_file=Path("/tmp/fake.key"),
-            tls_verify_ca=False,
-            user_agent="webservice",
-        )
+def fake_k8s_client() -> K8sClient:
+    return K8sClient(
+        server="https://example.com:6443",
+        namespace="tool-test",
+        tls_cert_file=Path("/tmp/fake.crt"),
+        tls_key_file=Path("/tmp/fake.key"),
+        tls_verify_ca=False,
+        user_agent="webservice",
+    )
 
-        real_get_object = client.get_object
+
+@pytest.fixture
+def patch_k8s_client_from_file(monkeypatch, fake_k8s_client: K8sClient):
+    def mock_from_file(*args, **kwargs):
+        real_get_object = fake_k8s_client.get_object
 
         def mock_get_object(*args, **kwargs):
             # this is a hack
@@ -141,9 +145,9 @@ def patch_k8s_client_from_file(monkeypatch):
                 return FAKE_IMAGE_CONFIG_DATA
             return real_get_object(*args, **kwargs)
 
-        monkeypatch.setattr(client, "get_object", mock_get_object)
+        monkeypatch.setattr(fake_k8s_client, "get_object", mock_get_object)
 
-        return client
+        return fake_k8s_client
 
     monkeypatch.setattr(K8sClient, "from_file", mock_from_file)
 
@@ -159,6 +163,40 @@ def fake_tool() -> Tool:
     Tool._PROJECT = "tools"
     with tempfile.TemporaryDirectory() as tmpdir:
         yield Tool("test", "tools.test", 52503, 52503, tmpdir)
+
+
+def test_KubernetesRoutingHandler_public_domain_default(
+    fake_k8s_client: K8sClient,
+    fake_tool: Tool,
+):
+    handler = KubernetesRoutingHandler(
+        api=fake_k8s_client,
+        tool=fake_tool,
+        namespace=f"tool-{fake_tool.name}",
+        webservice_config={},
+    )
+
+    assert (
+        handler._get_ingress_subdomain()["spec"]["rules"][0]["host"]
+        == "test.toolforge.org"
+    )
+
+
+def test_KubernetesRoutingHandler_public_domain_config(
+    fake_k8s_client: K8sClient,
+    fake_tool: Tool,
+):
+    handler = KubernetesRoutingHandler(
+        api=fake_k8s_client,
+        tool=fake_tool,
+        namespace=f"tool-{fake_tool.name}",
+        webservice_config={"public_domain": "example.com"},
+    )
+
+    assert (
+        handler._get_ingress_subdomain()["spec"]["rules"][0]["host"]
+        == "test.example.com"
+    )
 
 
 def test_KubernetesBackend_get_types(

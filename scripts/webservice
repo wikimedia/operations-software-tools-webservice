@@ -13,6 +13,7 @@ import yaml
 from toolsws.backends import Backend
 from toolsws.backends import GridEngineBackend
 from toolsws.backends import KubernetesBackend
+from toolsws.config import load_config
 from toolsws.tool import Tool
 from toolsws.utils import wait_for
 from toolsws.wstypes import WebService
@@ -23,7 +24,6 @@ GRIDENGINE_DEFAULT_RELEASE = "buster"
 GRIDENGINE_AVAILABLE_RELEASES = ["buster"]
 GRIDENGINE_DEFAULT_WSTYPE = "lighttpd"
 KUBERNETES_DEFAULT_WSTYPE = "php7.4"
-WEBSERVICE_CONFIG_PATH = "/etc/toolforge/webservice.yaml"
 
 # Make all `print()` output go to stderr by default
 print = functools.partial(print, file=sys.stderr)
@@ -386,10 +386,7 @@ if __name__ == "__main__":
             print("  {}".format(str(e)))
             sys.exit(1)
 
-    webservice_config = {}
-    if os.path.exists(WEBSERVICE_CONFIG_PATH):
-        with open(WEBSERVICE_CONFIG_PATH) as config:
-            webservice_config = yaml.safe_load(config)
+    webservice_config = load_config()
 
     args = argparser.parse_args(args=remainder_argv)
 

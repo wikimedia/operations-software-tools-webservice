@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 import time
-from typing import List
+from typing import Any, ClassVar, Dict, List, Optional
 
 from toolforge_weld.kubernetes import K8sClient, parse_quantity
 import yaml
@@ -21,10 +21,24 @@ from toolsws.wstypes import PythonWebService
 class KubernetesRoutingHandler:
     """Create and manage service and ingress objects to route HTTP requests."""
 
-    def __init__(self, api: K8sClient, tool, namespace, extra_labels=None):
+    DEFAULT_PUBLIC_DOMAIN: ClassVar[str] = "toolforge.org"
+
+    def __init__(
+        self,
+        *,
+        api: K8sClient,
+        tool: Tool,
+        namespace: str,
+        webservice_config: Dict[str, Any],
+        extra_labels: Optional[Dict[str, str]] = None,
+    ):
         self.api = api
         self.tool = tool
         self.namespace = namespace
+
+        self.domain = webservice_config.get(
+            "public_domain", self.DEFAULT_PUBLIC_DOMAIN
+        )
 
         # Labels for all objects created by this webservice
         # TODO: unduplicate
@@ -78,7 +92,7 @@ class KubernetesRoutingHandler:
             "spec": {
                 "rules": [
                     {
-                        "host": "{}.toolforge.org".format(self.tool.name),
+                        "host": f"{self.tool.name}.{self.domain}",
                         "http": {
                             "paths": [
                                 {
@@ -388,7 +402,10 @@ class KubernetesBackend(Backend):
             K8sClient.locate_config_file(), user_agent="webservice"
         )
         self.routing_handler = KubernetesRoutingHandler(
-            self.api, self.tool, self._get_ns()
+            api=self.api,
+            tool=self.tool,
+            namespace=self._get_ns(),
+            webservice_config=webservice_config,
         )
 
         # Labels for all objects created by this webservice

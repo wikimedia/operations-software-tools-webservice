@@ -6,6 +6,7 @@ from toolforge_weld.kubernetes import (
 )
 
 from toolsws.backends.kubernetes import KubernetesRoutingHandler
+from toolsws.config import load_config
 from toolsws.tool import Tool
 
 
@@ -88,11 +89,14 @@ def get_kubernetes_routing_handler():
     except KubernetesConfigFileNotFoundException:
         return None
 
+    webservice_config = load_config()
+
     return KubernetesRoutingHandler(
-        k8s_client,
-        tool,
-        "tool-{}".format(tool.name),
-        {"webservice.toolforge.org/gridengine": "true"},
+        api=k8s_client,
+        tool=tool,
+        namespace="tool-{}".format(tool.name),
+        webservice_config=webservice_config,
+        extra_labels={"webservice.toolforge.org/gridengine": "true"},
     )
 
 
