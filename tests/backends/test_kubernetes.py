@@ -1,46 +1,16 @@
 from copy import deepcopy
+from pathlib import Path
 import tempfile
 
 import pytest
+from toolforge_weld.kubernetes import K8sClient
 
 from toolsws.backends.kubernetes import (
     _containers_are_same,
-    K8sClient,
     KubernetesBackend,
 )
 from toolsws.tool import Tool
 from toolsws.wstypes.ws import WebService
-
-FAKE_K8S_CONFIG_DATA = {
-    "clusters": [
-        {
-            "name": "toolforge",
-            "cluster": {
-                "server": "https://example.com:6443",
-            },
-        },
-    ],
-    "contexts": [
-        {
-            "name": "toolforge",
-            "context": {
-                "cluster": "toolforge",
-                "namespace": "tool-test",
-                "user": "tf-test",
-            },
-        },
-    ],
-    "current-context": "toolforge",
-    "users": [
-        {
-            "name": "tf-test",
-            "user": {
-                "client-certificate": "/tmp/fake.crt",
-                "client-key": "/tmp/fake.key",
-            },
-        }
-    ],
-}
 
 
 FAKE_CONTAINER_SPEC = {
@@ -151,8 +121,15 @@ php7.4:
 
 @pytest.fixture
 def patch_k8s_client_from_file(monkeypatch):
-    def mock_from_file():
-        client = K8sClient(FAKE_K8S_CONFIG_DATA)
+    def mock_from_file(*args, **kwargs):
+        client = K8sClient(
+            server="https://example.com:6443",
+            namespace="tool-test",
+            tls_cert_file=Path("/tmp/fake.crt"),
+            tls_key_file=Path("/tmp/fake.key"),
+            tls_verify_ca=False,
+            user_agent="webservice",
+        )
 
         real_get_object = client.get_object
 

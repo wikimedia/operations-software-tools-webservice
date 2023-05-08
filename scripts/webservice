@@ -7,12 +7,12 @@ import re
 import sys
 import textwrap
 
+from toolforge_weld.kubernetes import KubernetesConfigFileNotFoundException
 import yaml
 
 from toolsws.backends import Backend
 from toolsws.backends import GridEngineBackend
 from toolsws.backends import KubernetesBackend
-from toolsws.backends.kubernetes import KubernetesConfigFileNotFoundException
 from toolsws.tool import Tool
 from toolsws.utils import wait_for
 from toolsws.wstypes import WebService

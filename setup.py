@@ -12,5 +12,5 @@ setup(
         "scripts/webservice",
     ],
     description="Infrastructure for running webservices on Toolforge",
-    install_requires=["PyYAML", "requests"],
+    install_requires=["PyYAML", "requests", "toolforge-weld"],
 )

@@ -4,35 +4,24 @@ import os
 import subprocess
 import sys
 import time
-from typing import List, Optional
+from typing import List
 
-import requests
-import urllib3
+from toolforge_weld.kubernetes import K8sClient, parse_quantity
 import yaml
 
+from toolsws.backends.backend import Backend
 from toolsws.tool import Tool
-from toolsws.utils import parse_quantity
 from toolsws.wstypes import GenericWebService
 from toolsws.wstypes import JSWebService
 from toolsws.wstypes import LighttpdPlainWebService
 from toolsws.wstypes import LighttpdWebService
 from toolsws.wstypes import PythonWebService
 
-from .backend import Backend
-
-
-class KubernetesException(Exception):
-    """Base class for exceptions related to the Kubernetes backend."""
-
-
-class KubernetesConfigFileNotFoundException(KubernetesException):
-    """Raised when a Kubernetes client is attempted to be created but the configuration file does not exist."""
-
 
 class KubernetesRoutingHandler:
     """Create and manage service and ingress objects to route HTTP requests."""
 
-    def __init__(self, api, tool, namespace, extra_labels=None):
+    def __init__(self, api: K8sClient, tool, namespace, extra_labels=None):
         self.api = api
         self.tool = tool
         self.namespace = namespace
@@ -46,13 +35,11 @@ class KubernetesRoutingHandler:
             "name": self.tool.name,
         }
 
-        self.webservice_label_selector = ",".join(
-            [
-                "{k}={v}".format(k=k, v=v)
-                for k, v in self.webservice_labels.items()
-                if k not in ["toolforge", "name"]
-            ]
-        )
+        self.webservice_label_selector = {
+            k: v
+            for k, v in self.webservice_labels.items()
+            if k not in ["toolforge", "name"]
+        }
 
         # this is after label_selector is created, to make sure we don't have conflicting
         # objects from different sources
@@ -67,7 +54,7 @@ class KubernetesRoutingHandler:
         (meaning they have a non-empty metadata.deletionTimestamp value) are
         ignored.
         """
-        objs = self.api.get_objects(kind, selector=selector)
+        objs = self.api.get_objects(kind, label_selector=selector)
         # Ignore objects that are in the process of being deleted.
         return [
             o
@@ -304,7 +291,9 @@ class KubernetesBackend(Backend):
     @staticmethod
     @lru_cache()
     def get_types():
-        client = K8sClient.from_file()
+        client = K8sClient.from_file(
+            K8sClient.locate_config_file(), user_agent="webservice"
+        )
         configmap = client.get_object(
             "configmaps", "image-config", namespace="tf-public"
         )
@@ -395,7 +384,9 @@ class KubernetesBackend(Backend):
             self.container_resources["limits"]["cpu"] = cpu
 
         self.replicas = replicas
-        self.api = K8sClient.from_file()
+        self.api = K8sClient.from_file(
+            K8sClient.locate_config_file(), user_agent="webservice"
+        )
         self.routing_handler = KubernetesRoutingHandler(
             self.api, self.tool, self._get_ns()
         )
@@ -408,13 +399,11 @@ class KubernetesBackend(Backend):
             "name": self.tool.name,
         }
 
-        self.webservice_label_selector = ",".join(
-            [
-                "{k}={v}".format(k=k, v=v)
-                for k, v in self.webservice_labels.items()
-                if k not in ["toolforge", "name"]
-            ]
-        )
+        self.webservice_label_selector = {
+            k: v
+            for k, v in self.webservice_labels.items()
+            if k not in ["toolforge", "name"]
+        }
 
     def _get_ns(self):
         return "tool-{}".format(self.tool.name)
@@ -427,7 +416,7 @@ class KubernetesBackend(Backend):
         (meaning they have a non-empty metadata.deletionTimestamp value) are
         ignored.
         """
-        objs = self.api.get_objects(kind, selector=selector)
+        objs = self.api.get_objects(kind, label_selector=selector)
         # Ignore objects that are in the process of being deleted.
         return [
             o
@@ -683,175 +672,3 @@ class KubernetesBackend(Backend):
         finally:
             # Belt & suspenders cleanup just in case kubectl leaks the pod
             self.api.delete_objects("pods", "name={}".format(name))
-
-
-# T253412: Disable warnings about unverifed TLS certs when talking to the
-# Kubernetes API endpoint
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-
-class K8sClient(object):
-    """Kubernetes API client."""
-
-    VERSIONS = {
-        "configmaps": "v1",
-        "deployments": "apps/v1",
-        "endpoints": "v1",
-        "ingresses": "networking.k8s.io/v1",
-        "pods": "v1",
-        "replicasets": "apps/v1",
-        "services": "v1",
-    }
-
-    @classmethod
-    def from_file(cls, filename=None):
-        """Create a client from a kubeconfig file."""
-        if not filename:
-            filename = os.getenv("KUBECONFIG", "~/.kube/config")
-        filename = os.path.expanduser(filename)
-
-        if not os.path.exists(filename):
-            raise KubernetesConfigFileNotFoundException(filename)
-
-        # when loading relative paths from kubeconfig, do it from the file itself, like
-        # the official libraries
-        old_path = os.curdir
-        os.chdir(os.path.dirname(filename))
-        with open(filename) as f:
-            data = yaml.safe_load(f.read())
-        try:
-            return cls(data)
-        finally:
-            os.chdir(old_path)
-
-    def __init__(self, config, timeout=10):
-        """Constructor."""
-        self.config = config
-        self.timeout = timeout
-        self.context = self._find_cfg_obj(
-            "contexts", config["current-context"]
-        )
-        self.cluster = self._find_cfg_obj("clusters", self.context["cluster"])
-        self.server = self.cluster["server"]
-        self.namespace = self.context["namespace"]
-
-        user = self._find_cfg_obj("users", self.context["user"])
-        self.session = requests.Session()
-        self.session.cert = (
-            os.path.realpath(user["client-certificate"]),
-            os.path.realpath(user["client-key"]),
-        )
-        # T253412: We are deliberately not validating the api endpoint's TLS
-        # certificate. The only way to do this with a self-signed cert is to
-        # pass the path to a CA bundle. We actually *can* do that, but with
-        # python2 we have seen the associated clean up code fail and leave
-        # /tmp full of orphan files.
-        self.session.verify = False
-
-    def _find_cfg_obj(self, kind, name):
-        """Lookup a named object in our config."""
-        for obj in self.config[kind]:
-            if obj["name"] == name:
-                return obj[kind[:-1]]
-        raise KeyError(
-            "Key {} not found in {} section of config".format(name, kind)
-        )
-
-    def _make_kwargs(self, url, **kwargs):
-        """Setup kwargs for a Requests request."""
-        version = kwargs.pop("version", "v1")
-        if version == "v1":
-            root = "api"
-        else:
-            root = "apis"
-
-        # use "or" syntax in case namespace is present but set as None
-        namespace = kwargs.pop("namespace", None) or self.namespace
-
-        kwargs["url"] = "{}/{}/{}/namespaces/{}/{}".format(
-            self.server, root, version, namespace, url
-        )
-
-        name = kwargs.pop("name", None)
-        if name is not None:
-            kwargs["url"] = "{}/{}".format(kwargs["url"], name)
-        if "timeout" not in kwargs:
-            kwargs["timeout"] = self.timeout
-        return kwargs
-
-    def _get(self, url, **kwargs):
-        """GET request."""
-        r = self.session.get(**self._make_kwargs(url, **kwargs))
-        r.raise_for_status()
-        return r.json()
-
-    def _post(self, url, **kwargs):
-        """POST request."""
-        r = self.session.post(**self._make_kwargs(url, **kwargs))
-        r.raise_for_status()
-        return r.status_code
-
-    def _put(self, url, **kwargs):
-        """PUT request."""
-        r = self.session.put(**self._make_kwargs(url, **kwargs))
-        r.raise_for_status()
-        return r.status_code
-
-    def _delete(self, url, **kwargs):
-        """DELETE request."""
-        r = self.session.delete(**self._make_kwargs(url, **kwargs))
-        r.raise_for_status()
-        return r.status_code
-
-    def get_object(
-        self, kind: str, name: str, *, namespace: Optional[str] = None
-    ):
-        """Get the object with the specified name and of the given kind in the namespace."""
-        return self._get(
-            kind,
-            name=name,
-            version=K8sClient.VERSIONS[kind],
-            namespace=namespace,
-        )
-
-    def get_objects(self, kind, selector=None):
-        """Get list of objects of the given kind in the namespace."""
-        return self._get(
-            kind,
-            params={"labelSelector": selector},
-            version=K8sClient.VERSIONS[kind],
-        )["items"]
-
-    def delete_objects(self, kind, selector=None):
-        """Delete objects of the given kind in the namespace."""
-        if kind == "services":
-            # Annoyingly Service does not have a Delete Collection option
-            for svc in self.get_objects(kind, selector):
-                self._delete(
-                    kind,
-                    name=svc["metadata"]["name"],
-                    version=K8sClient.VERSIONS[kind],
-                )
-        else:
-            self._delete(
-                kind,
-                params={"labelSelector": selector},
-                version=K8sClient.VERSIONS[kind],
-            )
-
-    def create_object(self, kind, spec):
-        """Create an object of the given kind in the namespace."""
-        return self._post(
-            kind,
-            json=spec,
-            version=K8sClient.VERSIONS[kind],
-        )
-
-    def replace_object(self, kind, spec):
-        """Replace an object of the given kind in the namespace."""
-        return self._put(
-            kind,
-            json=spec,
-            name=spec["metadata"]["name"],
-            version=K8sClient.VERSIONS[kind],
-        )

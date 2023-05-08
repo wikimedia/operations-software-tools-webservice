@@ -1,10 +1,11 @@
 import socket
 
-from toolsws.backends.kubernetes import (
+from toolforge_weld.kubernetes import (
     K8sClient,
     KubernetesConfigFileNotFoundException,
-    KubernetesRoutingHandler,
 )
+
+from toolsws.backends.kubernetes import KubernetesRoutingHandler
 from toolsws.tool import Tool
 
 
@@ -81,7 +82,9 @@ def get_kubernetes_routing_handler():
     tool = Tool.from_currentuser()
 
     try:
-        k8s_client = K8sClient.from_file()
+        k8s_client = K8sClient.from_file(
+            K8sClient.locate_config_file(), user_agent="webservice"
+        )
     except KubernetesConfigFileNotFoundException:
         return None
 
