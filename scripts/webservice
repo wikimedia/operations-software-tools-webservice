@@ -8,6 +8,8 @@ import sys
 import textwrap
 
 from toolforge_weld.kubernetes import KubernetesConfigFileNotFoundException
+from toolforge_weld.logs import get_log_source
+from toolforge_weld.utils import peek
 import yaml
 
 from toolsws.backends import Backend
@@ -249,7 +251,7 @@ if __name__ == "__main__":
         help="Type of webservice to start",
     )
 
-    allowed_actions = ["start", "stop", "status", "restart", "shell"]
+    allowed_actions = ["start", "stop", "status", "restart", "shell", "logs"]
     argparser.add_argument(
         "action",
         choices=allowed_actions,
@@ -306,6 +308,22 @@ if __name__ == "__main__":
         type=int,
         default=1,
         help="Set the number of pod replicas to use",
+    )
+
+    logs_group = argparser.add_argument_group("Log viewer options")
+    logs_group.add_argument(
+        "-f",
+        "--follow",
+        required=False,
+        action="store_true",
+        help="Stream updates",
+    )
+    logs_group.add_argument(
+        "-l",
+        "--last",
+        required=False,
+        type=int,
+        help="Number of recent log lines to display",
     )
 
     template_extra_args = None
@@ -545,3 +563,25 @@ if __name__ == "__main__":
             print("ERROR: shell is only supported for kubernetes backend")
             sys.exit(1)
         sys.exit(job.shell())
+
+    elif args.action == "logs":
+        if backend != "kubernetes":
+            print("ERROR: logs is only supported for kubernetes backend")
+            sys.exit(1)
+
+        log_source = get_log_source(user_agent="webservice")
+        logs = log_source.query(
+            selector=job.webservice_label_selector,
+            follow=args.follow,
+            lines=args.last,
+        )
+
+        first, logs = peek(logs)
+        if not first:
+            print("No logs found!")
+
+        for entry in logs:
+            if entry.container != "webservice":
+                continue
+            time = entry.datetime.replace(microsecond=0).isoformat("T")
+            print(f"{time} [{entry.pod}] {entry.message}", file=sys.stdout)
