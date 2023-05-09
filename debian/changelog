@@ -1,3 +1,9 @@
+toolforge-webservice (0.97) buster; urgency=medium
+
+  * [1b0d746] kubernetes: fix request_stop()
+
+ -- Taavi Väänänen <hi@taavi.wtf>  Tue, 09 May 2023 16:31:23 +0300
+
 toolforge-webservice (0.96) buster; urgency=medium
 
   [ David Caro ]
