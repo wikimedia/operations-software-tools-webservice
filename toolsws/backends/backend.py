@@ -64,6 +64,11 @@ class Backend(metaclass=ABCMeta):
         """
         pass
 
+    def shell(self) -> int:
+        raise NotImplementedError(
+            "This webservice backend does not support shells"
+        )
+
     def is_deprecated(self, wstype):
         """Is this type considered deprecated?"""
         state = type(self).get_types()[wstype].get("state", "stable")

@@ -8,7 +8,7 @@ from .ws import WebService
 
 
 WSTYPES = {
-    cls.NAME: cls
+    cls.NAME: cls  # type: ignore
     for cls in [
         GenericWebService,
         JSWebService,
@@ -20,4 +20,4 @@ WSTYPES = {
 }
 
 
-__all__ = list(WSTYPES.values()) + [WebService]
+__all__ = list(WSTYPES.values()) + [WebService]  # type: ignore
