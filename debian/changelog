@@ -1,3 +1,16 @@
+toolforge-webservice (0.96) buster; urgency=medium
+
+  [ David Caro ]
+  * [179d4c4] k8s: don't set command in the container if empty
+
+  [ Taavi Väänänen ]
+  * [19b4149] d/control: Do not manually list Python dependencies
+  * [9a57d73] Use toolforge_weld
+  * [d6c4cbc] Add logs action
+  * [b1c3d63] kubernetes: Allow configuring the toolforge.org public domain
+
+ -- Taavi Väänänen <hi@taavi.wtf>  Tue, 09 May 2023 12:29:29 +0000
+
 toolforge-webservice (0.95) buster; urgency=medium
 
   [ Raymond Ndibe ]
