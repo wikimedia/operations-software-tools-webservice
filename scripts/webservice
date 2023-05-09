@@ -493,6 +493,7 @@ if __name__ == "__main__":
         print(format_wstypes_block(acceptable_wstypes, ""))
         sys.exit(1)
 
+    job: Backend
     if backend == "gridengine":
         job = GridEngineBackend(
             tool, args.wstype, args.release, extra_args=args.extra_args
@@ -568,7 +569,7 @@ if __name__ == "__main__":
 
         log_source = get_log_source(user_agent="webservice")
         logs = log_source.query(
-            selector=job.webservice_label_selector,
+            selector=job.webservice_label_selector,  # type: ignore
             follow=args.follow,
             lines=args.last,
         )

@@ -229,7 +229,7 @@ def _containers_are_same(first, second) -> bool:
         ["template", "spec", "containers", 0, "image"],
         ["template", "spec", "containers", 0, "command"],
     ]:
-        if traverse(first, key) != traverse(second, key):
+        if traverse(first, key) != traverse(second, key):  # type: ignore
             return False
 
     for key in [
@@ -657,7 +657,7 @@ class KubernetesBackend(Backend):
             return deployments[0]
         return None
 
-    def shell(self):
+    def shell(self) -> int:
         """Run an interactive container on the k8s cluster."""
         name = "shell-{}".format(int(time.time()))
 
