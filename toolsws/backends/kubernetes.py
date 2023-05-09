@@ -202,8 +202,12 @@ class KubernetesRoutingHandler:
 
     def stop(self):
         """Clean up any created objects."""
-        self.api.delete_objects("ingresses", self.webservice_label_selector)
-        self.api.delete_objects("services", self.webservice_label_selector)
+        self.api.delete_objects(
+            "ingresses", label_selector=self.webservice_label_selector
+        )
+        self.api.delete_objects(
+            "services", label_selector=self.webservice_label_selector
+        )
 
 
 def traverse(obj, keys: List):
@@ -591,12 +595,16 @@ class KubernetesBackend(Backend):
     def request_stop(self):
         self.routing_handler.stop()
 
-        selector = self.webservice_label_selector
-        self.api.delete_objects("deployments", selector)
         self.api.delete_objects(
-            "replicasets", "name={name}".format(name=self.tool.name)
+            "deployments", label_selector=self.webservice_label_selector
         )
-        self.api.delete_objects("pods", selector)
+        self.api.delete_objects(
+            "replicasets",
+            label_selector="name={name}".format(name=self.tool.name),
+        )
+        self.api.delete_objects(
+            "pods", label_selector=self.webservice_label_selector
+        )
 
     def request_restart(self):
         print("Restarting...")
@@ -611,7 +619,9 @@ class KubernetesBackend(Backend):
         ):
             self.api.replace_object("deployments", self._get_deployment())
         else:
-            self.api.delete_objects("pods", self.webservice_label_selector)
+            self.api.delete_objects(
+                "pods", label_selector=self.webservice_label_selector
+            )
 
         # TODO: It would be cool and not terribly hard here to detect a pod
         # with an error or crash state and dump the logs of that pod for the
@@ -688,4 +698,6 @@ class KubernetesBackend(Backend):
             return kubectl.returncode
         finally:
             # Belt & suspenders cleanup just in case kubectl leaks the pod
-            self.api.delete_objects("pods", "name={}".format(name))
+            self.api.delete_objects(
+                "pods", label_selector="name={}".format(name)
+            )
