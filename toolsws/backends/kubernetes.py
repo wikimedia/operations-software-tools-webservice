@@ -18,6 +18,9 @@ from toolsws.wstypes import LighttpdWebService
 from toolsws.wstypes import PythonWebService
 
 
+DEFAULT_HTTP_PORT = 8000
+
+
 class KubernetesRoutingHandler:
     """Create and manage service and ingress objects to route HTTP requests."""
 
@@ -102,7 +105,7 @@ class KubernetesRoutingHandler:
                                         "service": {
                                             "name": self.tool.name,
                                             "port": {
-                                                "number": 8000,
+                                                "number": DEFAULT_HTTP_PORT,
                                             },
                                         },
                                     },
@@ -114,7 +117,7 @@ class KubernetesRoutingHandler:
             },
         }
 
-    def _get_svc(self, target_port=8000, selector=None):
+    def _get_svc(self, target_port=DEFAULT_HTTP_PORT, selector=None):
         """
         Return full spec for the webservice service
         """
@@ -131,7 +134,7 @@ class KubernetesRoutingHandler:
                     {
                         "name": "http",
                         "protocol": "TCP",
-                        "port": 8000,
+                        "port": DEFAULT_HTTP_PORT,
                         "targetPort": target_port,
                     }
                 ],
@@ -172,7 +175,9 @@ class KubernetesRoutingHandler:
             ],
         }
 
-    def _start_common(self, target_port=8000, service_selector=None):
+    def _start_common(
+        self, target_port=DEFAULT_HTTP_PORT, service_selector=None
+    ):
         """Create objects used for routing to a web service on any backend."""
         svcs = self._find_objs("services", self.webservice_label_selector)
         if len(svcs) == 0:
@@ -466,7 +471,7 @@ class KubernetesBackend(Backend):
                 "--type",
                 self.webservice.name,
                 "--port",
-                "8000",
+                str(DEFAULT_HTTP_PORT),
             ]
         else:
             cmd = []
@@ -474,7 +479,13 @@ class KubernetesBackend(Backend):
         if self.extra_args:
             cmd.extend(self.extra_args)
 
-        ports = [{"name": "http", "containerPort": 8000, "protocol": "TCP"}]
+        ports = [
+            {
+                "name": "http",
+                "containerPort": DEFAULT_HTTP_PORT,
+                "protocol": "TCP",
+            }
+        ]
 
         return {
             "kind": "Deployment",
@@ -559,10 +570,17 @@ class KubernetesBackend(Backend):
 
         if self.wstype == "buildservice":
             spec["containers"][0]["env"] = [
+                # For regular images, webservice-runner would take care of configuring the HTTP
+                # server to listen on port 8000, but for buildservice ones we need to set the
+                # PORT env var as it's what most buildpacks will use by default.
+                {
+                    "name": "PORT",
+                    "value": str(DEFAULT_HTTP_PORT),
+                },
                 {
                     "name": "NO_HOME",
                     "value": "a buildservice pod does not need a home env",
-                }
+                },
             ]
         else:
             spec["containers"][0][
