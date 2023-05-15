@@ -17,7 +17,10 @@ trap restore_user EXIT
 cd /src
 git config --global --add safe.directory /src
 echo "Updating changelog..."
-EDITOR=true gbp dch -R
+new_version="${1:+"--new-version=$1"}"
+EDITOR=true gbp dch \
+    --release \
+    $new_version
 
 cur_version="$(dpkg-parsechangelog -S version)"
 

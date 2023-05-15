@@ -10,7 +10,12 @@ fi
 
 email="$(git config user.email)"
 name="$(git config user.name)"
-distro="${1:-buster}"
+if [[ "${1}" == "buster" ]] || [[ "${1}" == "bullseye" ]]; then
+    distro="${1}"
+    shift
+else
+    distro="buster"
+fi
 
 docker build "utils/debuilder-${distro}" $no_cache -t "debuilder-${distro}:latest"
 docker run \
@@ -19,4 +24,5 @@ docker run \
     --env "EMAIL=${email}" \
     --env "NAME=${name}" \
     --rm \
-    "debuilder-${distro}:latest"
+    "debuilder-${distro}:latest" \
+    "$@"
