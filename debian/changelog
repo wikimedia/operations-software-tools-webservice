@@ -1,3 +1,15 @@
+toolforge-webservice (0.98) buster; urgency=medium
+
+  [ Taavi Väänänen ]
+  * [c0e3bb8] tox: Add mypy
+
+  [ David Caro ]
+  * [4d3d7c4] buildservice: set the PORT=8000 env var
+  * [ee16d2c] Fix tests to adapt the latest toolforge-weld
+  * [01d5c97] utils: allow specifying the version for bump_version
+
+ -- David Caro <dcaro@wikimedia.org>  Mon, 15 May 2023 07:39:41 +0000
+
 toolforge-webservice (0.97) buster; urgency=medium
 
   * [1b0d746] kubernetes: fix request_stop()
