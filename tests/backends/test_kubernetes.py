@@ -4,6 +4,7 @@ import tempfile
 
 import pytest
 from toolforge_weld.kubernetes import K8sClient
+from toolforge_weld.kubernetes_config import Kubeconfig
 
 from toolsws.backends.kubernetes import (
     _containers_are_same,
@@ -122,12 +123,15 @@ php7.4:
 
 @pytest.fixture
 def fake_k8s_client() -> K8sClient:
+    kubeconfig = Kubeconfig(
+        path=Path("dummy/path"),
+        current_server="https://example.com:6443",
+        current_namespace="tool-test",
+        client_cert_file=Path("/tmp/fake.crt"),
+        client_key_file=Path("/tmp/fake.key"),
+    )
     return K8sClient(
-        server="https://example.com:6443",
-        namespace="tool-test",
-        tls_cert_file=Path("/tmp/fake.crt"),
-        tls_key_file=Path("/tmp/fake.key"),
-        tls_verify_ca=False,
+        kubeconfig=kubeconfig,
         user_agent="webservice",
     )
 
