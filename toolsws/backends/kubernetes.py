@@ -1,10 +1,11 @@
+from datetime import datetime
 from functools import lru_cache
 import json
 import os
 import subprocess
 import sys
 import time
-from typing import Any, ClassVar, Dict, List, Optional
+from typing import Any, ClassVar, Dict, Optional
 
 from toolforge_weld.kubernetes import K8sClient, parse_quantity
 import yaml
@@ -19,6 +20,7 @@ from toolsws.wstypes import PythonWebService
 
 
 DEFAULT_HTTP_PORT = 8000
+STARTED_AT_ANNOTATION = "toolforge.org/started-at"
 
 
 class KubernetesRoutingHandler:
@@ -215,56 +217,6 @@ class KubernetesRoutingHandler:
         )
 
 
-def traverse(obj, keys: List):
-    for key in keys:
-        try:
-            # note that this can't use .get(), as sometimes
-            # those are lists
-            obj = obj[key]
-        except KeyError:
-            # sometimes default resources for example are not present,
-            # deal with them properly
-            return None
-    return obj
-
-
-def _containers_are_same(first, second) -> bool:
-    for key in [
-        ["replicas"],
-        ["template", "spec", "containers", 0, "image"],
-        ["template", "spec", "containers", 0, "command"],
-    ]:
-        if traverse(first, key) != traverse(second, key):  # type: ignore
-            return False
-
-    for key in [
-        ["template", "spec", "containers", 0, "resources", "limits", "memory"],
-        ["template", "spec", "containers", 0, "resources", "limits", "cpu"],
-        [
-            "template",
-            "spec",
-            "containers",
-            0,
-            "resources",
-            "requests",
-            "memory",
-        ],
-        ["template", "spec", "containers", 0, "resources", "requests", "cpu"],
-    ]:
-        first_quantity = traverse(first, key)
-        if first_quantity:
-            first_quantity = parse_quantity(first_quantity)
-
-        second_quantity = traverse(second, key)
-        if second_quantity:
-            second_quantity = parse_quantity(second_quantity)
-
-        if first_quantity != second_quantity:
-            return False
-
-    return True
-
-
 class KubernetesBackend(Backend):
     """
     Backend spawning webservices with a k8s Deployment + Service
@@ -450,20 +402,27 @@ class KubernetesBackend(Backend):
             if o["metadata"].get("deletionTimestamp", None) is None
         ]
 
-    def _wait_for_pods(self, label_selector, timeout=30):
+    def _wait_for_pods(self, label_selector, started_at, timeout=30):
         """
-        Wait for at least 1 pod to become 'ready'
+        Wait for at least 1 pod with the given startedAt annotation to become 'ready'
         """
         for _ in range(timeout):
             pods = self._find_objs("pods", label_selector)
+            pods = [
+                pod
+                for pod in pods
+                if pod["metadata"]["annotations"].get(STARTED_AT_ANNOTATION)
+                == started_at
+            ]
             if self._any_pod_in_state(pods, "Running"):
                 return True
             time.sleep(1)
         return False
 
-    def _get_deployment(self):
+    def _get_deployment(self, started_at):
         """
-        Return the full spec of the deployment object for this webservice
+        Return the full spec of the deployment object for this webservice,
+        started at the given timestamp.
         """
         if self.use_webservice_runner:
             cmd = [
@@ -499,7 +458,15 @@ class KubernetesBackend(Backend):
                 "replicas": self.replicas,
                 "selector": {"matchLabels": self.webservice_labels},
                 "template": {
-                    "metadata": {"labels": self.webservice_labels},
+                    "metadata": {
+                        "labels": self.webservice_labels,
+                        "annotations": {
+                            # this annotation, which changes each time the deployment is updated,
+                            # will cause Kubernetes to cleanly restart the deployment
+                            # (start new pod, wait for it to be ready, stop old pod)
+                            STARTED_AT_ANNOTATION: started_at,
+                        },
+                    },
                     "spec": self._get_container_spec(
                         "webservice",
                         self.container_image,
@@ -606,7 +573,10 @@ class KubernetesBackend(Backend):
             "deployments", self.webservice_label_selector
         )
         if len(deployments) == 0:
-            self.api.create_object("deployments", self._get_deployment())
+            started_at = datetime.utcnow().isoformat()
+            self.api.create_object(
+                "deployments", self._get_deployment(started_at)
+            )
 
         self.routing_handler.start_kubernetes()
 
@@ -627,24 +597,24 @@ class KubernetesBackend(Backend):
     def request_restart(self):
         print("Restarting...")
 
-        # For most intents and purposes, the only thing necessary
-        # to restart a Kubernetes application is to delete the pods.
-        # However, if the replace command also specifies updated
-        # container resources (for example CPU or memory), we need
-        # to completely replace the Deployment object.
-        if not _containers_are_same(
-            self._get_live_deployment()["spec"], self._get_deployment()["spec"]
-        ):
-            self.api.replace_object("deployments", self._get_deployment())
-        else:
-            self.api.delete_objects(
-                "pods", label_selector=self.webservice_label_selector
-            )
+        # To restart the Kubernetes application, we replace the Deployment object.
+        # At least the startedAt timestamp is always different,
+        # so Kubernetes will always create a new pod and stop the old one,
+        # even if the rest of the Deployment did not change.
+        # (But it is also possible that the replace command also specified
+        # updated container resources, such as CPU or memory, which changed.)
+
+        started_at = datetime.utcnow().isoformat()
+        self.api.replace_object(
+            "deployments", self._get_deployment(started_at)
+        )
 
         # TODO: It would be cool and not terribly hard here to detect a pod
         # with an error or crash state and dump the logs of that pod for the
         # user to examine.
-        if not self._wait_for_pods(self.webservice_label_selector, timeout=30):
+        if not self._wait_for_pods(
+            self.webservice_label_selector, started_at, timeout=30
+        ):
             print(
                 "Your webservice is taking quite while to restart. If it isn't"
                 " up shortly, run a 'webservice stop' and the start command "

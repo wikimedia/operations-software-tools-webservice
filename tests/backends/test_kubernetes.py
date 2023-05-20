@@ -1,4 +1,3 @@
-from copy import deepcopy
 from pathlib import Path
 import tempfile
 
@@ -7,7 +6,6 @@ from toolforge_weld.kubernetes import K8sClient
 from toolforge_weld.kubernetes_config import Kubeconfig
 
 from toolsws.backends.kubernetes import (
-    _containers_are_same,
     KubernetesBackend,
     KubernetesRoutingHandler,
 )
@@ -261,48 +259,3 @@ def test_KubernetesBackend_parse_resources(
 
     assert type(backend.container_resources) is dict
     assert backend.container_resources == expected
-
-
-def test_containers_are_same_same():
-    # equal containers should be the same
-    assert _containers_are_same(FAKE_CONTAINER_SPEC, FAKE_CONTAINER_SPEC)
-
-    # take a copy to not modify global state
-    container = deepcopy(FAKE_CONTAINER_SPEC)
-    container["template"]["spec"]["containers"][0]["resources"] = {
-        "limits": {
-            "memory": "512Mi",
-            "cpu": "500m",  # changed from 0.5
-        },
-        "requests": {
-            "memory": "262144Ki",  # changed from 256Mi
-            "cpu": "0.125",
-        },
-    }
-
-    assert _containers_are_same(FAKE_CONTAINER_SPEC, container)
-
-
-def test_containers_are_same_different_image():
-    # take a copy to not modify global state
-    container = deepcopy(FAKE_CONTAINER_SPEC)
-    container["template"]["spec"]["containers"][0]["image"] = "test"
-
-    assert not _containers_are_same(FAKE_CONTAINER_SPEC, container)
-
-
-def test_containers_are_same_different_resources():
-    # take a copy to not modify global state
-    container = deepcopy(FAKE_CONTAINER_SPEC)
-    container["template"]["spec"]["containers"][0]["resources"] = {
-        "limits": {
-            "memory": "512Mi",
-            "cpu": "500mi",  # changed from 0.5 / 500m
-        },
-        "requests": {
-            "memory": "256M",  # changed from 256Mi
-            "cpu": "0.125",
-        },
-    }
-
-    assert not _containers_are_same(FAKE_CONTAINER_SPEC, container)
