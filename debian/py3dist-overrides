@@ -1,4 +1,0 @@
-# see dh-python3(1)
-# toolforge-weld package is in tools repo, not available
-# in Jenkins builds (jenkins-glue)
-toolforge-weld python3-toolforge-weld

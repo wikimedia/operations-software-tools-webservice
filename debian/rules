@@ -1,9 +1,0 @@
-#!/usr/bin/make -f
-
-export PYBUILD_NAME=toolforge-webservice
-
-# these are run on our CI (Jenkins) too, let's avoid duplication
-export PYBUILD_DISABLE=test
-
-%:
-	dh $@ --with python3 --buildsystem=pybuild

@@ -1,9 +1,0 @@
-[tool.black]
-line-length = 79
-target_version = ['py37']
-
-[tool.pytest.ini_options]
-filterwarnings = [
-    # Used in toolforge_weld/__init__.py, to be fixed once 3.7 (buster) is no longer supported
-    "ignore:pkg_resources is deprecated as an API"
-]
